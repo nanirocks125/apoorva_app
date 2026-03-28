@@ -1,10 +1,9 @@
+import 'package:apoorva_app/enum/form_mode.dart';
 import 'package:apoorva_app/model/account.dart';
-import 'package:apoorva_app/model/organization.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/enum/account_type.dart';
 import 'package:apoorva_app/services/organization_service.dart';
-
-enum FormMode { create, edit, view }
 
 class OrganizationFormScreen extends StatefulWidget {
   final Organization? org; // Changed from Map to Model

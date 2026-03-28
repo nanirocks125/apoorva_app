@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'account.dart'; // Ensure you have the Account model we created
+import '../account.dart'; // Ensure you have the Account model we created
 
 part 'organization.g.dart';
 

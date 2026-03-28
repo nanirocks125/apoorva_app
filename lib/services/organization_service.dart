@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:apoorva_app/model/organization.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
 
 class OrganizationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -65,5 +65,14 @@ class OrganizationService {
     }
 
     await orgRef.delete();
+  }
+
+  // Inside organization_service.dart
+  Future<Organization?> getOrganizationById(String orgId) async {
+    final doc = await _db.collection('organizations').doc(orgId).get();
+    if (doc.exists) {
+      return Organization.fromJson(doc.data()!);
+    }
+    return null;
   }
 }

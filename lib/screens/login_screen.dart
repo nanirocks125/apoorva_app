@@ -1,3 +1,4 @@
+import 'package:apoorva_app/screens/home_screen.dart';
 import 'package:apoorva_app/screens/organization_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user.user?.email == "nanirocks125@gmail.com") {
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OrganizationScreen()),
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            // MaterialPageRoute(builder: (context) => OrganizationScreen()),
           );
         }
       } else {
@@ -79,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(Icons.storefront, size: 80, color: Color(0xFFFF5733)),
               const SizedBox(height: 16),
               Text(
-                'Apoorva Polaris',
+                'Apoorva',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFFF5733),

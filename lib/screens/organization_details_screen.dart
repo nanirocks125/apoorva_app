@@ -1,4 +1,7 @@
-import 'package:apoorva_app/model/organization.dart';
+import 'package:apoorva_app/components/user_assignment_picker.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/user/app_user_snapshot.dart';
+import 'package:apoorva_app/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../enum/account_type.dart';
@@ -6,7 +9,9 @@ import '../enum/account_type.dart';
 class OrganizationDetailsScreen extends StatelessWidget {
   final Organization org;
 
-  const OrganizationDetailsScreen({super.key, required this.org});
+  OrganizationDetailsScreen({super.key, required this.org});
+
+  final UserService _userService = UserService();
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +121,9 @@ class OrganizationDetailsScreen extends StatelessWidget {
                   );
                 },
               ),
+            _buildStaffSection(
+              context,
+            ), // Moved staff section to the end for better flow
           ],
         ),
       ),
@@ -151,6 +159,98 @@ class OrganizationDetailsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildStaffHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Authorized Staff',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        IconButton(
+          icon: const Icon(Icons.person_add_alt_1, color: Color(0xFFFF5733)),
+          onPressed: () => _openUserPicker(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStaffSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStaffHeader(context),
+          const SizedBox(height: 12),
+          StreamBuilder<List<AppUserSnapshot>>(
+            stream: _userService.getOrganizationUsers(org.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final staffList = snapshot.data ?? [];
+
+              if (staffList.isEmpty) {
+                return const Card(
+                  child: ListTile(
+                    title: Text(
+                      'No staff assigned',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    subtitle: Text('Add users from the Global Users tab'),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: staffList.length,
+                itemBuilder: (context, index) {
+                  final staff = staffList[index];
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey.shade200,
+                        child: Text(staff.name[0].toUpperCase()),
+                      ),
+                      title: Text(
+                        staff.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(staff.email),
+                      trailing: Chip(
+                        label: Text(
+                          staff.orgRole.toUpperCase(),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        backgroundColor: _getRoleColor(staff.orgRole),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Simple helper for role colors
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red.shade100;
+      case 'manager':
+        return Colors.orange.shade100;
+      default:
+        return Colors.blue.shade100;
+    }
+  }
+
   String _calculateTotalBalance() {
     double total = org.accounts.fold(
       0,
@@ -183,5 +283,16 @@ class OrganizationDetailsScreen extends StatelessWidget {
 
   void _navigateToEdit(BuildContext context) {
     // Logic to push to the OrganizationFormScreen in 'edit' mode
+  }
+
+  void _openUserPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => UserAssignmentPicker(organization: org),
+    );
   }
 }
