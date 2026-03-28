@@ -1,5 +1,7 @@
+import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/home_screen.dart';
 import 'package:apoorva_app/screens/organization_screen.dart';
+import 'package:apoorva_app/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  UserService _userService = UserService();
+
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
     try {
@@ -29,21 +33,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print('after sign in methods: ${user.user?.email}');
 
-      // Hard-coded Master Admin Email check
-      if (user.user?.email == "nanirocks125@gmail.com") {
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-            // MaterialPageRoute(builder: (context) => OrganizationScreen()),
-          );
-        }
-      } else {
-        // Standard shop login logic
-        print('Login successful for non-master admin: ${user.user?.email}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful, but not a master admin.'),
+      final AppUser? loggedInUser = await _userService.getUserById(
+        user.user!.uid,
+      );
+
+      if (loggedInUser == null) {
+        // This happens if a user is in Auth but you haven't created their /users/ doc yet
+        throw 'User profile not found. Please contact the administrator.';
+      }
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(loggedInUser: loggedInUser),
           ),
+          // MaterialPageRoute(builder: (context) => OrganizationScreen()),
         );
       }
     } catch (e) {
@@ -64,8 +68,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _emailController.text = "nanirocks125@gmail.com";
-    _passwordController.text = "Nandam@125";
+    _emailController.text = "lavanya@gmail.com";
+    _passwordController.text = "Apoorva@123";
   }
 
   @override

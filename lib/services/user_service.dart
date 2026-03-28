@@ -5,6 +5,7 @@ import 'package:apoorva_app/model/user/app_user_snapshot.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
 class UserService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -168,5 +169,27 @@ class UserService {
               .map((doc) => AppUserSnapshot.fromJson(doc.data()))
               .toList(),
         );
+  }
+
+  // Inside your UserService class
+  Future<AppUser?> getUserById(String uid) async {
+    try {
+      // 1. Reference the specific document in the 'users' collection
+      final DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
+
+      // 2. Check if the document actually exists in Firestore
+      if (doc.exists && doc.data() != null) {
+        // 3. Convert the map data into your AppUser object
+        // This assumes you have a fromJson or fromMap factory in your model
+        return AppUser.fromJson(doc.data() as Map<String, dynamic>);
+      } else {
+        debugPrint("User document not found for UID: $uid");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error fetching user data: $e");
+      // You might want to rethrow or return null based on your error handling strategy
+      return null;
+    }
   }
 }
