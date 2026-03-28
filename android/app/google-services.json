@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "942263598354",
+    "project_id": "apoorva-4ad68",
+    "storage_bucket": "apoorva-4ad68.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:942263598354:android:5fb76d6ff45387757247cb",
+        "android_client_info": {
+          "package_name": "com.apoorva.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCihkwH4_3UbHSRNlQMeMno_1On85JynMk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
