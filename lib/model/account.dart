@@ -1,25 +1,24 @@
+import 'package:apoorva_app/enum/account_type.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:uuid/uuid.dart';
+
+part 'account.g.dart';
+
+@JsonSerializable()
 class Account {
   final String id;
   final String name;
-  final String type; // Cash, Bank, Digital Wallet
+  final AccountType type; // Cash, Bank, Digital Wallet
   final double currentBalance;
-  final bool isDefaultUpi;
 
   Account({
-    required this.id,
+    String? id,
     required this.name,
     required this.type,
     required this.currentBalance,
-    this.isDefaultUpi = false,
-  });
+  }) : id = id ?? const Uuid().v4();
 
-  factory Account.fromMap(Map<String, dynamic> data, String id) {
-    return Account(
-      id: id,
-      name: data['name'] ?? '',
-      type: data['account_type'] ?? 'Cash',
-      currentBalance: (data['current_balance'] ?? 0).toDouble(),
-      isDefaultUpi: data['is_default_upi'] ?? false,
-    );
-  }
+  factory Account.fromJson(Map<String, dynamic> json) =>
+      _$AccountFromJson(json);
+  Map<String, dynamic> toJson() => _$AccountToJson(this);
 }
