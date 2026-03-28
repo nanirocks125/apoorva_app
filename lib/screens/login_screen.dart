@@ -1,89 +1,120 @@
-import 'package:apoorva_app/screens/cashflow.dart';
-import 'package:flutter/material.dart';
-import 'package:apoorva_app/components/rounded_button.dart';
-import 'package:apoorva_app/constants.dart';
+import 'package:apoorva_app/screens/organization_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'chat_screen.dart';
-import 'package:flutter_progress_hud/flutter_progress_hud.dart';
+import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
-  static const String id = 'login_screen';
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool showSpinner = false;
-  final _auth = FirebaseAuth.instance;
-  late String email;
-  late String password;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      print(
+        'email: ${_emailController.text.trim()}, password: ${_passwordController.text.trim()}',
+      );
+      UserCredential user = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+
+      print('after sign in methods: ${user.user?.email}');
+
+      // Hard-coded Master Admin Email check
+      if (user.user?.email == "nanirocks125@gmail.com") {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => OrganizationScreen()),
+          );
+        }
+      } else {
+        // Standard shop login logic
+        print('Login successful for non-master admin: ${user.user?.email}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful, but not a master admin.'),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle error
+      print('error in login: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login failed. Please check your credentials.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _emailController.text = "nanirocks125@gmail.com";
+    _passwordController.text = "Nandam@125";
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: ProgressHUD(
-        // inAsyncCall: showSpinner,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Flexible(
-                child: Hero(
-                  tag: 'logo',
-                  child: Container(
-                    height: 200.0,
-                    child: Image.asset('images/logo.png'),
-                  ),
+            children: [
+              // Placeholder for Apoorva Logo
+              const Icon(Icons.storefront, size: 80, color: Color(0xFFFF5733)),
+              const SizedBox(height: 16),
+              Text(
+                'Apoorva Polaris',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFFF5733),
                 ),
               ),
-              SizedBox(height: 48.0),
+              const Text('Master Admin Login'),
+              const SizedBox(height: 40),
               TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Admin Email'),
                 keyboardType: TextInputType.emailAddress,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  email = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your email',
-                ),
               ),
-              SizedBox(height: 8.0),
+              const SizedBox(height: 16),
               TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
-                textAlign: TextAlign.center,
-                onChanged: (value) {
-                  password = value;
-                },
-                decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your password',
-                ),
               ),
-              SizedBox(height: 24.0),
-              RoundedButton(
-                title: 'Log In',
-                colour: Colors.lightBlueAccent,
-                onPressed: () async {
-                  setState(() {
-                    showSpinner = true;
-                  });
-                  try {
-                    // final user =
-                    await _auth.signInWithEmailAndPassword(
-                      email: email,
-                      password: password,
-                    );
-                    Navigator.pushNamed(context, CashflowScreen.id);
-
-                    setState(() {
-                      showSpinner = false;
-                    });
-                  } catch (e) {
-                    print(e);
-                  }
-                },
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56, // Large touch target for speed
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF5733),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Login to Dashboard',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                ),
               ),
             ],
           ),

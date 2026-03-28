@@ -44,13 +44,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA_YuUYq5qWWqdzK28PkzPbQik2yv5-GSM',
-    appId: '1:942263598354:web:d58a0662f2b5e31d7247cb',
-    messagingSenderId: '942263598354',
-    projectId: 'apoorva-4ad68',
-    authDomain: 'apoorva-4ad68.firebaseapp.com',
-    storageBucket: 'apoorva-4ad68.firebasestorage.app',
-    measurementId: 'G-59T6J4EV1V',
+    apiKey: 'AIzaSyC8tk0hDmzdRpVFZoFwhKiiXCmuVhniR84',
+    appId: '1:719122164711:web:575b976c3ab5ff119d6b42',
+    messagingSenderId: '719122164711',
+    projectId: 'apoorva-debug-8f9eb',
+    authDomain: 'apoorva-debug-8f9eb.firebaseapp.com',
+    storageBucket: 'apoorva-debug-8f9eb.firebasestorage.app',
+    measurementId: 'G-95VVY2KCVZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
