@@ -1,58 +1,72 @@
-import 'package:apoorva_app/components/global_drawer.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
-import 'package:apoorva_app/screens/login_screen.dart';
-import 'package:apoorva_app/screens/user/users_screen.dart';
-import 'package:apoorva_app/services/user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:apoorva_app/screens/auth/login_screen.dart';
+import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
+import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
+import 'package:apoorva_app/services/auth_service.dart';
+import 'package:apoorva_app/services/organization_service.dart';
 import 'package:flutter/material.dart';
-import 'package:apoorva_app/screens/organization_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser loggedInUser;
   HomeScreen({super.key, required this.loggedInUser});
-  final FirebaseAuth _authService = FirebaseAuth.instance;
+  final OrganizationService _orgService = OrganizationService();
 
   @override
   Widget build(BuildContext context) {
     final bool isSuperAdmin = loggedInUser.role == .superAdmin;
-    final bool hasNoShops = loggedInUser.orgIds.isEmpty;
+    final int shopCount = loggedInUser.assignedOrgs.length;
+    print('organization count for user ${loggedInUser.name}: $shopCount');
+    if (isSuperAdmin) {
+      return SuperAdminDashboard(user: loggedInUser);
+    }
 
     // 1. If not an admin and no shops assigned, show the waiting room
-    if (!isSuperAdmin && hasNoShops) {
+    if (shopCount == 0) {
       return Scaffold(
         appBar: AppBar(title: const Text('Apoorva Polaris')),
         body: _buildUnassignedView(context),
       );
     }
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Apoorva Polaris Admin'),
-          backgroundColor: const Color(0xFFFF5733),
-          foregroundColor: Colors.white,
-          bottom: const TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [
-              Tab(icon: Icon(Icons.storefront), text: 'Organizations'),
-              Tab(icon: Icon(Icons.people_alt), text: 'Global Users'),
-            ],
-          ),
-        ),
-        drawer: GlobalDrawer(
-          currentUser: loggedInUser,
-          onLogout: () => _handleLogout(context),
-        ),
-        body: TabBarView(
-          children: [
-            OrganizationScreen(),
-            UserScreen(), // This handles the generic list of all users
-          ],
-        ),
-      ),
+    // 3. Shop Selector (If they manage multiple branches)
+    if (shopCount > 1) {
+      return OrganizationSelectionScreen(user: loggedInUser);
+    }
+
+    return _buildOrganizationDashboardView(context, loggedInUser);
+  }
+
+  Widget _buildOrganizationDashboardView(BuildContext context, AppUser user) {
+    print(
+      'buildng org dashboard for user ${user.name} with orgs: ${user.assignedOrgs.map((o) => o.name).join(', ')}',
+    );
+    final String orgId = loggedInUser.assignedOrgs.first.orgId;
+
+    return FutureBuilder<Organization?>(
+      future: _orgService.getOrganizationById(
+        orgId,
+      ), // You'll need this helper in OrgService
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        print('Organization fetch result for ID $orgId: ${snapshot.data}');
+
+        if (snapshot.hasData && snapshot.data != null) {
+          return OrganizationDashboard(
+            organization: snapshot.data!,
+            currentUser: loggedInUser,
+          );
+        }
+
+        // Fallback if the shop was deleted but the user still has the ID
+        return _buildUnassignedView(context);
+      },
     );
   }
 
@@ -136,7 +150,8 @@ class HomeScreen extends StatelessWidget {
 
     if (confirm == true) {
       // 2. Perform the sign out
-      await _authService.signOut();
+      final AuthService authService = AuthService();
+      await authService.signOut();
 
       // 3. Wipe the navigation stack and go to Login
       if (context.mounted) {

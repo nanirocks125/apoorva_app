@@ -1,5 +1,6 @@
 import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/organization/organization_snapshot.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/model/user/app_user_snapshot.dart';
 import 'package:apoorva_app/services/user_service.dart';
@@ -225,8 +226,8 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
     try {
       // 2. Call the service to perform the bidirectional delete
       await _userService.unmapUserFromOrganization(
-        userId,
-        widget.organization.id,
+        userId: userId,
+        orgId: widget.organization.id,
       );
 
       if (mounted) {

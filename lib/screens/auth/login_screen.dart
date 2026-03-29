@@ -1,6 +1,6 @@
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/home_screen.dart';
-import 'package:apoorva_app/screens/organization_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_screen.dart';
 import 'package:apoorva_app/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    // _emailController.text = "nanirocks125@gmail.com";
+    // _passwordController.text = "Nandam@125";
+    // return;
     _emailController.text = "lavanya@gmail.com";
     _passwordController.text = "Apoorva@123";
   }

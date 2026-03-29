@@ -1,4 +1,12 @@
-import 'package:apoorva_app/screens/login_screen.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/user/app_user.dart';
+import 'package:apoorva_app/screens/auth/login_screen.dart';
+import 'package:apoorva_app/screens/home_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
+import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
+import 'package:apoorva_app/screens/pos_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +24,65 @@ class ApoorvaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Apoorva POS',
+      title: 'Apoorva Retail Management',
+      initialRoute: '/login',
+      // 2. Named Routes Table
+      routes: {'/login': (context) => const LoginScreen()},
+
+      // 3. Dynamic Route Handling (For screens requiring objects like Organization)
+      onGenerateRoute: (settings) {
+        // --- Handle /home route ---
+        if (settings.name == '/home') {
+          final user =
+              settings.arguments
+                  as AppUser; // Extract the user passed from Login
+          return MaterialPageRoute(
+            builder: (context) => HomeScreen(loggedInUser: user),
+          );
+        }
+
+        if (settings.name == '/pos') {
+          final orgId =
+              settings.arguments
+                  as String; // Extract the user passed from Login
+          return MaterialPageRoute(
+            builder: (context) => PosScreen(orgId: orgId),
+          );
+        }
+
+        // --- Handle /super-admin route ---
+        if (settings.name == '/super-admin') {
+          final user = settings.arguments as AppUser;
+          return MaterialPageRoute(
+            builder: (context) => SuperAdminDashboard(user: user),
+          );
+        }
+        if (settings.name == '/org-form') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) =>
+                OrganizationFormScreen(mode: args['mode'], org: args['org']),
+          );
+        }
+
+        if (settings.name == '/org-details') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => OrganizationDetailsScreen(org: org),
+          );
+        }
+
+        // --- Handle /org-selection route ---
+        if (settings.name == '/org-selection') {
+          final user = settings.arguments as AppUser;
+          return MaterialPageRoute(
+            builder: (context) => OrganizationSelectionScreen(user: user),
+          );
+        }
+
+        return null; // Fallback to routes table
+      },
+      // );
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

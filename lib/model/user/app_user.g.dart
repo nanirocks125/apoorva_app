@@ -14,8 +14,10 @@ AppUser _$AppUserFromJson(Map<String, dynamic> json) => AppUser(
       $enumDecodeNullable(_$SystemRoleEnumMap, json['role']) ??
       SystemRole.standard,
   status: json['status'] as String? ?? 'Active',
-  orgIds:
-      (json['orgIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+  assignedOrgs:
+      (json['assignedOrgs'] as List<dynamic>?)
+          ?.map((e) => OrganizationSnapshot.fromJson(e as Map<String, dynamic>))
+          .toList() ??
       [],
   createdAt: AppUser._tsToDate(json['createdAt']),
 );
@@ -26,7 +28,7 @@ Map<String, dynamic> _$AppUserToJson(AppUser instance) => <String, dynamic>{
   'email': instance.email,
   'role': _$SystemRoleEnumMap[instance.role]!,
   'status': instance.status,
-  'orgIds': instance.orgIds,
+  'assignedOrgs': instance.assignedOrgs,
   'createdAt': AppUser._dateToTs(instance.createdAt),
 };
 

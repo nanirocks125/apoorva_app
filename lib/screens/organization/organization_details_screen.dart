@@ -4,7 +4,7 @@ import 'package:apoorva_app/model/user/app_user_snapshot.dart';
 import 'package:apoorva_app/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../enum/account_type.dart';
+import '../../enum/account_type.dart';
 
 class OrganizationDetailsScreen extends StatelessWidget {
   final Organization org;

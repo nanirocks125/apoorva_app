@@ -1,4 +1,5 @@
 import 'package:apoorva_app/enum/system_role.dart';
+import 'package:apoorva_app/model/organization/organization_snapshot.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -22,7 +23,7 @@ class AppUser {
 
   // --- The Multi-Org Upgrade ---
   @JsonKey(defaultValue: [])
-  final List<String> orgIds;
+  final List<OrganizationSnapshot> assignedOrgs;
 
   @JsonKey(fromJson: _tsToDate, toJson: _dateToTs)
   final DateTime createdAt;
@@ -33,7 +34,7 @@ class AppUser {
     required this.email,
     this.role = SystemRole.standard,
     this.status = 'Active',
-    this.orgIds = const [], // Initialize as empty list
+    this.assignedOrgs = const [], // Initialize as empty list
     required this.createdAt,
   }) : id = id ?? Uuid().v4();
 

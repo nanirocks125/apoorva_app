@@ -42,8 +42,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       role: _selectedSystemRole,
-      orgIds:
-          widget.user?.orgIds ?? [], // Preserves existing mappings if editing
+      assignedOrgs:
+          widget.user?.assignedOrgs ??
+          [], // Preserves existing mappings if editing
       createdAt: widget.user?.createdAt ?? DateTime.now(),
     );
 

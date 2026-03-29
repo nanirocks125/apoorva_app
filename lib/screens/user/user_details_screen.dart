@@ -1,7 +1,7 @@
 import 'package:apoorva_app/components/shop_assignment_picker.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
-import 'package:apoorva_app/screens/organization_details_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
 import 'package:apoorva_app/screens/user/user_form_screen.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/user_service.dart';

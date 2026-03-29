@@ -199,6 +199,9 @@ class _ShopAssignmentPickerState extends State<ShopAssignmentPicker> {
   }
 
   void _handleUnmap(String orgId) async {
-    await _userService.unmapUserFromOrganization(widget.user.id, orgId);
+    await _userService.unmapUserFromOrganization(
+      userId: widget.user.id,
+      orgId: orgId,
+    );
   }
 }

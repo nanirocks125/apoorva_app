@@ -67,12 +67,59 @@ class OrganizationService {
     await orgRef.delete();
   }
 
-  // Inside organization_service.dart
   Future<Organization?> getOrganizationById(String orgId) async {
-    final doc = await _db.collection('organizations').doc(orgId).get();
+    print(
+      'getting organization for ID: $orgId',
+    ); // Debug log to check the input
+    final doc = await _db
+        .collection('organizations')
+        .doc(orgId.trim())
+        .get(); // trim() వాడండి
     if (doc.exists) {
-      return Organization.fromJson(doc.data()!);
+      print(
+        'doc exists for orgId $orgId: ${doc.data()}',
+      ); // Check if data is actually there
+      try {
+        print(
+          'doc.data() for orgId $orgId: ${doc.data()}',
+        ); // ఇక్కడ డేటా వస్తుందా అని చెక్ చేయండి
+        return Organization.fromJson(doc.data()!);
+      } catch (e) {
+        print("Parsing Error: $e"); // ఇక్కడ అసలు ఎర్రర్ ఏంటో తెలుస్తుంది
+        return null;
+      }
+    } else {
+      print(
+        'document does not exist for orgId $orgId',
+      ); // డాక్యుమెంట్ లేనిది కూడా చెక్ చేయండి
     }
     return null;
+  }
+
+  Future<List<Organization>> getMultipleOrgsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+
+    // Firestore 'whereIn' is perfect for this, up to 10-30 IDs
+    final query = await _db
+        .collection('organizations')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+
+    return query.docs.map((doc) => Organization.fromJson(doc.data())).toList();
+  }
+
+  Stream<List<Map<String, dynamic>>> getLiveCategories(String orgId) {
+    return FirebaseFirestore.instance
+        .collection('organizations')
+        .doc(orgId)
+        .collection('inventory') // మీ PRD ప్రకారం inventory సబ్-కలెక్షన్
+        .orderBy('is_hotkey', descending: true) // హాట్-కీలు పైన ఉంటాయి
+        .orderBy('name')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 }

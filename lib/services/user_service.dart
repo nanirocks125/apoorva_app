@@ -92,11 +92,18 @@ class UserService {
   Future<void> mapUserToOrganization({
     required AppUser fullUser,
     required Organization fullOrg,
-    String orgRole = 'staff', // You can pass 'manager' or 'admin' here
+    String orgRole = 'staff',
   }) async {
     final batch = _db.batch();
 
-    // 1. Create the Slim User Snapshot for the Organization
+    // 1. Organization Snapshot (User document లో సేవ్ చేయడానికి)
+    final orgSnapshot = OrganizationSnapshot(
+      orgId: fullOrg.id,
+      name: fullOrg.name,
+      accentColor: fullOrg.accentColor,
+    );
+
+    // 2. User Snapshot (Organization సబ్-కలెక్షన్ లో సేవ్ చేయడానికి)
     final userSnapshot = AppUserSnapshot(
       uid: fullUser.id,
       name: fullUser.name,
@@ -104,43 +111,64 @@ class UserService {
       orgRole: orgRole,
     );
 
-    // 2. Create the Slim Organization Snapshot for the User
-    final orgSnapshot = OrganizationSnapshot(
-      orgId: fullOrg.id,
-      name: fullOrg.name,
-      accentColor: fullOrg.accentColor,
-    );
-
-    // 3. Define the two paths
+    // 3. References
+    // Path A: Organization లోపల ఉండే Staff list (Sub-collection)
     final orgUserRef = _db
         .collection('organizations')
         .doc(fullOrg.id)
         .collection('users')
         .doc(fullUser.id);
 
-    final userOrgRef = _db
-        .collection('users')
-        .doc(fullUser.id)
-        .collection('organizations')
-        .doc(fullOrg.id);
+    // Path B: User document (Top-level document update)
+    final userRef = _db.collection('users').doc(fullUser.id);
 
-    // 4. Add both to the batch
+    // 4. Batch Operations
+    // A: Organization సబ్-కలెక్షన్ లో యూజర్ ని యాడ్ చేస్తున్నాం
     batch.set(orgUserRef, userSnapshot.toJson());
-    batch.set(userOrgRef, orgSnapshot.toJson());
 
-    // 5. Commit the transaction
+    // B: User document లో ఉన్న 'assignedOrgs' array కి Snapshot ని యాడ్ చేస్తున్నాం
+    batch.update(userRef, {
+      'assignedOrgs': FieldValue.arrayUnion([orgSnapshot.toJson()]),
+    });
+
+    // 5. Commit
     await batch.commit();
   }
 
-  Future<void> unmapUserFromOrganization(String userId, String orgId) async {
+  Future<void> unmapUserFromOrganization({
+    required String userId,
+    required String orgId,
+  }) async {
+    // 1. ముందుగా యూజర్ డేటాను Fetch చేయాలి (Batch లో ఇది చేయలేము)
+    final userRef = _db.collection('users').doc(userId);
+    final doc = await userRef.get();
+
+    if (!doc.exists) return;
+
+    // 2. Dart లో లిస్ట్‌ని ఫిల్టర్ చేయాలి
+    final userData = doc.data() as Map<String, dynamic>;
+    final List assignedOrgs = userData['assignedOrgs'] ?? [];
+
+    // ఆ orgId లేని మిగిలిన ఆర్గనైజేషన్లను మాత్రమే ఉంచండి
+    final updatedOrgs = assignedOrgs
+        .where((org) => org['orgId'] != orgId)
+        .toList();
+
+    // 3. ఇప్పుడు Batch ని స్టార్ట్ చేయండి
     final batch = _db.batch();
 
-    // Remove from Org sub-collection
-    batch.delete(_db.doc('organizations/$orgId/users/$userId'));
+    // A: User document ని కొత్త లిస్ట్‌తో Update చేయండి
+    batch.update(userRef, {'assignedOrgs': updatedOrgs});
 
-    // Remove from User profile mappings
-    batch.delete(_db.doc('users/$userId/organizations/$orgId'));
+    // B: Organization staff list నుండి యూజర్‌ని Delete చేయండి
+    final orgUserRef = _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('users')
+        .doc(userId);
+    batch.delete(orgUserRef);
 
+    // 4. Commit the batch
     await batch.commit();
   }
 
