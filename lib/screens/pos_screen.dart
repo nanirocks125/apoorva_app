@@ -12,15 +12,6 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
-  // PRD ప్రకారం కేటగిరీల జాబితా [cite: 8, 31]
-  // final List<String> categories = [
-  //   'Bangles',
-  //   'Panchaloha',
-  //   'Necklace',
-  //   'Earrings',
-  //   'Sets',
-  // ];
-
   OrganizationService get _orgService => OrganizationService();
   final PosCart _cart = PosCart();
 
@@ -118,58 +109,62 @@ class _PosScreenState extends State<PosScreen> {
       appBar: AppBar(title: const Text('Apoorva POS')),
       body: Column(
         children: [
-          // --- VISUAL DASHBOARD ---
-          // PosScreen build method లోపల
+          // 1. VISUAL DASHBOARD: Categories Grid
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _orgService.getLiveCategories(widget.orgId),
-              builder: (context, snapshot) {
-                print('error ${snapshot.error}');
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final categories = snapshot.data ?? [];
-
-                if (categories.isEmpty) {
-                  return const Center(
-                    child: Text('No categories found. Add some in Inventory!'),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(20),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 220,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = categories[index];
-                    return _buildCategoryCard(
-                      context,
-                      cat['name'],
-                      cat['current_stock'].toString(),
-                      cat['is_hotkey'] ?? false,
-                      cat['social_media_link'],
-                      () => _openSmartCalculator(cat),
-                    );
-                  },
-                );
-              },
-            ),
+            flex: 3, // Adjust ratio as needed
+            child: _buildCategoryGrid(),
           ),
 
-          // --- CART & CHECKOUT ---
+          const Divider(height: 1),
+
+          // 2. CURRENT CART: Selected Items List
+          Expanded(flex: 2, child: _buildCartList()),
+
+          // 3. CART SUMMARY & CHECKOUT
           _buildCartSummary(),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryGrid() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _orgService.getLiveCategories(widget.orgId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final categories = snapshot.data ?? [];
+        if (categories.isEmpty) {
+          return const Center(child: Text('No categories found.'));
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 180,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.1,
+          ),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final cat = categories[index];
+            return _buildCategoryCard(
+              context,
+              cat['name'],
+              cat['current_stock'].toString(),
+              cat['is_hotkey'] ?? false,
+              ',',
+              () => _openSmartCalculator(cat),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -232,6 +227,52 @@ class _PosScreenState extends State<PosScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCartList() {
+    if (_cart.items.isEmpty) {
+      return const Center(
+        child: Text('Cart is empty', style: TextStyle(color: Colors.grey)),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: _cart.items.length,
+      separatorBuilder: (context, index) => const Divider(),
+      itemBuilder: (context, index) {
+        final item = _cart.items[index];
+        return ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            item.categoryName,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            '₹${item.stickerPrice} - ${item.discountPercent.toInt()}% Off',
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '₹${item.finalPrice.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(
+                  Icons.remove_circle_outline,
+                  color: Colors.red,
+                ),
+                onPressed: () => _updateCart(() => _cart.items.removeAt(index)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
