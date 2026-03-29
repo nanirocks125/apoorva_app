@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 class UserService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<void> createIdentityAndProfile({
+  Future<AppUser> createIdentityAndProfile({
     required AppUser user,
     required String password,
   }) async {
@@ -40,6 +40,7 @@ class UserService {
 
       // 5. Cleanup the secondary app
       await secondaryApp.delete();
+      return finalUser; // Return the complete user object with UID
     } catch (e) {
       await secondaryApp.delete();
       throw Exception("Failed to create identity: $e");
