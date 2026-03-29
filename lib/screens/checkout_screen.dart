@@ -1,3 +1,5 @@
+import 'package:apoorva_app/screens/sale_success_screen.dart';
+import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -378,7 +380,73 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   // Finalize Sale logic (Include both the discount and the payment breakdown)
+  // Inside _CheckoutScreenState
   Future<void> _finalizeSale() async {
-    // ... Batch logic here ...
+    setState(() => _isProcessing = true);
+
+    // Prepare payment breakdown from the controllers
+    Map<String, double> payments = {};
+    _selectedModes.forEach((mode, isSelected) {
+      if (isSelected) {
+        payments[mode] =
+            double.tryParse(_paymentControllers[mode]!.text) ?? 0.0;
+      }
+    });
+
+    try {
+      final String saleId = await SaleService().confirmSale(
+        orgId: widget.orgId,
+        cart: widget.cart,
+        customerName: widget.customerName,
+        customerPhone: widget.customerPhone,
+        overallDiscountPercent: _overallDiscountPercent,
+        overallDiscountAmount: _overallDiscountAmount, // Your calculated getter
+        roundOff: double.tryParse(_discountController.text) ?? 0.0,
+        netPayable: _finalTotal, // Your calculated getter
+        payments: payments,
+      );
+
+      if (mounted) {
+        // Show success and return to POS, clearing the cart
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SaleSuccessScreen(
+              saleId: saleId,
+              customerPhone: widget.customerPhone,
+              customerName: widget.customerName.isEmpty
+                  ? 'Walk-in'
+                  : widget.customerName,
+              items: widget.cart.items
+                  .map(
+                    (i) => {
+                      'name': i.categoryName,
+                      'stickerPrice': i.stickerPrice,
+                      'finalPrice': i.finalPrice,
+                    },
+                  )
+                  .toList(),
+              subtotal: widget.cart.totalPayable,
+              overallDiscountAmount: _overallDiscountAmount,
+              roundOff: double.tryParse(_discountController.text) ?? 0.0,
+              netPayable: _finalTotal,
+              payments: payments,
+              orgId: widget.orgId, // Map of {'Cash': 100, 'UPI': 100}
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sale Failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
   }
 }
