@@ -76,13 +76,7 @@ class OrganizationService {
         .doc(orgId.trim())
         .get(); // trim() వాడండి
     if (doc.exists) {
-      print(
-        'doc exists for orgId $orgId: ${doc.data()}',
-      ); // Check if data is actually there
       try {
-        print(
-          'doc.data() for orgId $orgId: ${doc.data()}',
-        ); // ఇక్కడ డేటా వస్తుందా అని చెక్ చేయండి
         return Organization.fromJson(doc.data()!);
       } catch (e) {
         print("Parsing Error: $e"); // ఇక్కడ అసలు ఎర్రర్ ఏంటో తెలుస్తుంది

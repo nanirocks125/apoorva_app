@@ -25,8 +25,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   SystemRole _selectedSystemRole = SystemRole.standard;
-  bool _isLoading = false; // 1. Add this state variable
+  UserRole _selectedUserRole = UserRole.staff; // Default organizational role
 
+  bool _isLoading = false; // 1. Add this state variable
   bool _isAuthorized = false;
   bool _checkingAccess = true;
 
@@ -36,6 +37,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
     _nameController = TextEditingController(text: widget.user?.name ?? '');
     _emailController = TextEditingController(text: widget.user?.email ?? '');
     _selectedSystemRole = widget.user?.role ?? SystemRole.standard;
+    print(
+      'checking permissions for user ${widget.user?.name} with role ${widget.user?.role} on org ${widget.org?.name}',
+    );
     _checkPermission();
   }
 
@@ -45,6 +49,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     // 1. Allow if the user is a Global Super Admin
     final globalUser = await _service.getUserById(currentUser.uid);
+    print('global user role: ${globalUser?.role}');
     if (globalUser?.role == SystemRole.superAdmin) {
       if (mounted) {
         setState(() {
@@ -66,7 +71,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
           .get();
 
       if (orgUserDoc.exists) {
-        final role = orgUserDoc.data()?['orgRole'] as UserRole?;
+        final roleString = orgUserDoc.data()?['orgRole'] as String?;
+
+        // Convert the string to an enum value safely
+        final role = UserRole.values.firstWhere(
+          (e) => e.name == roleString,
+          orElse: () => UserRole.staff, // Default fallback
+        );
+
+        print('role: $role');
         // Check for 'owner' or 'manager' roles
         // ignore: unrelated_type_equality_checks
         if (role == UserRole.admin ||
@@ -96,10 +109,14 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     setState(() => _isLoading = true);
 
+    final platformRole = widget.org != null
+        ? SystemRole.standard
+        : _selectedSystemRole;
+
     final newUserTemplate = AppUser(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
-      role: _selectedSystemRole,
+      role: platformRole,
       createdAt: DateTime.now(),
     );
 
@@ -116,19 +133,21 @@ class _UserFormScreenState extends State<UserFormScreen> {
         await _service.mapUserToOrganization(
           fullUser: createdUser,
           fullOrg: widget.org!,
-          orgRole: _selectedSystemRole
+          orgRole: _selectedUserRole
               .name, // Using the same role for org mapping for simplicity
         );
       }
 
       if (mounted) {
-        final message = widget.org != null
-            ? 'Staff registered and mapped to ${widget.org!.name}'
-            : 'Global user created successfully';
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.org != null
+                  ? 'Registered as ${_selectedUserRole.name} in ${widget.org!.name}'
+                  : 'Global identity created.',
+            ),
+          ),
+        );
         Navigator.pop(context);
       }
     } catch (e) {
@@ -144,6 +163,14 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Show spinner while determining access permission
+    if (_checkingAccess) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFFF5733)),
+        ),
+      );
+    }
     if (!_isAuthorized) {
       return Scaffold(
         appBar: AppBar(title: const Text('Access Denied')),
@@ -217,6 +244,48 @@ class _UserFormScreenState extends State<UserFormScreen> {
               validator: (v) => v!.contains('@') ? null : 'Enter a valid email',
             ),
             const SizedBox(height: 16),
+
+            // --- CONTEXT-AWARE ROLE SELECTION ---
+            if (widget.org == null) ...[
+              // Platform-level: Super Admin creating global identities
+              DropdownButtonFormField<SystemRole>(
+                value: _selectedSystemRole,
+                decoration: const InputDecoration(
+                  labelText: 'System Access Level',
+                  prefixIcon: Icon(Icons.admin_panel_settings),
+                ),
+                items: SystemRole.values
+                    .map(
+                      (r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r.name.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedSystemRole = val!),
+              ),
+            ] else ...[
+              // Shop-level: Owner/Manager adding staff to their specific branch
+              DropdownButtonFormField<UserRole>(
+                value: _selectedUserRole,
+                decoration: const InputDecoration(
+                  labelText: 'Staff Position',
+                  prefixIcon: Icon(Icons.badge),
+                ),
+                // We exclude 'Owner' usually as that's a platform-level assignment
+                items: UserRole.values
+                    .where((r) => r != UserRole.owner)
+                    .map(
+                      (r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r.name.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedUserRole = val!),
+              ),
+            ],
+            /*
             DropdownButtonFormField<SystemRole>(
               value: _selectedSystemRole,
               decoration: const InputDecoration(
@@ -233,6 +302,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   .toList(),
               onChanged: (val) => setState(() => _selectedSystemRole = val!),
             ),
+            */
             const SizedBox(height: 32),
             SizedBox(
               height: 50,
