@@ -122,4 +122,36 @@ class OrganizationService {
               .toList(),
         );
   }
+
+  // Fetch categories in real-time
+  Stream<List<Map<String, dynamic>>> getInventory(String orgId) {
+    return _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('inventory')
+        .orderBy('name')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
+  }
+
+  // Add or Update a Category
+  Future<void> saveCategory(
+    String orgId,
+    Map<String, dynamic> data, {
+    String? catId,
+  }) async {
+    final ref = _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('inventory');
+    if (catId == null) {
+      await ref.add(data); // Create new
+    } else {
+      await ref.doc(catId).update(data); // Update existing
+    }
+  }
 }

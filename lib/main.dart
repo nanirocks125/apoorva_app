@@ -2,6 +2,7 @@ import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/home_screen.dart';
+import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
@@ -47,6 +48,13 @@ class ApoorvaApp extends StatelessWidget {
                   as String; // Extract the user passed from Login
           return MaterialPageRoute(
             builder: (context) => PosScreen(orgId: orgId),
+          );
+        }
+
+        if (settings.name == '/inventory') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => InventoryScreen(orgId: org.id),
           );
         }
 
