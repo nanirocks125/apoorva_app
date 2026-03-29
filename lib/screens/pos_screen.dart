@@ -109,18 +109,31 @@ class _PosScreenState extends State<PosScreen> {
       appBar: AppBar(title: const Text('Apoorva POS')),
       body: Column(
         children: [
-          // 1. VISUAL DASHBOARD: Categories Grid
-          Expanded(
-            flex: 3, // Adjust ratio as needed
-            child: _buildCategoryGrid(),
+          // 1. VISUAL DASHBOARD: Now shrinks to fit content [cite: 36]
+          _buildCategoryGrid(),
+
+          const Divider(height: 1, thickness: 1),
+
+          // 2. CURRENT CART: Header [cite: 36]
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.grey.shade50,
+            child: Text(
+              'CURRENT CART',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade500,
+                letterSpacing: 1.1,
+              ),
+            ),
           ),
 
-          const Divider(height: 1),
+          // 3. CART LIST: Takes the REMAINING space [cite: 36]
+          Expanded(child: _buildCartList()),
 
-          // 2. CURRENT CART: Selected Items List
-          Expanded(flex: 2, child: _buildCartList()),
-
-          // 3. CART SUMMARY & CHECKOUT
+          // 4. CART SUMMARY & CHECKOUT [cite: 36]
           _buildCartSummary(),
         ],
       ),
@@ -131,25 +144,26 @@ class _PosScreenState extends State<PosScreen> {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _orgService.getLiveCategories(widget.orgId),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
+        if (snapshot.hasError)
           return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-        }
 
         final categories = snapshot.data ?? [];
-        if (categories.isEmpty) {
+        if (categories.isEmpty)
           return const Center(child: Text('No categories found.'));
-        }
 
         return GridView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
+          // --- THE KEY FIXES ---
+          shrinkWrap: true, // Sizes the grid to its children only
+          physics:
+              const NeverScrollableScrollPhysics(), // Let the Column handle layout
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 180,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.1,
+            maxCrossAxisExtent: 140, // Slightly smaller for a tighter look
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.3, // Wider than tall for a "button" feel
           ),
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -159,7 +173,7 @@ class _PosScreenState extends State<PosScreen> {
               cat['name'],
               cat['current_stock'].toString(),
               cat['is_hotkey'] ?? false,
-              ',',
+              cat['social_media_link'],
               () => _openSmartCalculator(cat),
             );
           },
