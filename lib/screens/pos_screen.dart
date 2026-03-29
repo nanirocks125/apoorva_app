@@ -1,6 +1,8 @@
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
+import 'package:apoorva_app/screens/checkout_screen.dart';
 import 'package:apoorva_app/services/organization_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class PosScreen extends StatefulWidget {
@@ -14,6 +16,16 @@ class PosScreen extends StatefulWidget {
 class _PosScreenState extends State<PosScreen> {
   OrganizationService get _orgService => OrganizationService();
   final PosCart _cart = PosCart();
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _customerPhoneController =
+      TextEditingController();
+
+  @override
+  void dispose() {
+    _customerNameController.dispose();
+    _customerPhoneController.dispose();
+    super.dispose();
+  }
 
   void _openSmartCalculator(Map<String, dynamic> category) {
     final TextEditingController priceController = TextEditingController();
@@ -109,6 +121,10 @@ class _PosScreenState extends State<PosScreen> {
       appBar: AppBar(title: const Text('Apoorva POS')),
       body: Column(
         children: [
+          // 1. CUSTOMER INPUT: Priority placement at the top
+          _buildCustomerDataHeader(),
+
+          const Divider(height: 1),
           // 1. VISUAL DASHBOARD: Now shrinks to fit content [cite: 36]
           _buildCategoryGrid(),
 
@@ -135,6 +151,44 @@ class _PosScreenState extends State<PosScreen> {
 
           // 4. CART SUMMARY & CHECKOUT [cite: 36]
           _buildCartSummary(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomerDataHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Column(
+        children: [
+          // 1. Customer Name Field
+          TextField(
+            controller: _customerNameController,
+            decoration: InputDecoration(
+              labelText: 'Customer Name',
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              prefixIcon: const Icon(Icons.person_outline, size: 20),
+            ),
+          ),
+
+          const SizedBox(height: 12), // Vertical gap instead of horizontal
+          // 2. Phone Number Field
+          TextField(
+            controller: _customerPhoneController,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              labelText: 'Phone Number',
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              prefixIcon: const Icon(Icons.phone_outlined, size: 20),
+            ),
+          ),
         ],
       ),
     );
@@ -326,9 +380,22 @@ class _PosScreenState extends State<PosScreen> {
             ),
             onPressed: _cart.items.isEmpty
                 ? null
-                : () {
-                    // TODO: Navigate to Tender Splitting Screen
-                  },
+                : () =>
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CheckoutScreen(
+                            cart: _cart,
+                            orgId: widget.orgId,
+                            customerName: _customerNameController.value.text,
+                            customerPhone: _customerPhoneController.value.text,
+                          ),
+                        ),
+                      ).then((sold) {
+                        if (sold == true) {
+                          _updateCart(() => _cart.items.clear());
+                        }
+                      }),
             child: const Text(
               'CHECKOUT',
               style: TextStyle(color: Colors.white),
@@ -338,23 +405,4 @@ class _PosScreenState extends State<PosScreen> {
       ),
     );
   }
-
-  // Widget _buildCategoryButton(String label) {
-  //   return InkWell(
-  //     onTap: () => _openSmartCalculator(label),
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: Colors.orange.withOpacity(0.1),
-  //         borderRadius: BorderRadius.circular(16),
-  //         border: Border.all(color: Colors.orange),
-  //       ),
-  //       child: Center(
-  //         child: Text(
-  //           label,
-  //           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }
