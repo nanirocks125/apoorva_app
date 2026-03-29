@@ -8,6 +8,7 @@ import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
+import 'package:apoorva_app/screens/user/users_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,6 +41,11 @@ class ApoorvaApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) => HomeScreen(loggedInUser: user),
           );
+        }
+
+        if (settings.name == '/staff') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(builder: (context) => UserScreen(org: org));
         }
 
         if (settings.name == '/pos') {

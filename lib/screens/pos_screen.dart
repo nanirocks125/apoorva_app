@@ -144,14 +144,17 @@ class _PosScreenState extends State<PosScreen> {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _orgService.getLiveCategories(widget.orgId),
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
-        if (snapshot.connectionState == ConnectionState.waiting)
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
 
         final categories = snapshot.data ?? [];
-        if (categories.isEmpty)
+        if (categories.isEmpty) {
           return const Center(child: Text('No categories found.'));
+        }
 
         return GridView.builder(
           padding: const EdgeInsets.all(12),

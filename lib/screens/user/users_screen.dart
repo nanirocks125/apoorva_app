@@ -1,4 +1,5 @@
 import 'package:apoorva_app/enum/form_mode.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/user/user_details_screen.dart';
 import 'package:apoorva_app/screens/user/user_form_screen.dart';
 import 'package:flutter/material.dart';
@@ -6,20 +7,28 @@ import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/services/user_service.dart';
 
 class UserScreen extends StatelessWidget {
-  const UserScreen({super.key});
+  const UserScreen({super.key, this.org});
+  final Organization? org; // Optional: Provide for branch staff list
 
   @override
   Widget build(BuildContext context) {
     final UserService userService = UserService();
 
+    final Stream<List<AppUser>> userStream = org != null
+        ? userService.getStaffForOrg(org!.id)
+        : userService.getAllUsersGlobal();
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text(org != null ? '${org!.name} Staff' : 'All Users'),
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFFF5733),
         onPressed: () => _openUserForm(context),
         child: const Icon(Icons.person_add, color: Colors.white),
       ),
       body: StreamBuilder<List<AppUser>>(
-        stream: userService.getAllUsersGlobal(),
+        stream: userStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
