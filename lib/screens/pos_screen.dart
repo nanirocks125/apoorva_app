@@ -27,9 +27,19 @@ class _PosScreenState extends State<PosScreen> {
     super.dispose();
   }
 
-  void _openSmartCalculator(Map<String, dynamic> category) {
-    final TextEditingController priceController = TextEditingController();
-    double selectedDiscount = 0.0;
+  void _openSmartCalculator(
+    Map<String, dynamic> category, {
+    CartItem? existingItem,
+    int? index,
+  }) {
+    // If editing, use the existing price; otherwise, start empty
+    final TextEditingController priceController = TextEditingController(
+      text: existingItem != null
+          ? existingItem.stickerPrice.toStringAsFixed(0)
+          : '',
+    );
+
+    double selectedDiscount = existingItem?.discountPercent ?? 0.0;
 
     showModalBottomSheet(
       context: context,
@@ -46,7 +56,9 @@ class _PosScreenState extends State<PosScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Adding ${category['name']}',
+                existingItem != null
+                    ? 'Edit ${category['name']}'
+                    : 'Adding ${category['name']}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -56,8 +68,7 @@ class _PosScreenState extends State<PosScreen> {
               TextField(
                 controller: priceController,
                 decoration: const InputDecoration(
-                  labelText:
-                      'Sticker Price', // As per comfort reference [cite: 25]
+                  labelText: 'Sticker Price',
                   prefixText: '₹ ',
                   border: OutlineInputBorder(),
                 ),
@@ -65,7 +76,6 @@ class _PosScreenState extends State<PosScreen> {
                 autofocus: true,
               ),
               const SizedBox(height: 16),
-              // Discount Quick-Keys
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [0.0, 5.0, 10.0, 15.0]
@@ -83,24 +93,35 @@ class _PosScreenState extends State<PosScreen> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
+                  backgroundColor: existingItem != null
+                      ? Colors.blue
+                      : const Color(0xFFFF5733),
                 ),
                 onPressed: () {
                   final double? price = double.tryParse(priceController.text);
                   if (price != null && price > 0) {
                     _updateCart(() {
-                      _cart.items.add(
-                        CartItem(
-                          categoryId: category['id'],
-                          categoryName: category['name'],
-                          stickerPrice: price,
-                          discountPercent: selectedDiscount,
-                        ),
+                      final updatedItem = CartItem(
+                        categoryId: category['id'],
+                        categoryName: category['name'],
+                        stickerPrice: price,
+                        discountPercent: selectedDiscount,
                       );
+
+                      if (index != null) {
+                        // UPDATE: Replace existing item at index
+                        _cart.items[index] = updatedItem;
+                      } else {
+                        // CREATE: Add new item
+                        _cart.items.add(updatedItem);
+                      }
                     });
                     Navigator.pop(context);
                   }
                 },
-                child: const Text('ADD TO CART'),
+                child: Text(
+                  existingItem != null ? 'UPDATE ITEM' : 'ADD TO CART',
+                ),
               ),
               const SizedBox(height: 20),
             ],
@@ -307,40 +328,93 @@ class _PosScreenState extends State<PosScreen> {
         child: Text('Cart is empty', style: TextStyle(color: Colors.grey)),
       );
     }
-    return ListView.separated(
+    return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _cart.items.length,
-      separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         final item = _cart.items[index];
-        return ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(
-            item.categoryName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade200),
           ),
-          subtitle: Text(
-            '₹${item.stickerPrice} - ${item.discountPercent.toInt()}% Off',
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '₹${item.finalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            // --- Reuse the Smart Calculator for Editing ---
+            onTap: () => _openSmartCalculator(
+              {'id': item.categoryId, 'name': item.categoryName},
+              existingItem: item,
+              index: index,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // 1. Visual Icon/Letter Badge
+                  CircleAvatar(
+                    backgroundColor: const Color(0xFFFF5733).withOpacity(0.1),
+                    child: Text(
+                      item.categoryName[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFFFF5733),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // 2. Item Details (Name & Discount math)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.categoryName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '₹${item.stickerPrice.toStringAsFixed(0)} • ${item.discountPercent.toInt()}% Off',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 3. Price & Action
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹${item.finalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: () =>
+                            _updateCart(() => _cart.items.removeAt(index)),
+                        child: Icon(
+                          Icons.remove_circle,
+                          color: Colors.red.shade400,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(
-                  Icons.remove_circle_outline,
-                  color: Colors.red,
-                ),
-                onPressed: () => _updateCart(() => _cart.items.removeAt(index)),
-              ),
-            ],
+            ),
           ),
         );
       },
