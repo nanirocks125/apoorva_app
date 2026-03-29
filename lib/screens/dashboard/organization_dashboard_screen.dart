@@ -88,6 +88,13 @@ class OrganizationDashboard extends StatelessWidget {
                 ),
                 _buildActionCard(
                   context,
+                  'Sales History',
+                  Icons.history_outlined,
+                  Colors.teal,
+                  '/sales-history',
+                ), // NEW
+                _buildActionCard(
+                  context,
                   'Reports',
                   Icons.analytics_outlined,
                   Colors.purple,
@@ -112,6 +119,13 @@ class OrganizationDashboard extends StatelessWidget {
                 childAspectRatio: 1.1,
               ),
               children: [
+                _buildActionCard(
+                  context,
+                  'Customers',
+                  Icons.people_outline,
+                  Colors.orange,
+                  '/customers',
+                ), // NEW
                 _buildActionCard(
                   context,
                   'WhatsApp Scripts',

@@ -1,6 +1,8 @@
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
+import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
+import 'package:apoorva_app/screens/customer/customer_screen.dart';
 import 'package:apoorva_app/screens/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
@@ -8,6 +10,8 @@ import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
+import 'package:apoorva_app/screens/reports_screen.dart';
+import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
@@ -50,6 +54,32 @@ class ApoorvaApp extends StatelessWidget {
           return MaterialPageRoute(builder: (context) => UserScreen(org: org));
         }
 
+        if (settings.name == '/reports') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => ReportsScreen(orgId: org.id),
+          );
+        }
+
+        if (settings.name == '/customers') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => CustomersScreen(orgId: org.id),
+          );
+        }
+
+        if (settings.name == '/customer-sales-history') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => CustomerHistoryScreen(
+              orgId: args['orgId'],
+              customerId: args['customerId'],
+              customerName: args['customerName'],
+              customerPhone: args['customerPhone'],
+            ),
+          );
+        }
+
         if (settings.name == '/scripts') {
           final org = settings.arguments as Organization;
           return MaterialPageRoute(
@@ -69,6 +99,13 @@ class ApoorvaApp extends StatelessWidget {
                   as String; // Extract the user passed from Login
           return MaterialPageRoute(
             builder: (context) => PosScreen(orgId: orgId),
+          );
+        }
+
+        if (settings.name == '/sales-history') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => SalesHistoryScreen(orgId: org.id),
           );
         }
 
