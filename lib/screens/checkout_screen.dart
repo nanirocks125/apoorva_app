@@ -54,17 +54,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Colors.green; // Perfectly matched
   }
 
+  double _overallDiscountPercent = 0.0; // New state for % discount
+
+  double get _overallDiscountAmount {
+    return widget.cart.totalPayable * (_overallDiscountPercent / 100);
+  }
+
   @override
   void initState() {
     super.initState();
-    // Default cash to the full total on load
-    _paymentControllers['Cash']!.text = widget.cart.totalPayable
-        .toStringAsFixed(2);
+
+    _discountController.addListener(_syncDefaultPayment);
+    _syncDefaultPayment();
+  }
+
+  void _syncDefaultPayment() {
+    if (_isProcessing) return;
+
+    // We only auto-sync if the user hasn't started a complex split payment
+    // Or simply, we update the 'Cash' field whenever the total changes
+    setState(() {
+      _paymentControllers['Cash']!.text = _finalTotal.toStringAsFixed(2);
+    });
   }
 
   double get _finalTotal {
-    double discount = double.tryParse(_discountController.text) ?? 0.0;
-    return widget.cart.totalPayable - discount;
+    double roundOff = double.tryParse(_discountController.text) ?? 0.0;
+
+    // Logic: Original - Percentage - Round-off
+    return widget.cart.totalPayable - _overallDiscountAmount - roundOff;
   }
 
   double get _totalPaid {
@@ -89,52 +107,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- 1. READ-ONLY CUSTOMER SECTION ---
+            // 1. CUSTOMER INFO
             _buildSectionHeader('CUSTOMER DETAILS'),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.customerName.isEmpty
-                        ? 'Walk-in Customer'
-                        : widget.customerName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.customerPhone.isEmpty
-                        ? 'No Phone Provided'
-                        : widget.customerPhone,
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                ],
-              ),
-            ),
+            _buildCustomerInfoCard(),
 
             const SizedBox(height: 24),
 
-            // --- 2. MULTI-PAYMENT SECTION ---
-            _buildSectionHeader('PAYMENT MODES (SPLIT ALLOWED)'),
-            ..._selectedModes.keys.map((mode) => _buildPaymentRow(mode)),
+            // 2. DISCOUNTS: We calculate the price first
+            _buildSectionHeader('OVERALL DISCOUNT (%)'),
+            _buildDiscountChips(),
 
             const SizedBox(height: 24),
 
-            // --- 3. SETTLEMENT SUMMARY ---
+            // 3. SETTLEMENT SUMMARY: Now correctly placed before payment
+            _buildSectionHeader('BILL SUMMARY'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: Column(
                 children: [
@@ -142,13 +134,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     'Cart Subtotal',
                     '₹${widget.cart.totalPayable.toStringAsFixed(2)}',
                   ),
+                  if (_overallDiscountPercent > 0)
+                    _summaryRow(
+                      'Flat ${_overallDiscountPercent.toInt()}% Discount',
+                      '- ₹${_overallDiscountAmount.toStringAsFixed(2)}',
+                      color: Colors.green.shade700,
+                    ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Final Round-off Discount'),
+                      const Text(
+                        'Final Round-off',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                       SizedBox(
-                        width: 100,
+                        width: 120,
                         child: TextField(
                           controller: _discountController,
                           textAlign: TextAlign.right,
@@ -157,31 +158,63 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           decoration: const InputDecoration(
                             prefixText: '₹ ',
                             isDense: true,
+                            border: OutlineInputBorder(),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const Divider(height: 32),
+                  const Divider(height: 32, thickness: 1),
                   _summaryRow(
                     'NET PAYABLE',
                     '₹${_finalTotal.toStringAsFixed(2)}',
                     isBold: true,
                   ),
-                  _summaryRow(
-                    'TOTAL ENTERED',
-                    '₹${_totalPaid.toStringAsFixed(2)}',
-                    color: _totalPaid == _finalTotal
-                        ? Colors.green
-                        : Colors.red,
-                  ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 30),
+
+            // 4. PAYMENT MODES: Now the user knows exactly what amount to enter here
+            _buildSectionHeader('COLLECT PAYMENT'),
+            ..._selectedModes.keys.map((mode) => _buildPaymentRow(mode)),
+
+            // Extra padding for the bottom button
+            const SizedBox(height: 40),
           ],
         ),
       ),
       bottomNavigationBar: _buildBottomAction(),
+    );
+  }
+
+  Widget _buildCustomerInfoCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.customerName.isEmpty
+                ? 'Walk-in Customer'
+                : widget.customerName,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.customerPhone.isEmpty
+                ? 'No Phone Provided'
+                : widget.customerPhone,
+            style: TextStyle(color: Colors.grey.shade700),
+          ),
+        ],
+      ),
     );
   }
 
@@ -273,6 +306,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Update the % Discount selection to trigger the sync
+  Widget _buildDiscountChips() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [0.0, 5.0, 10.0, 15.0, 20.0].map((pct) {
+        return ChoiceChip(
+          label: Text('${pct.toInt()}%'),
+          selected: _overallDiscountPercent == pct,
+          onSelected: (selected) {
+            if (selected) {
+              setState(() {
+                _overallDiscountPercent = pct;
+                // Trigger sync after the % discount changes
+                _syncDefaultPayment();
+              });
+            }
+          },
+        );
+      }).toList(),
     );
   }
 
