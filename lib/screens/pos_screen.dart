@@ -159,10 +159,6 @@ class _PosScreenState extends State<PosScreen> {
                       cat['is_hotkey'] ?? false,
                       cat['social_media_link'],
                       () => _openSmartCalculator(cat),
-                      // () => {},
-                      // () => _openSmartCalculator(
-                      //   cat,
-                      // ), // బల్క్ కేటగిరీ లెవెల్ ట్రాకింగ్ [cite: 8]
                     );
                   },
                 );
