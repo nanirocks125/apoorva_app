@@ -1,3 +1,5 @@
+import 'package:apoorva_app/services/pdf_invoice_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Light-weight import
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -193,6 +195,30 @@ class SaleSuccessScreen extends StatelessWidget {
 
             const SizedBox(height: 48),
 
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey,
+                minimumSize: const Size.fromHeight(55),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => PdfInvoiceService.createAndShareInvoice(
+                customerName: customerName,
+                netPayable: netPayable.toString(),
+                saleId: saleId,
+                items: items, // Pass your cart items list here
+              ),
+              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+              label: const Text(
+                'GENERATE & SHARE PDF',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
             // ACTION BUTTONS
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -366,21 +392,43 @@ class SaleSuccessScreen extends StatelessWidget {
     String template,
     Map<String, dynamic> data,
   ) async {
-    // Processing placeholders for a personalized touch
+    // 1. Process Placeholders
     String message = template
         .replaceAll('[NAME]', data['customerName'] ?? 'Customer')
-        .replaceAll('[AMOUNT]', '₹${data['netPayable']}')
-        .replaceAll('[ID]', data['id']);
+        .replaceAll('[AMOUNT]', (data['netPayable'] ?? 0.0).toStringAsFixed(2))
+        .replaceAll('[ID]', data['id'] ?? 'N/A');
 
-    // Add Apoorva brand footer or care instructions as required by PRD
+    // 2. Add Mandatory Care Instructions [cite: 43, 44]
     message +=
-        "\n\nCare Tip: Keep your jewelry away from perfumes to maintain its shine! ✨"; //
+        "\n\n✨ Care Tip: Keep your jewelry away from perfumes and water to maintain its high-res shine!";
 
-    final encodedMessage = Uri.encodeComponent(message);
-    final url = "https://wa.me/$phone?text=$encodedMessage";
+    // 3. Platform-Specific URI Construction
+    Uri url;
+    if (kIsWeb) {
+      // Web version uses the universal wa.me link
+      url = Uri.parse(
+        "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
+      );
+    } else {
+      // Mobile version can use the specific whatsapp scheme for faster app switching
+      url = Uri.parse(
+        "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
+      );
+    }
 
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    try {
+      // On Web, canLaunchUrl can sometimes be restrictive,
+      // so we attempt the launch with an external application mode.
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint("Platform Launch Error: $e");
+      // Fallback for mobile if whatsapp:// fails (e.g., app not installed)
+      if (!kIsWeb) {
+        final Uri fallbackUrl = Uri.parse(
+          "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
+        );
+        await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+      }
     }
   }
 }

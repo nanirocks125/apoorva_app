@@ -2,6 +2,7 @@ import 'package:apoorva_app/components/global_drawer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class OrganizationDashboard extends StatelessWidget {
@@ -94,6 +95,42 @@ class OrganizationDashboard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 32),
+            // --- NEW: MARKETING & GROWTH SECTION  ---
+            const Text(
+              'Marketing',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            GridView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 250,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              children: [
+                _buildActionCard(
+                  context,
+                  'WhatsApp Scripts',
+                  Icons.chat_bubble_outline,
+                  const Color(0xFF25D366), // Brand WhatsApp Green
+                  '/scripts',
+                ),
+                // Inside the Marketing GridView in OrganizationDashboard
+                _buildActionCard(
+                  context,
+                  'Unsent Bills',
+                  Icons.pending_actions, // స్పష్టంగా అర్థమయ్యే ఐకాన్
+                  Colors.redAccent, // దృష్టిని ఆకర్షించడానికి ఎరుపు రంగు
+                  '/whatsapp-queue',
+                ),
+                // Future expansion: Festival Planner [cite: 39]
+              ],
+            ),
+            const SizedBox(height: 80), // Space for FAB
           ],
         ),
       ),
@@ -137,29 +174,71 @@ class OrganizationDashboard extends StatelessWidget {
     );
   }
 
+  @override
   Widget _buildLiveStatusGrid() {
+    // 1. Calculate the start of the current day (00:00:00)
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
     return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent:
-            250, // కార్డ్ గరిష్ట వెడల్పును 250 కి పరిమితం చేస్తుంది
+        maxCrossAxisExtent: 250,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.3, // కార్డ్ పొడవు, వెడల్పు నిష్పత్తి
+        childAspectRatio: 1.3,
       ),
       children: [
-        _buildStatCard(
-          'Sales Today',
-          '₹12,450',
-          Icons.trending_up,
-          Colors.green,
+        // --- LIVE SALES TODAY STREAM ---
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('organizations')
+              .doc(organization.id)
+              .collection('sales')
+              .where(
+                'timestamp',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+              )
+              .snapshots(),
+          builder: (context, snapshot) {
+            double totalRevenue = 0;
+
+            if (snapshot.hasData) {
+              // Aggregate netPayable from all sales today
+              for (var doc in snapshot.data!.docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                totalRevenue += (data['netPayable'] ?? 0).toDouble();
+              }
+            }
+
+            return _buildStatCard(
+              'Sales Today',
+              '₹${totalRevenue.toStringAsFixed(0)}', // Live aggregated value
+              Icons.trending_up,
+              snapshot.hasError ? Colors.grey : Colors.green,
+            );
+          },
         ),
-        _buildStatCard(
-          'Low Stock',
-          '05 Items',
-          Icons.warning_amber_rounded,
-          Colors.red,
+
+        // --- LIVE LOW STOCK STREAM ---
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('organizations')
+              .doc(organization.id)
+              .collection('inventory')
+              .where('stock', isLessThan: 5) // Assuming 5 is your threshold
+              .snapshots(),
+          builder: (context, snapshot) {
+            final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+
+            return _buildStatCard(
+              'Low Stock',
+              '${count.toString().padLeft(2, '0')} Items',
+              Icons.warning_amber_rounded,
+              count > 0 ? Colors.red : Colors.grey,
+            );
+          },
         ),
       ],
     );

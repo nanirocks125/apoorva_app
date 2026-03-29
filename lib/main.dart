@@ -8,7 +8,9 @@ import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
+import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/user/users_screen.dart';
+import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,6 +48,19 @@ class ApoorvaApp extends StatelessWidget {
         if (settings.name == '/staff') {
           final org = settings.arguments as Organization;
           return MaterialPageRoute(builder: (context) => UserScreen(org: org));
+        }
+
+        if (settings.name == '/scripts') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => ScriptsScreen(orgId: org.id),
+          );
+        }
+        if (settings.name == '/whatsapp-queue') {
+          final org = settings.arguments as Organization;
+          return MaterialPageRoute(
+            builder: (context) => WhatsappQueueScreen(orgId: org.id),
+          );
         }
 
         if (settings.name == '/pos') {
