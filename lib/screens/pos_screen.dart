@@ -1,3 +1,5 @@
+import 'package:apoorva_app/model/cart/cart_item.dart';
+import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:flutter/material.dart';
 
@@ -20,10 +22,94 @@ class _PosScreenState extends State<PosScreen> {
   // ];
 
   OrganizationService get _orgService => OrganizationService();
+  final PosCart _cart = PosCart();
 
-  void _openSmartCalculator(String category) {
-    // ఇక్కడ స్టిక్కర్ ధర మరియు 5%, 10% డిస్కౌంట్ బటన్లతో
-    // క్యాలిక్యులేటర్ ఓపెన్ అవుతుంది.
+  void _openSmartCalculator(Map<String, dynamic> category) {
+    final TextEditingController priceController = TextEditingController();
+    double selectedDiscount = 0.0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Adding ${category['name']}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(
+                  labelText:
+                      'Sticker Price', // As per comfort reference [cite: 25]
+                  prefixText: '₹ ',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              // Discount Quick-Keys
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [0.0, 5.0, 10.0, 15.0]
+                    .map(
+                      (pct) => ChoiceChip(
+                        label: Text('${pct.toInt()}% Off'),
+                        selected: selectedDiscount == pct,
+                        onSelected: (selected) =>
+                            setModalState(() => selectedDiscount = pct),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                onPressed: () {
+                  final double? price = double.tryParse(priceController.text);
+                  if (price != null && price > 0) {
+                    _updateCart(() {
+                      _cart.items.add(
+                        CartItem(
+                          categoryId: category['id'],
+                          categoryName: category['name'],
+                          stickerPrice: price,
+                          discountPercent: selectedDiscount,
+                        ),
+                      );
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('ADD TO CART'),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper to refresh UI
+  void _updateCart(VoidCallback fn) {
+    setState(fn);
   }
 
   @override
@@ -38,6 +124,11 @@ class _PosScreenState extends State<PosScreen> {
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: _orgService.getLiveCategories(widget.orgId),
               builder: (context, snapshot) {
+                print('error ${snapshot.error}');
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -67,7 +158,8 @@ class _PosScreenState extends State<PosScreen> {
                       cat['current_stock'].toString(),
                       cat['is_hotkey'] ?? false,
                       cat['social_media_link'],
-                      () => {},
+                      () => _openSmartCalculator(cat),
+                      // () => {},
                       // () => _openSmartCalculator(
                       //   cat,
                       // ), // బల్క్ కేటగిరీ లెవెల్ ట్రాకింగ్ [cite: 8]
@@ -147,25 +239,6 @@ class _PosScreenState extends State<PosScreen> {
     );
   }
 
-  Widget _buildCategoryButton(String label) {
-    return InkWell(
-      onTap: () => _openSmartCalculator(label),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCartSummary() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -175,19 +248,33 @@ class _PosScreenState extends State<PosScreen> {
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text('Items: 2'), Text('Total: ₹2,450')],
+            children: [
+              Text(
+                'Items: ${_cart.items.length}',
+                style: const TextStyle(fontSize: 16),
+              ),
+              Text(
+                'Total: ₹${_cart.totalPayable.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
-              backgroundColor: Colors.green,
+              backgroundColor: _cart.items.isEmpty ? Colors.grey : Colors.green,
             ),
-            onPressed: () {
-              /* Tender Splitting Screen కి నావిగేట్ చేయండి  */
-            },
+            onPressed: _cart.items.isEmpty
+                ? null
+                : () {
+                    // TODO: Navigate to Tender Splitting Screen
+                  },
             child: const Text(
               'CHECKOUT',
               style: TextStyle(color: Colors.white),
@@ -197,4 +284,23 @@ class _PosScreenState extends State<PosScreen> {
       ),
     );
   }
+
+  // Widget _buildCategoryButton(String label) {
+  //   return InkWell(
+  //     onTap: () => _openSmartCalculator(label),
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         color: Colors.orange.withOpacity(0.1),
+  //         borderRadius: BorderRadius.circular(16),
+  //         border: Border.all(color: Colors.orange),
+  //       ),
+  //       child: Center(
+  //         child: Text(
+  //           label,
+  //           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }
