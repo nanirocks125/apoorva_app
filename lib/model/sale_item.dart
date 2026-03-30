@@ -1,5 +1,13 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'sale_item.g.dart';
+
+@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class SaleItem {
+  // Keeping 'cat_id' for backwards compatibility with your existing data
+  @JsonKey(name: 'cat_id')
   final String categoryId;
+
   final int qty;
   final double stickerPrice;
   final double finalPrice;
@@ -11,12 +19,9 @@ class SaleItem {
     required this.finalPrice,
   });
 
-  factory SaleItem.fromMap(Map<String, dynamic> data) {
-    return SaleItem(
-      categoryId: data['cat_id'] ?? '',
-      qty: data['qty'] ?? 1,
-      stickerPrice: (data['sticker_price'] ?? 0).toDouble(),
-      finalPrice: (data['final_price'] ?? 0).toDouble(),
-    );
-  }
+  // --- JSON Logic ---
+  factory SaleItem.fromJson(Map<String, dynamic> json) =>
+      _$SaleItemFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SaleItemToJson(this);
 }
