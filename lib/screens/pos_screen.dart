@@ -69,37 +69,82 @@ class _PosScreenState extends State<PosScreen> {
       ),
       body: Column(
         children: [
-          // 1. CUSTOMER INPUT: Priority placement at the top
-          _buildCustomerDataHeader(),
+          // Wrap everything except the footer in an Expanded + CustomScrollView
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                // 1. Customer Fields
+                SliverToBoxAdapter(child: _buildCustomerDataHeader()),
 
-          const Divider(height: 1),
-          // 1. VISUAL DASHBOARD: Now shrinks to fit content [cite: 36]
-          _buildCategoryGrid(),
+                const SliverToBoxAdapter(
+                  child: Divider(height: 1),
+                ), // Replace the old grid with the new Row
+                _buildHotKeyRow(),
 
-          const Divider(height: 1, thickness: 1),
+                // 2. The Category Grid
+                // We wrap your grid in a SliverToBoxAdapter so it stays
+                // as part of the main scroll flow.
+                // SliverToBoxAdapter(child: _buildCategoryGrid()),
+                const SliverToBoxAdapter(
+                  child: Divider(height: 1, thickness: 1),
+                ),
 
-          // 2. CURRENT CART: Header [cite: 36]
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey.shade50,
-            child: Text(
-              'CURRENT CART',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade500,
-                letterSpacing: 1.1,
-              ),
+                // 3. Cart Header
+                SliverToBoxAdapter(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: Colors.grey.shade50,
+                    child: Text(
+                      'CURRENT CART',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade500,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 4. The Cart List
+                // We convert your ListView into a SliverList
+                _buildSliverCartList(),
+              ],
             ),
           ),
 
-          // 3. CART LIST: Takes the REMAINING space [cite: 36]
-          Expanded(child: _buildCartList()),
-
-          // 4. CART SUMMARY & CHECKOUT [cite: 36]
+          // 5. Fixed Bottom Summary
           _buildCartSummary(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSliverCartList() {
+    if (_cart.items.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(40.0),
+          child: Center(
+            child: Text('Cart is empty', style: TextStyle(color: Colors.grey)),
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      sliver: SliverList.builder(
+        itemCount: _cart.items.length,
+        itemBuilder: (context, index) {
+          final item = _cart.items[index];
+          return Card(
+            // ... (Your existing Card/ListTile code here)
+          );
+        },
       ),
     );
   }
@@ -206,27 +251,12 @@ class _PosScreenState extends State<PosScreen> {
         ),
         child: Stack(
           children: [
-            // Social Media Link Icon
-            // if (socialLink != null && socialLink.isNotEmpty)
-            //   Positioned(
-            //     top: 8,
-            //     right: 8,
-            //     child: IconButton(
-            //       icon: const Icon(
-            //         Icons.instagram,
-            //         color: Colors.pink,
-            //         size: 20,
-            //       ),
-            //       onPressed: () =>
-            //           _launchURL(socialLink), // Social Media Link Mapper
-            //     ),
-            //   ),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    category.name,
+                    '${category.billMachineNumber} - ${category.name}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -665,5 +695,194 @@ class _PosScreenState extends State<PosScreen> {
   // Helper to refresh UI
   void _updateCart(VoidCallback fn) {
     setState(fn);
+  }
+
+  Widget _buildHotKeyRow() {
+    return StreamBuilder<List<Category>>(
+      stream: _orgService.getLiveCategories(widget.organization.id),
+      builder: (context, snapshot) {
+        // FIX: Even the "loading" or "empty" states must return a Sliver
+        if (!snapshot.hasData) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+
+        final allCategories = snapshot.data ?? [];
+        final hotkeys = allCategories.where((c) => c.isHotkey).toList();
+
+        // FIX: Wrap the horizontal row in a SliverToBoxAdapter
+        return SliverToBoxAdapter(
+          child: Container(
+            height: 100,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: hotkeys.length + 1,
+              itemBuilder: (context, index) {
+                if (index < hotkeys.length) {
+                  final cat = hotkeys[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: SizedBox(
+                      width: 120,
+                      child: _buildCategoryCard(
+                        context,
+                        cat,
+                        () => _openSmartCalculator(category: cat),
+                      ),
+                    ),
+                  );
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _buildMoreButton(context, allCategories),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAllCategoriesPicker(
+    BuildContext context,
+    List<Category> categories,
+  ) {
+    String searchQuery = ""; // Local search state
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          // Filter categories based on search query
+          final filteredCategories = categories
+              .where(
+                (c) => c.name.toLowerCase().contains(searchQuery.toLowerCase()),
+              )
+              .toList();
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.8, // Slightly larger to accommodate search bar
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) => Column(
+              children: [
+                // 1. Search Bar Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Search categories...',
+                          prefixIcon: const Icon(Icons.search),
+                          isDense: true,
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          // Update the local state of the bottom sheet
+                          setModalState(() => searchQuery = value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Divider(),
+
+                // 2. Results Grid
+                Expanded(
+                  child: filteredCategories.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 48,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No categories match "$searchQuery"',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
+                        )
+                      : GridView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1.1,
+                              ),
+                          itemCount: filteredCategories.length,
+                          itemBuilder: (context, index) {
+                            final cat = filteredCategories[index];
+                            return _buildCategoryCard(context, cat, () {
+                              Navigator.pop(context); // Close picker
+                              _openSmartCalculator(
+                                category: cat,
+                              ); // Open calculator
+                            });
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMoreButton(BuildContext context, List<Category> allCategories) {
+    return InkWell(
+      onTap: () => _showAllCategoriesPicker(context, allCategories),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 100,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.grid_view_rounded, color: Colors.blueGrey),
+            SizedBox(height: 4),
+            Text('More', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
   }
 }
