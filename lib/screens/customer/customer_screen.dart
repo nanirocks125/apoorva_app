@@ -1,5 +1,6 @@
+import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/services/customer_service.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CustomersScreen extends StatefulWidget {
@@ -39,36 +40,32 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('organizations')
-            .doc(widget.orgId)
-            .collection('customers')
-            .orderBy('name')
-            .snapshots(),
+      body: StreamBuilder<List<Customer>>(
+        stream: CustomerService().getCustomers(widget.orgId),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          if (!snapshot.hasData)
+          }
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
 
-          // Client-side filtering for high-speed search
-          final docs = snapshot.data!.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final name = (data['name'] ?? '').toString().toLowerCase();
-            final phone = (data['phone'] ?? '').toString();
-            return name.contains(_searchQuery) || phone.contains(_searchQuery);
+          // 1. Client-side filtering using typed Model properties
+          final filteredCustomers = snapshot.data!.where((customer) {
+            final query = _searchQuery.toLowerCase();
+            return customer.name.toLowerCase().contains(query) ||
+                customer.phone.contains(query);
           }).toList();
 
-          if (docs.isEmpty)
+          if (filteredCustomers.isEmpty) {
             return const Center(child: Text('No customers found.'));
+          }
 
           return ListView.builder(
-            itemCount: docs.length,
+            itemCount: filteredCustomers.length,
             padding: const EdgeInsets.all(12),
             itemBuilder: (context, index) {
-              final customer = docs[index].data() as Map<String, dynamic>;
-              final String customerId = docs[index].id;
+              final customer = filteredCustomers[index];
 
               return Card(
                 elevation: 0,
@@ -82,9 +79,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     backgroundColor: Colors.orange.shade100,
                     child: Text(
                       // Safety check: if name is empty, show '?' instead of crashing
-                      (customer['name'] != null &&
-                              customer['name'].toString().isNotEmpty)
-                          ? customer['name'][0].toUpperCase()
+                      (customer.name.isNotEmpty)
+                          ? customer.name[0].toUpperCase()
                           : '?',
                       style: const TextStyle(
                         color: Colors.orange,
@@ -93,10 +89,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     ),
                   ),
                   title: Text(
-                    customer['name'],
+                    customer.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(customer['phone']),
+                  subtitle: Text(customer.phone),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -106,15 +102,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           color: Colors.blue,
                         ),
                         onPressed: () =>
-                            launchUrl(Uri.parse("tel:${customer['phone']}")),
+                            launchUrl(Uri.parse("tel:${customer.phone}")),
                       ),
                       IconButton(
                         icon: const Icon(Icons.history, color: Colors.teal),
-                        onPressed: () => _viewPurchaseHistory(
-                          customerId,
-                          customer['name'],
-                          customer['phone'],
-                        ),
+                        onPressed: () => _viewPurchaseHistory(customer),
                       ),
                     ],
                   ),
@@ -128,24 +120,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 
-  void _viewPurchaseHistory(
-    String customerId,
-    String customerName,
-    String customerPhone,
-  ) {
+  void _viewPurchaseHistory(Customer customer) {
     Navigator.pushNamed(
       context,
       '/customer-sales-history',
-      arguments: {
-        'orgId': widget.orgId,
-        'customerId': customerId,
-        'customerName': customerName,
-        'customerPhone': customerPhone,
-      },
+      arguments: {'orgId': widget.orgId, 'customer': customer},
     );
   }
 
-  void _showCustomerDetails(Map<String, dynamic> customer) {
+  void _showCustomerDetails(Customer customer) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -158,11 +141,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              customer['name'],
+              customer.name,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(
-              customer['phone'],
+              customer.phone,
               style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const Divider(height: 32),
@@ -177,7 +160,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               children: [
                 const Text('Total Visits:'),
                 Text(
-                  '${customer['visitCount'] ?? 1}',
+                  '${customer.visitCount}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

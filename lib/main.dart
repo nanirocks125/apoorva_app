@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
@@ -73,9 +74,7 @@ class ApoorvaApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) => CustomerHistoryScreen(
               orgId: args['orgId'],
-              customerId: args['customerId'],
-              customerName: args['customerName'],
-              customerPhone: args['customerPhone'],
+              customer: args['customer'] as Customer,
             ),
           );
         }

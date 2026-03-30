@@ -1,25 +1,22 @@
+import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class CustomerHistoryScreen extends StatelessWidget {
   final String orgId;
-  final String customerId;
-  final String customerName;
-  final String customerPhone;
+  final Customer customer;
 
   const CustomerHistoryScreen({
     super.key,
     required this.orgId,
-    required this.customerId,
-    required this.customerName,
-    required this.customerPhone,
+    required this.customer,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('$customerName\'s Purchases')),
+      appBar: AppBar(title: Text('${customer.name}\'s Purchases')),
       body: StreamBuilder<QuerySnapshot>(
         // Filtering by customerId to ensure zero discrepancy
         stream: FirebaseFirestore.instance
@@ -28,7 +25,7 @@ class CustomerHistoryScreen extends StatelessWidget {
             .collection('sales')
             .where(
               'customerPhone',
-              isEqualTo: customerPhone,
+              isEqualTo: customer.phone,
             ) // Using the phone number string            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
