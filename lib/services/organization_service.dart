@@ -107,7 +107,7 @@ class OrganizationService {
   }
 
   Stream<List<Category>> getLiveCategories(String orgId) {
-    return FirebaseFirestore.instance
+    return _db
         .collection('organizations')
         .doc(orgId)
         .collection('inventory')

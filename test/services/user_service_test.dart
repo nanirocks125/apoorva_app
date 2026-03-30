@@ -105,7 +105,7 @@ void main() {
         'id': uid,
         'name': 'Apoorva Admin',
         'email': 'admin@apoorva.com',
-        'role': 'superAdmin',
+        'role': 'super_admin',
       });
 
       final result = await userService.getUserById(uid);

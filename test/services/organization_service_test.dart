@@ -95,6 +95,7 @@ void main() {
             .doc(orgId)
             .collection('inventory')
             .add({
+              'id': 'cat_001', // ✅ Add this! The model needs an ID string
               'name': 'Gold Rings',
               'billMachineNumber': 5,
               'currentStock': 10,

@@ -7,12 +7,17 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class FakeLaunchOptions extends Fake implements LaunchOptions {}
+
 // Mocking the URL Launcher Platform
 class MockUrlLauncher extends Mock
     with MockPlatformInterfaceMixin
     implements UrlLauncherPlatform {}
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(FakeLaunchOptions());
+  });
   late FakeFirebaseFirestore fakeDb;
   late WhatsAppService whatsappService;
   late MockUrlLauncher mockLauncher;

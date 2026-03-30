@@ -48,6 +48,8 @@ void main() {
               'id': 'existing_id',
               'name': 'Silver Rings',
               'billMachineNumber': 15,
+              'currentStock': 0, // ✅ Add this
+              'isHotkey': false, // ✅ Add this
             });
 
         // 2. Attempt: Add a NEW category with the same number 15
@@ -110,8 +112,20 @@ void main() {
             .doc(orgId)
             .collection('inventory');
 
-        await coll.add({'name': 'Z', 'billMachineNumber': 99, 'id': 'id1'});
-        await coll.add({'name': 'A', 'billMachineNumber': 1, 'id': 'id2'});
+        await coll.add({
+          'name': 'Z',
+          'billMachineNumber': 99,
+          'id': 'id1',
+          'currentStock': 0,
+          'isHotkey': false,
+        });
+        await coll.add({
+          'name': 'A',
+          'billMachineNumber': 1,
+          'id': 'id2',
+          'currentStock': 0,
+          'isHotkey': false,
+        });
 
         final stream = inventoryService.getCategories(orgId);
         final results = await stream.first;
