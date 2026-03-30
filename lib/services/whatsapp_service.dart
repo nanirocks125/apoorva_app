@@ -5,8 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class WhatsAppService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  WhatsAppService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   Future<void> saveScript(String orgId, WhatsAppScript script) async {
     try {
       // 1. Create a reference to a NEW document (this doesn't save it yet)
@@ -45,7 +47,7 @@ class WhatsAppService {
         .collection('organizations')
         .doc(orgId)
         .collection('sales')
-        .where('whatsapp_status', isEqualTo: 'unsent')
+        .where('whatsappStatus', isEqualTo: 'unsent')
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map(

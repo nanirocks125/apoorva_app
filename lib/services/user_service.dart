@@ -8,7 +8,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class UserService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  // Defaults to real Firestore, but accepts Fake for tests
+  UserService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
 
   Future<AppUser> createIdentityAndProfile({
     required AppUser user,
