@@ -1,10 +1,11 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:apoorva_app/services/whatsapp_service.dart';
+import 'package:apoorva_app/services/sale_service.dart'; // assuming markAsSent is here
 
 class WhatsappQueueScreen extends StatelessWidget {
-  final String orgId; // Foundation for multi-tenancy
+  final String orgId;
 
   const WhatsappQueueScreen({super.key, required this.orgId});
 
@@ -13,27 +14,19 @@ class WhatsappQueueScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Unsent Bills Queue'),
-        backgroundColor: const Color(0xFF25D366), // WhatsApp Brand Color
+        backgroundColor: const Color(0xFF25D366),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        // Only fetch sales marked as 'unsent' to maintain Cash Integrity [cite: 9, 43]
-        stream: FirebaseFirestore.instance
-            .collection('organizations')
-            .doc(orgId)
-            .collection('sales')
-            .where('whatsapp_status', isEqualTo: 'unsent')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
+      body: StreamBuilder<List<Sale>>(
+        // 1. Using Typed Stream from Service
+        stream: WhatsAppService().getUnsentSales(orgId),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            print('error: ${snapshot.error}');
+          if (snapshot.hasError)
             return Center(child: Text('Error: ${snapshot.error}'));
-          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final sales = snapshot.data!.docs;
+          final sales = snapshot.data ?? [];
           if (sales.isEmpty) {
             return const Center(child: Text('All bills are synced! 🎉'));
           }
@@ -42,9 +35,7 @@ class WhatsappQueueScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: sales.length,
             itemBuilder: (context, index) {
-              final saleDoc = sales[index];
-              final sale = saleDoc.data() as Map<String, dynamic>;
-              final String saleId = saleDoc.id;
+              final sale = sales[index];
 
               return Card(
                 elevation: 0,
@@ -55,27 +46,24 @@ class WhatsappQueueScreen extends StatelessWidget {
                 ),
                 child: ListTile(
                   title: Text(
-                    '${sale['customerName']} - ₹${sale['netPayable']}',
+                    '${sale.customerName} - ₹${sale.netPayable.toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text('ID: ${saleId.substring(0, 8)}...'),
+                  subtitle: Text('ID: ${sale.id.substring(0, 8)}...'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // STEP 1: Select Script & Share [cite: 36, 40]
                       IconButton(
                         icon: const Icon(
                           Icons.chat_bubble_outline,
                           color: Colors.green,
                         ),
-                        onPressed: () =>
-                            _openScriptLibrary(context, saleId, sale),
+                        onPressed: () => _openScriptLibrary(context, sale),
                         tooltip: 'Select Script and Share',
                       ),
                       const VerticalDivider(),
-                      // STEP 2: Manual Override [cite: 43]
                       TextButton(
-                        onPressed: () => _markAsSent(context, saleId),
+                        onPressed: () => _handleMarkAsSent(context, sale.id),
                         child: const Text(
                           'MARK SENT',
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -92,12 +80,7 @@ class WhatsappQueueScreen extends StatelessWidget {
     );
   }
 
-  // Opens the Caption & Script Library bottom sheet
-  void _openScriptLibrary(
-    BuildContext context,
-    String saleId,
-    Map<String, dynamic> saleData,
-  ) {
+  void _openScriptLibrary(BuildContext context, Sale sale) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -115,17 +98,13 @@ class WhatsappQueueScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                // Fetch organization-specific scripts
-                stream: FirebaseFirestore.instance
-                    .collection('organizations')
-                    .doc(orgId)
-                    .collection('scripts')
-                    .snapshots(),
+              child: StreamBuilder<List<WhatsAppScript>>(
+                // 2. Using Typed Scripts Stream
+                stream: WhatsAppService().getScriptsStream(orgId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData)
                     return const Center(child: CircularProgressIndicator());
-                  final scripts = snapshot.data!.docs;
+                  final scripts = snapshot.data ?? [];
 
                   if (scripts.isEmpty)
                     return const Center(child: Text('No scripts available.'));
@@ -133,21 +112,17 @@ class WhatsappQueueScreen extends StatelessWidget {
                   return ListView.builder(
                     itemCount: scripts.length,
                     itemBuilder: (context, idx) {
-                      final script =
-                          scripts[idx].data() as Map<String, dynamic>;
+                      final script = scripts[idx];
                       return ListTile(
-                        title: Text(script['title'] ?? 'Untitled'),
-                        subtitle: Text(script['language'] ?? 'English'),
+                        title: Text(script.title),
+                        subtitle: Text(script.language),
                         trailing: const Icon(Icons.send, color: Colors.green),
                         onTap: () {
-                          Navigator.pop(context); // Close sheet
+                          Navigator.pop(context);
                           _processWhatsAppShare(
                             context: context,
-                            orgId: orgId,
-                            saleId: saleId,
-                            phone: saleData['customerPhone'] ?? '',
-                            template: script['content'] ?? '',
-                            saleData: saleData,
+                            sale: sale,
+                            script: script,
                           );
                         },
                       );
@@ -164,37 +139,19 @@ class WhatsappQueueScreen extends StatelessWidget {
 
   Future<void> _processWhatsAppShare({
     required BuildContext context,
-    required String orgId,
-    required String saleId,
-    required String phone,
-    required String template,
-    required Map<String, dynamic> saleData,
+    required Sale sale,
+    required WhatsAppScript script,
   }) async {
-    // 1. Placeholder Replacement
-    String message = template
-        .replaceAll('[NAME]', saleData['customerName'] ?? 'Customer')
-        .replaceAll('[AMOUNT]', '₹${saleData['netPayable']}')
-        .replaceAll('[ID]', saleId);
-
-    // 2. Add Mandatory Care Instructions [cite: 43, 44]
-    message +=
-        "\n\n✨ Care Tip: Keep jewelry away from perfumes and water to maintain shine!";
-
-    // 3. Platform-Specific URI [cite: 58]
-    final Uri url = kIsWeb
-        ? Uri.parse("https://wa.me/$phone?text=${Uri.encodeComponent(message)}")
-        : Uri.parse(
-            "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
-          );
+    // 3. Centralized Formatting logic from the model
+    final String message = script.formatMessage(sale);
 
     try {
-      final bool launched = await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
+      await WhatsAppService().launchWhatsApp(
+        phone: sale.customerPhone,
+        message: message,
       );
 
-      if (launched && context.mounted) {
-        // 4. Manual Confirmation Dialog to ensure Zero Discrepancy [cite: 22, 37]
+      if (context.mounted) {
         final bool? isSent = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
@@ -215,25 +172,17 @@ class WhatsappQueueScreen extends StatelessWidget {
         );
 
         if (isSent == true) {
-          await _markAsSent(context, saleId);
+          await _handleMarkAsSent(context, sale.id);
         }
       }
     } catch (e) {
-      debugPrint("Launch Error: $e");
+      debugPrint("WhatsApp Launch Error: $e");
     }
   }
 
-  Future<void> _markAsSent(BuildContext context, String saleId) async {
-    // Core POS logic: reconcile digital record with physical activity [cite: 9, 36, 43]
-    await FirebaseFirestore.instance
-        .collection('organizations')
-        .doc(orgId)
-        .collection('sales')
-        .doc(saleId)
-        .update({
-          'whatsapp_status': 'sent',
-          'last_shared_at': FieldValue.serverTimestamp(),
-        });
+  Future<void> _handleMarkAsSent(BuildContext context, String saleId) async {
+    // Reconciling digital record with physical activity
+    await SaleService().markSaleAsSent(orgId: orgId, saleId: saleId);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

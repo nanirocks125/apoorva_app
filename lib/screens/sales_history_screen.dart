@@ -1,3 +1,6 @@
+import 'package:apoorva_app/enum/payment_mode.dart';
+import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -46,38 +49,33 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        // Scoped to the organization and sorted by time for Cash Integrity
-        stream: FirebaseFirestore.instance
-            .collection('organizations')
-            .doc(widget.orgId)
-            .collection('sales')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
+      body: StreamBuilder<List<Sale>>(
+        // 1. Typed Stream using SaleService
+        stream: SaleService().getSalesByDate(widget.orgId, _selectedDate),
         builder: (context, snapshot) {
           if (snapshot.hasError)
             return Center(child: Text('Error: ${snapshot.error}'));
           if (!snapshot.hasData)
             return const Center(child: CircularProgressIndicator());
 
-          // Client-side filtering for high-speed search across the daily list
-          final docs = snapshot.data!.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final name = (data['customerName'] ?? '').toString().toLowerCase();
-            final id = doc.id.toLowerCase();
+          // 2. Filter list based on search query
+          final sales = snapshot.data!.where((sale) {
+            final name = sale.customerName.toLowerCase();
+            final id = sale.id.toLowerCase();
             return name.contains(_searchQuery) || id.contains(_searchQuery);
           }).toList();
 
-          if (docs.isEmpty)
-            return const Center(child: Text('No transactions found.'));
+          if (sales.isEmpty) {
+            return const Center(
+              child: Text('No transactions found for this date.'),
+            );
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(12),
-            itemCount: docs.length,
+            itemCount: sales.length,
             itemBuilder: (context, index) {
-              final sale = docs[index].data() as Map<String, dynamic>;
-              final String saleId = docs[index].id;
-              final DateTime date = (sale['timestamp'] as Timestamp).toDate();
+              final sale = sales[index]; // Now a Sale object!
 
               return Card(
                 elevation: 0,
@@ -87,17 +85,16 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                   side: BorderSide(color: Colors.grey.shade200),
                 ),
                 child: ExpansionTile(
-                  leading: _buildPaymentIcon(sale['paymentMode'] ?? 'Cash'),
+                  // 3. Using Enum and Model properties
+                  leading: _buildPaymentStatusIcon(sale.payments),
                   title: Text(
-                    '₹${sale['netPayable']}',
+                    '₹${sale.netPayable.toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '${sale['customerName']} • ${DateFormat('hh:mm a').format(date)}',
+                    '${sale.customerName} • ${DateFormat('hh:mm a').format(sale.timestamp)}',
                   ),
-                  trailing: _buildShareStatus(
-                    sale['whatsapp_status'] ?? 'unsent',
-                  ),
+                  trailing: _buildShareStatus(sale.whatsappStatus),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -105,38 +102,33 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Divider(),
-                          _buildInfoRow('Full Bill ID', saleId),
-                          _buildInfoRow(
-                            'Payment Mode',
-                            sale['paymentMode'] ?? 'Cash',
-                          ),
-                          _buildInfoRow(
-                            'Date',
-                            DateFormat('dd MMM yyyy').format(date),
-                          ),
+                          _buildInfoRow('Full Bill ID', sale.id),
+                          _buildInfoRow('Phone', sale.customerPhone),
+                          _buildInfoRow('Source', sale.source),
                           const SizedBox(height: 12),
                           const Text(
                             'Items Purchased:',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          ...(sale['items'] as List? ?? [])
-                              .map(
-                                (item) => Text(
-                                  '• ${item['name']} (₹${item['price']})',
-                                ),
-                              )
-                              .toList(),
+                          ...sale.items.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '• ${item.categoryId} - ₹${item.finalPrice} (Qty: ${item.qty})',
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               OutlinedButton.icon(
-                                onPressed: () => _reshareBill(saleId, sale),
+                                onPressed: () => _reshareBill(sale),
                                 icon: const Icon(Icons.share),
                                 label: const Text('Reshare'),
                               ),
                               ElevatedButton.icon(
-                                onPressed: () => _printBill(saleId, sale),
+                                onPressed: () => _printBill(sale),
                                 icon: const Icon(Icons.print),
                                 label: const Text('Print PDF'),
                               ),
@@ -195,6 +187,19 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     );
   }
 
+  // UI Helpers updated for the model
+  Widget _buildPaymentStatusIcon(Map<PaymentMode, double> payments) {
+    // Determine the primary payment mode (the one with highest amount)
+    final primaryMode = payments.entries
+        .reduce((a, b) => a.value > b.value ? a : b)
+        .key;
+
+    return CircleAvatar(
+      backgroundColor: Colors.red.withOpacity(0.1),
+      child: Icon(primaryMode.icon, color: Colors.red, size: 20),
+    );
+  }
+
   // --- ACTIONS ---
 
   Future<void> _selectDate(BuildContext context) async {
@@ -207,11 +212,11 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _reshareBill(String id, Map<String, dynamic> data) {
+  void _reshareBill(Sale sale) {
     // Navigates back to the Script Library to reshare
   }
 
-  void _printBill(String id, Map<String, dynamic> data) {
+  void _printBill(Sale sale) {
     // Logic to regenerate the PDF Receipt
   }
 }

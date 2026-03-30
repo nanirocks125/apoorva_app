@@ -37,4 +37,61 @@ class SaleService {
 
     return saleRef.id;
   }
+
+  Future<void> markSaleAsSent({
+    required String orgId,
+    required String saleId,
+  }) async {
+    try {
+      final saleRef = _db
+          .collection('organizations')
+          .doc(orgId)
+          .collection('sales')
+          .doc(saleId);
+
+      await saleRef.update({
+        'whatsapp_status': 'sent',
+        'last_shared_at': FieldValue.serverTimestamp(), // Audit trail కోసం
+      });
+    } catch (e) {
+      print("Error updating sale status: $e");
+      rethrow; // UI లో ఎర్రర్ చూపించడానికి rethrow చేస్తున్నాం
+    }
+  }
+
+  // SaleService క్లాస్ లోపల:
+  Stream<List<Sale>> getSalesByDate(String orgId, DateTime date) {
+    // రోజు ప్రారంభం మరియు ముగింపు సమయాలు
+    DateTime start = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    DateTime end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    return _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales')
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Sale.fromFirestore(doc)).toList(),
+        );
+  }
+
+  // SaleService క్లాస్ లోపల:
+  Stream<List<Sale>> getCustomerSales(String orgId, String phone) {
+    return _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales')
+        // DB లో snake_case (customer_phone) వాడుతుంటే ఇక్కడ మార్చండి
+        .where('customer_phone', isEqualTo: phone)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Sale.fromFirestore(doc)).toList(),
+        );
+  }
 }

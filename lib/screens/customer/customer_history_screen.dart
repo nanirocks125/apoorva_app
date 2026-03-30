@@ -1,4 +1,6 @@
 import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -17,40 +19,28 @@ class CustomerHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('${customer.name}\'s Purchases')),
-      body: StreamBuilder<QuerySnapshot>(
-        // Filtering by customerId to ensure zero discrepancy
-        stream: FirebaseFirestore.instance
-            .collection('organizations')
-            .doc(orgId)
-            .collection('sales')
-            .where(
-              'customerPhone',
-              isEqualTo: customer.phone,
-            ) // Using the phone number string            .orderBy('timestamp', descending: true)
-            .snapshots(),
+      body: StreamBuilder<List<Sale>>(
+        // 1. Typed Stream using SaleService
+        stream: SaleService().getCustomerSales(orgId, customer.phone),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('error fetching sales: ${snapshot.error}');
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final sales = snapshot.data!.docs;
+          final sales = snapshot.data ?? [];
 
           if (sales.isEmpty) {
-            return const Center(
-              child: Text('No purchase history found for this customer.'),
-            );
+            return const Center(child: Text('No purchase history found.'));
           }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: sales.length,
             itemBuilder: (context, index) {
-              final sale = sales[index].data() as Map<String, dynamic>;
-              final date = (sale['timestamp'] as Timestamp).toDate();
+              final sale = sales[index]; // Now a Sale object!
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -60,18 +50,16 @@ class CustomerHistoryScreen extends StatelessWidget {
                 child: ExpansionTile(
                   leading: const Icon(Icons.receipt_long, color: Colors.teal),
                   title: Text(
-                    '₹${sale['netPayable']}',
+                    '₹${sale.netPayable.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
                   ),
                   subtitle: Text(
-                    DateFormat('dd MMM yyyy, hh:mm a').format(date),
+                    DateFormat('dd MMM yyyy, hh:mm a').format(sale.timestamp),
                   ),
-                  trailing: _buildStatusBadge(
-                    sale['whatsapp_status'] ?? 'unsent',
-                  ),
+                  trailing: _buildStatusBadge(sale.whatsappStatus),
                   children: [
                     const Divider(),
                     Padding(
@@ -79,35 +67,32 @@ class CustomerHistoryScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildDetailRow('Bill ID:', sale.id.substring(0, 8)),
                           _buildDetailRow(
-                            'Bill ID:',
-                            sales[index].id.substring(0, 8),
-                          ),
-                          _buildDetailRow(
-                            'Payment:',
-                            sale['paymentMode'] ?? 'N/A',
+                            'Discount:',
+                            '₹${sale.overallDiscountAmount}',
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            'Items:',
+                            'Items Purchased:',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          // Dynamically listing items from the sale
-                          ...(sale['items'] as List? ?? [])
-                              .map(
-                                (item) => Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    '• ${item['name']} (₹${item['price']})',
-                                  ),
-                                ),
-                              )
-                              .toList(),
+
+                          // SaleItem మోడల్ నుండి ఐటెమ్స్ మ్యాపింగ్
+                          ...sale.items.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '• ${item.categoryId} (₹${item.finalPrice})',
+                              ),
+                            ),
+                          ),
+
                           const SizedBox(height: 16),
                           Center(
                             child: OutlinedButton.icon(
                               onPressed: () {
-                                // Logic to regenerate PDF from existing sale data
+                                // Existing PDF logic with sale object
                               },
                               icon: const Icon(Icons.picture_as_pdf),
                               label: const Text('View/Share Bill'),

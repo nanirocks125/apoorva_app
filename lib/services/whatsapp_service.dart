@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +18,23 @@ class WhatsAppService {
         .map(
           (snapshot) => snapshot.docs
               .map((doc) => WhatsAppScript.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  Stream<List<Sale>> getUnsentSales(String orgId) {
+    return _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales')
+        .where('whatsapp_status', isEqualTo: 'unsent')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => Sale.fromFirestore(doc),
+              ) // Bridge వాడటం వల్ల ID కూడా వస్తుంది
               .toList(),
         );
   }
