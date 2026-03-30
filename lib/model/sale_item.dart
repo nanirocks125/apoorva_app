@@ -7,6 +7,7 @@ class SaleItem {
   // Keeping 'cat_id' for backwards compatibility with your existing data
   @JsonKey(name: 'cat_id')
   final String categoryId;
+  final String categoryName;
 
   final int qty;
   final double stickerPrice;
@@ -17,6 +18,7 @@ class SaleItem {
     required this.qty,
     required this.stickerPrice,
     required this.finalPrice,
+    required this.categoryName,
   });
 
   double get discountPercent {

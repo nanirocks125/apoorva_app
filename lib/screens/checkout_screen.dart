@@ -80,7 +80,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // We only auto-sync if the user hasn't started a complex split payment
     // Or simply, we update the 'Cash' field whenever the total changes
     setState(() {
-      _paymentControllers['Cash']!.text = _finalTotal.toStringAsFixed(2);
+      _paymentControllers[PaymentMode.cash]!.text = _finalTotal.toStringAsFixed(
+        2,
+      );
     });
   }
 
@@ -123,6 +125,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             _buildSectionHeader('OVERALL DISCOUNT (%)'),
             _buildDiscountChips(),
 
+            const SizedBox(height: 24),
+
+            _buildCartItemsList(),
             const SizedBox(height: 24),
 
             // 3. SETTLEMENT SUMMARY: Now correctly placed before payment
@@ -401,6 +406,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           .map(
             (i) => SaleItem(
               categoryId: i.category.id,
+              categoryName: i.category.name,
               qty: 1, // Change if you support multiple quantities
               stickerPrice: i.stickerPrice,
               finalPrice: i.finalPrice,
@@ -466,5 +472,69 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Widget _buildCartItemsList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('CART ITEMS'),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics:
+                const NeverScrollableScrollPhysics(), // Important inside SingleChildScrollView
+            itemCount: widget.cart.items.length,
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, color: Colors.grey.shade50),
+            itemBuilder: (context, index) {
+              final item = widget.cart.items[index];
+              return Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.category.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2D3436),
+                            ),
+                          ),
+                          Text(
+                            '₹${item.stickerPrice.toStringAsFixed(0)} - ${item.discountPercent.toInt()}%',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '₹${item.finalPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

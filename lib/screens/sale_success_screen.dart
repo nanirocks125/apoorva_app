@@ -59,7 +59,7 @@ class SaleSuccessScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${item.categoryId} (₹${item.stickerPrice.toStringAsFixed(0)})',
+                          '${item.categoryName} (₹${item.stickerPrice.toStringAsFixed(0)})',
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         Text(
