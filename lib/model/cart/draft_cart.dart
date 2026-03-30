@@ -5,7 +5,7 @@ import 'package:apoorva_app/utilities/timestamp_converter.dart';
 
 part 'draft_cart.g.dart';
 
-@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
+@JsonSerializable(explicitToJson: true)
 class DraftCart {
   final String id;
   final String customerName;

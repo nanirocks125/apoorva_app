@@ -9,19 +9,19 @@ part of 'internal_transfer.dart';
 InternalTransfer _$InternalTransferFromJson(Map<String, dynamic> json) =>
     InternalTransfer(
       id: json['id'] as String,
-      fromAccountId: json['from_account_id'] as String,
-      toAccountId: json['to_account_id'] as String,
+      fromAccountId: json['fromAccountId'] as String,
+      toAccountId: json['toAccountId'] as String,
       amount: (json['amount'] as num).toDouble(),
-      transferType: json['transfer_type'] as String,
+      transferType: json['transferType'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
 
 Map<String, dynamic> _$InternalTransferToJson(InternalTransfer instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'from_account_id': instance.fromAccountId,
-      'to_account_id': instance.toAccountId,
+      'fromAccountId': instance.fromAccountId,
+      'toAccountId': instance.toAccountId,
       'amount': instance.amount,
-      'transfer_type': instance.transferType,
+      'transferType': instance.transferType,
       'timestamp': instance.timestamp.toIso8601String(),
     };

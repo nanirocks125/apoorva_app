@@ -7,10 +7,15 @@ class SaleItem {
   // Keeping 'cat_id' for backwards compatibility with your existing data
   @JsonKey(name: 'cat_id')
   final String categoryId;
+
+  @JsonKey(defaultValue: '')
   final String categoryName;
 
+  @JsonKey(defaultValue: 0)
   final int qty;
+  @JsonKey(defaultValue: 0)
   final double stickerPrice;
+  @JsonKey(defaultValue: 0)
   final double finalPrice;
 
   SaleItem({

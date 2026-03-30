@@ -8,14 +8,14 @@ part of 'cart_item.dart';
 
 CartItem _$CartItemFromJson(Map<String, dynamic> json) => CartItem(
   category: Category.fromJson(json['category'] as Map<String, dynamic>),
-  stickerPrice: (json['sticker_price'] as num).toDouble(),
-  discountPercent: (json['discount_percent'] as num?)?.toDouble() ?? 0.0,
+  stickerPrice: (json['stickerPrice'] as num).toDouble(),
+  discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0.0,
   quantity: (json['quantity'] as num?)?.toInt() ?? 1,
 );
 
 Map<String, dynamic> _$CartItemToJson(CartItem instance) => <String, dynamic>{
   'category': instance.category.toJson(),
-  'sticker_price': instance.stickerPrice,
-  'discount_percent': instance.discountPercent,
+  'stickerPrice': instance.stickerPrice,
+  'discountPercent': instance.discountPercent,
   'quantity': instance.quantity,
 };

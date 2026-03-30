@@ -53,10 +53,13 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         // 1. Typed Stream using SaleService
         stream: SaleService().getSalesByDate(widget.orgId, _selectedDate),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
+            print('error fetching sales: ${snapshot.error}');
             return Center(child: Text('Error: ${snapshot.error}'));
-          if (!snapshot.hasData)
+          }
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           // 2. Filter list based on search query
           final sales = snapshot.data!.where((sale) {

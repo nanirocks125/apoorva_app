@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'whatsapp_script.g.dart';
 
-@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
+@JsonSerializable(explicitToJson: true)
 class WhatsAppScript {
   final String id;
   final String title;

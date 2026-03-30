@@ -8,20 +8,20 @@ part of 'draft_cart.dart';
 
 DraftCart _$DraftCartFromJson(Map<String, dynamic> json) => DraftCart(
   id: json['id'] as String,
-  customerName: json['customer_name'] as String,
-  customerPhone: json['customer_phone'] as String,
+  customerName: json['customerName'] as String,
+  customerPhone: json['customerPhone'] as String,
   items: (json['items'] as List<dynamic>)
       .map((e) => CartItem.fromJson(e as Map<String, dynamic>))
       .toList(),
   total: (json['total'] as num).toDouble(),
-  createdAt: DateTime.parse(json['created_at'] as String),
+  createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$DraftCartToJson(DraftCart instance) => <String, dynamic>{
   'id': instance.id,
-  'customer_name': instance.customerName,
-  'customer_phone': instance.customerPhone,
+  'customerName': instance.customerName,
+  'customerPhone': instance.customerPhone,
   'items': instance.items.map((e) => e.toJson()).toList(),
   'total': instance.total,
-  'created_at': instance.createdAt.toIso8601String(),
+  'createdAt': instance.createdAt.toIso8601String(),
 };

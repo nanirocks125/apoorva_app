@@ -3,7 +3,7 @@ import 'package:apoorva_app/model/category/category.dart';
 
 part 'cart_item.g.dart';
 
-@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
+@JsonSerializable(explicitToJson: true)
 class CartItem {
   final Category category;
   final double stickerPrice;

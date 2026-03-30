@@ -6,12 +6,10 @@ import 'package:apoorva_app/utilities/timestamp_converter.dart';
 
 part 'sale.g.dart';
 
-@JsonSerializable(
-  explicitToJson: true,
-  fieldRename: FieldRename.snake,
-) // snake_case for DB
+@JsonSerializable(explicitToJson: true)
 class Sale {
   final String id;
+
   final String staffId;
   final String customerPhone;
   final String customerName; // Added for searchability
