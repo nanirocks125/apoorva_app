@@ -16,7 +16,7 @@ class GlobalDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if the user is a Super Admin
-    final bool isSuperAdmin = currentUser.role == SystemRole.superAdmin;
+    final bool isSuperAdmin = currentUser.role == AppUserRole.superAdmin;
 
     return Drawer(
       child: Column(

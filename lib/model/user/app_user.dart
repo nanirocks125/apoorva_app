@@ -1,3 +1,4 @@
+import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/enum/system_role.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -11,7 +12,7 @@ class AppUser {
   final String id;
   final String name;
   final String email;
-  final SystemRole role;
+  final AppUserRole role;
   final String status;
 
   // --- The Multi-Org Upgrade ---
@@ -25,7 +26,7 @@ class AppUser {
     String? id,
     required this.name,
     required this.email,
-    this.role = SystemRole.standard,
+    this.role = AppUserRole.standard,
     this.status = 'Active',
     this.assignedOrgs = const [], // Initialize as empty list
     required this.createdAt,

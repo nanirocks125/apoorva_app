@@ -1,8 +1,8 @@
+import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
-import 'package:apoorva_app/enum/system_role.dart';
 
 void main() {
   final testDate = DateTime(2026, 3, 30, 10, 0, 0);
@@ -19,7 +19,7 @@ void main() {
 
         expect(user.id, isNotEmpty);
         expect(user.id.length, greaterThan(30)); // UUID v4 length check
-        expect(user.role, SystemRole.standard); // Default enum
+        expect(user.role, AppUserRole.standard); // Default enum
       });
 
       test('should use provided ID instead of generating one', () {

@@ -1,4 +1,5 @@
 import 'package:apoorva_app/enum/app_user_role.dart';
+import 'package:apoorva_app/enum/organization_user_role.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
@@ -19,7 +20,7 @@ class _ShopAssignmentPickerState extends State<ShopAssignmentPicker> {
   final UserService _userService = UserService();
 
   String? _selectedOrgId;
-  AppUserRole _selectedRole = AppUserRole.staff;
+  OrganizationUserRole _selectedRole = OrganizationUserRole.staff;
   bool _isSaving = false;
 
   @override
@@ -142,13 +143,13 @@ class _ShopAssignmentPickerState extends State<ShopAssignmentPicker> {
               child: Row(
                 children: [
                   Expanded(
-                    child: DropdownButtonFormField<AppUserRole>(
+                    child: DropdownButtonFormField<OrganizationUserRole>(
                       value: _selectedRole,
                       decoration: const InputDecoration(
                         labelText: 'Role in Shop',
                         border: OutlineInputBorder(),
                       ),
-                      items: AppUserRole.values
+                      items: OrganizationUserRole.values
                           .map(
                             (r) => DropdownMenuItem(
                               value: r,

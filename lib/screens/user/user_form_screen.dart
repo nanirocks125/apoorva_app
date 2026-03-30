@@ -1,3 +1,4 @@
+import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/enum/form_mode.dart';
 import 'package:apoorva_app/enum/organization_user_role.dart';
 import 'package:apoorva_app/enum/system_role.dart';
@@ -25,7 +26,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  SystemRole _selectedSystemRole = SystemRole.standard;
+  AppUserRole _selectedSystemRole = AppUserRole.standard;
   OrganizationUserRole _selectedUserRole =
       OrganizationUserRole.staff; // Default organizational role
 
@@ -38,7 +39,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.user?.name ?? '');
     _emailController = TextEditingController(text: widget.user?.email ?? '');
-    _selectedSystemRole = widget.user?.role ?? SystemRole.standard;
+    _selectedSystemRole = widget.user?.role ?? AppUserRole.standard;
     print(
       'checking permissions for user ${widget.user?.name} with role ${widget.user?.role} on org ${widget.org?.name}',
     );
@@ -52,7 +53,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     // 1. Allow if the user is a Global Super Admin
     final globalUser = await _service.getUserById(currentUser.uid);
     print('global user role: ${globalUser?.role}');
-    if (globalUser?.role == SystemRole.superAdmin) {
+    if (globalUser?.role == AppUserRole.superAdmin) {
       if (mounted) {
         setState(() {
           _isAuthorized = true;
@@ -112,7 +113,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     setState(() => _isLoading = true);
 
     final platformRole = widget.org != null
-        ? SystemRole.standard
+        ? AppUserRole.standard
         : _selectedSystemRole;
 
     final newUserTemplate = AppUser(
@@ -250,13 +251,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
             // --- CONTEXT-AWARE ROLE SELECTION ---
             if (widget.org == null) ...[
               // Platform-level: Super Admin creating global identities
-              DropdownButtonFormField<SystemRole>(
+              DropdownButtonFormField<AppUserRole>(
                 value: _selectedSystemRole,
                 decoration: const InputDecoration(
                   labelText: 'System Access Level',
                   prefixIcon: Icon(Icons.admin_panel_settings),
                 ),
-                items: SystemRole.values
+                items: AppUserRole.values
                     .map(
                       (r) => DropdownMenuItem(
                         value: r,
