@@ -109,8 +109,8 @@ class OrganizationService {
         .doc(orgId)
         .collection('inventory')
         // 1. Ensure 'isHotkey' spelling matches your model (no capital K)
-        .orderBy('isHotkey', descending: true)
-        .orderBy('name')
+        // .orderBy('isHotkey', descending: true)
+        // .orderBy('name')
         .snapshots()
         .map((snapshot) {
           // 2. We must map over 'snapshot.docs' to get a list

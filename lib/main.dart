@@ -19,7 +19,6 @@ import 'package:apoorva_app/screens/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart'; // Ensure you've run 'flutterfire configure'
 
 void main() async {
