@@ -1,6 +1,7 @@
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/screens/checkout_screen.dart';
+import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ class PosScreen extends StatefulWidget {
 class _PosScreenState extends State<PosScreen> {
   OrganizationService get _orgService => OrganizationService();
   final PosCart _cart = PosCart();
+  String?
+  _activeDraftId; // Tracks if the current cart came from a specific draft
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _customerPhoneController =
       TextEditingController();
@@ -139,7 +142,41 @@ class _PosScreenState extends State<PosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Apoorva POS')),
+      appBar: AppBar(
+        title: const Text('Apoorva POS'),
+        actions: [
+          // 1. డ్రాఫ్ట్ గా సేవ్ చేసే బటన్
+          IconButton(
+            icon: const Icon(
+              Icons.pause_circle_filled_outlined,
+              color: Colors.orange,
+            ),
+            tooltip: 'Hold Bill',
+            onPressed: _cart.items.isEmpty ? null : _holdCurrentBill,
+          ),
+          // 2. డ్రాఫ్ట్స్ లిస్ట్ చూసే బటన్ (With Badge)
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('organizations')
+                .doc(widget.orgId)
+                .collection('drafts')
+                .snapshots(),
+            builder: (context, snapshot) {
+              int count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+              return Badge(
+                label: Text(count.toString()),
+                isLabelVisible: count > 0,
+                child: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  onPressed: () =>
+                      _showDraftsList(context, snapshot.data?.docs ?? []),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Column(
         children: [
           // 1. CUSTOMER INPUT: Priority placement at the top
@@ -461,13 +498,28 @@ class _PosScreenState extends State<PosScreen> {
                           builder: (context) => CheckoutScreen(
                             cart: _cart,
                             orgId: widget.orgId,
-                            customerName: _customerNameController.value.text,
-                            customerPhone: _customerPhoneController.value.text,
+                            customerName: _customerNameController.text,
+                            customerPhone: _customerPhoneController.text,
+                            activeDraftId: _activeDraftId,
                           ),
                         ),
                       ).then((sold) {
                         if (sold == true) {
-                          _updateCart(() => _cart.items.clear());
+                          // 1. If it was a resumed draft, delete it now that payment is confirmed
+                          if (_activeDraftId != null) {
+                            DraftService().deleteDraft(
+                              widget.orgId,
+                              _activeDraftId!,
+                            );
+                          }
+
+                          // 2. Clear state for the next customer
+                          _updateCart(() {
+                            _activeDraftId = null;
+                            _cart.items.clear();
+                            _customerNameController.clear();
+                            _customerPhoneController.clear();
+                          });
                         }
                       }),
             child: const Text(
@@ -478,5 +530,96 @@ class _PosScreenState extends State<PosScreen> {
         ],
       ),
     );
+  }
+
+  // 1. ప్రస్తుత బిల్లును హోల్డ్ చేయడం
+  Future<void> _holdCurrentBill() async {
+    await DraftService().saveDraft(
+      orgId: widget.orgId,
+      customerName: _customerNameController.text,
+      customerPhone: _customerPhoneController.text,
+      items: _cart.items,
+      // Pass the activeDraftId here if you want to overwrite instead of creating a new one
+    );
+
+    _updateCart(() {
+      _activeDraftId = null; // Reset
+      _cart.items.clear();
+      _customerNameController.clear();
+      _customerPhoneController.clear();
+    });
+  }
+
+  // 2. హోల్డ్ లో ఉన్న బిల్లుల లిస్ట్ చూపించడం
+  void _showDraftsList(
+    BuildContext context,
+    List<QueryDocumentSnapshot> drafts,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Text(
+              'HOLD BILLS (DRAFTS)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Divider(),
+            Expanded(
+              child: drafts.isEmpty
+                  ? const Center(child: Text("No bills on hold"))
+                  : ListView.builder(
+                      itemCount: drafts.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            drafts[index].data() as Map<String, dynamic>;
+                        return ListTile(
+                          title: Text(
+                            data['customerName'].isEmpty
+                                ? "Walk-in"
+                                : data['customerName'],
+                          ),
+                          subtitle: Text(
+                            "${data['items'].length} items • ₹${data['total']}",
+                          ),
+                          trailing: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.green,
+                          ),
+                          onTap: () {
+                            _resumeDraft(drafts[index].id, data);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 3. డ్రాఫ్ట్ ని మళ్ళీ కార్ట్ లోకి తీసుకురావడం
+  void _resumeDraft(String draftId, Map<String, dynamic> data) {
+    _updateCart(() {
+      _activeDraftId = draftId; // Link this session to the draft
+      _cart.items.clear();
+      _customerNameController.text = data['customerName'];
+      _customerPhoneController.text = data['customerPhone'];
+
+      for (var item in data['items']) {
+        _cart.items.add(
+          CartItem(
+            categoryId: item['categoryId'],
+            categoryName: item['categoryName'],
+            stickerPrice: item['stickerPrice'],
+            discountPercent: item['discountPercent'],
+          ),
+        );
+      }
+    });
+    // REMOVED: DraftService().deleteDraft(widget.orgId, draftId);
   }
 }

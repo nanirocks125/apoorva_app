@@ -1,4 +1,5 @@
 import 'package:apoorva_app/screens/sale_success_screen.dart';
+import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +11,7 @@ class CheckoutScreen extends StatefulWidget {
   final String orgId;
   final String customerName; // Pass these from PosScreen
   final String customerPhone;
+  final String? activeDraftId; // NEW: To handle draft deletion
 
   const CheckoutScreen({
     super.key,
@@ -17,6 +19,7 @@ class CheckoutScreen extends StatefulWidget {
     required this.orgId,
     required this.customerName,
     required this.customerPhone,
+    this.activeDraftId,
   });
 
   @override
@@ -379,12 +382,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // Finalize Sale logic (Include both the discount and the payment breakdown)
-  // Inside _CheckoutScreenState
   Future<void> _finalizeSale() async {
     setState(() => _isProcessing = true);
 
-    // Prepare payment breakdown from the controllers
     Map<String, double> payments = {};
     _selectedModes.forEach((mode, isSelected) {
       if (isSelected) {
@@ -394,20 +394,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
 
     try {
-      final String saleId = await SaleService().confirmSale(
+      // Calling the new Atomic Service Method
+      final String saleId = await SaleService().confirmSaleWithAtomicCleanup(
         orgId: widget.orgId,
-        cart: widget.cart,
         customerName: widget.customerName,
         customerPhone: widget.customerPhone,
+        items: widget.cart.items
+            .map(
+              (i) => {
+                'name': i.categoryName,
+                'stickerPrice': i.stickerPrice,
+                'finalPrice': i.finalPrice,
+                'discountPercent': i.discountPercent,
+              },
+            )
+            .toList(),
+        subtotal: widget.cart.totalPayable,
         overallDiscountPercent: _overallDiscountPercent,
-        overallDiscountAmount: _overallDiscountAmount, // Your calculated getter
+        overallDiscountAmount: _overallDiscountAmount,
         roundOff: double.tryParse(_discountController.text) ?? 0.0,
-        netPayable: _finalTotal, // Your calculated getter
+        netPayable: _finalTotal,
         payments: payments,
+        activeDraftId:
+            widget.activeDraftId, // Batch ensures this is deleted on success
       );
 
+      print("Atomic Transaction Success: Sale recorded and Draft removed.");
+
       if (mounted) {
-        // Show success and return to POS, clearing the cart
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -431,7 +445,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               roundOff: double.tryParse(_discountController.text) ?? 0.0,
               netPayable: _finalTotal,
               payments: payments,
-              orgId: widget.orgId, // Map of {'Cash': 100, 'UPI': 100}
+              orgId: widget.orgId,
             ),
           ),
         );
