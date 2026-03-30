@@ -8,7 +8,6 @@ import 'package:apoorva_app/screens/checkout_screen.dart';
 import 'package:apoorva_app/services/draft_cart_service.dart';
 import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class PosScreen extends StatefulWidget {
@@ -516,25 +515,18 @@ class _PosScreenState extends State<PosScreen> {
     });
   }
 
-  // 1. Named parameters వాడటం వల్ల కోడ్ క్లీన్ గా ఉంటుంది
   void _openSmartCalculator({
     Category? category,
     CartItem? existingItem,
     int? index,
   }) {
-    // ఎడిట్ చేస్తుంటే పాత ప్రైస్, లేకపోతే ఖాళీ
     final TextEditingController priceController = TextEditingController(
       text: existingItem != null
           ? existingItem.stickerPrice.toStringAsFixed(0)
           : '',
     );
-
     double selectedDiscount = existingItem?.discountPercent ?? 0.0;
-
-    // కేటగిరీ ఆబ్జెక్ట్ ని ఎంచుకోవడం
     final currentCategory = existingItem?.category ?? category;
-
-    if (currentCategory == null) return; // Safety check
 
     showModalBottomSheet(
       context: context,
@@ -552,8 +544,8 @@ class _PosScreenState extends State<PosScreen> {
             children: [
               Text(
                 existingItem != null
-                    ? 'Edit ${currentCategory.name}'
-                    : 'Adding ${currentCategory.name}',
+                    ? 'Edit ${currentCategory?.name}'
+                    : 'Adding ${currentCategory?.name}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -569,20 +561,85 @@ class _PosScreenState extends State<PosScreen> {
                 ),
                 keyboardType: TextInputType.number,
                 autofocus: true,
+                onChanged: (_) => setModalState(
+                  () {},
+                ), // ధర మారుతున్నప్పుడు కింద అమౌంట్ అప్‌డేట్ అవుతుంది
               ),
-              // ... (Discount Selection Row) ...
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
+              // --- 1. DISCOUNT CHIPS (తిరిగి వచ్చేసాయి!) ---
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Select Discount",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [0.0, 5.0, 10.0, 15.0, 20.0].map((pct) {
+                  return ChoiceChip(
+                    label: Text('${pct.toInt()}%'),
+                    selected: selectedDiscount == pct,
+                    selectedColor: const Color(0xFFFF5733).withOpacity(0.2),
+                    onSelected: (selected) {
+                      // చిప్ క్లిక్ చేసినప్పుడు డిస్కౌంట్ మారుతుంది + ఫైనల్ ప్రైస్ కూడా అప్‌డేట్ అవుతుంది
+                      setModalState(() => selectedDiscount = pct);
+                    },
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 16),
+              const Divider(),
+
+              // --- 2. FINAL PRICE PREVIEW (రియల్ టైమ్) ---
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Final Price:",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    Builder(
+                      builder: (context) {
+                        final double price =
+                            double.tryParse(priceController.text) ?? 0.0;
+                        // డిస్కౌంట్ తర్వాత వచ్చే అసలు ధర
+                        final double finalPrice =
+                            price * (1 - (selectedDiscount / 100));
+                        return Text(
+                          '₹${finalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF5733),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: const Color(0xFFFF5733),
+                ),
                 onPressed: () {
                   final double? price = double.tryParse(priceController.text);
                   if (price != null && price > 0) {
                     _updateCart(() {
                       final updatedItem = CartItem(
-                        category: currentCategory, // Correct Category Object
+                        category: currentCategory!,
                         stickerPrice: price,
                         discountPercent: selectedDiscount,
                       );
-
                       if (index != null) {
                         _cart.items[index] = updatedItem;
                       } else {
@@ -594,8 +651,10 @@ class _PosScreenState extends State<PosScreen> {
                 },
                 child: Text(
                   existingItem != null ? 'UPDATE ITEM' : 'ADD TO CART',
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
