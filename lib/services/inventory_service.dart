@@ -2,8 +2,10 @@ import 'package:apoorva_app/model/category/category.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InventoryService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  InventoryService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   Future<void> saveCategory(String orgId, Category category) async {
     final collection = _db
         .collection('organizations')

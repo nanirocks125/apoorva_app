@@ -6,7 +6,6 @@ import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/checkout_screen.dart';
 import 'package:apoorva_app/services/draft_cart_service.dart';
-import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:flutter/material.dart';
 
@@ -461,12 +460,16 @@ class _PosScreenState extends State<PosScreen> {
 
   // 1. ప్రస్తుత బిల్లును హోల్డ్ చేయడం
   Future<void> _holdCurrentBill() async {
-    await DraftService().saveDraft(
-      orgId: widget.organization.id,
-      customerName: _customerNameController.text,
-      customerPhone: _customerPhoneController.text,
-      items: _cart.items,
-      // Pass the activeDraftId here if you want to overwrite instead of creating a new one
+    await DraftCartService().saveDraft(
+      widget.organization.id,
+      DraftCart(
+        id: '',
+        customerName: _customerNameController.text,
+        customerPhone: _customerPhoneController.text,
+        items: _cart.items,
+        total: _cart.totalPayable,
+        createdAt: DateTime.now(),
+      ),
     );
 
     _updateCart(() {
@@ -914,7 +917,10 @@ class _PosScreenState extends State<PosScreen> {
       if (sold == true) {
         // 1. If it was a resumed draft, delete it now that payment is confirmed
         if (_activeDraftId != null) {
-          DraftService().deleteDraft(widget.organization.id, _activeDraftId!);
+          DraftCartService().deleteDraft(
+            widget.organization.id,
+            _activeDraftId!,
+          );
         }
 
         // 2. Clear state for the next customer

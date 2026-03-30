@@ -3,7 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 
 class OrganizationService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  OrganizationService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   // Real-time stream: Now returns a clean list of Organization objects
   Stream<List<Organization>> getOrganizations() {
