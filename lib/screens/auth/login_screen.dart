@@ -1,8 +1,8 @@
+import 'package:provider/provider.dart'; // Gives you .read and .watch
+import 'package:apoorva_app/providers/auth_provider.dart'; // Gives you the AuthProvider class
 import 'package:apoorva_app/model/user/app_user.dart';
-import 'package:apoorva_app/screens/home_screen.dart';
-import 'package:apoorva_app/screens/organization/organization_screen.dart';
 import 'package:apoorva_app/services/user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   UserService _userService = UserService();
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleLogin(BuildContext context) async {
     setState(() => _isLoading = true);
     try {
       print(
@@ -43,12 +43,21 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(loggedInUser: loggedInUser),
-          ),
-          // MaterialPageRoute(builder: (context) => OrganizationScreen()),
+        // Save user to global state
+        // Instead of context.read<AuthProvider>()
+        Provider.of<AuthProvider>(context, listen: false).setUser(loggedInUser);
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+          arguments:
+              loggedInUser, // Passing the AppUser object as the required argument
         );
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute(
+        //     builder: (context) => HomeScreen(loggedInUser: loggedInUser),
+        //   ),
+        //   // MaterialPageRoute(builder: (context) => OrganizationScreen()),
+        // );
       }
     } catch (e) {
       setState(() {
@@ -113,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 56, // Large touch target for speed
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleLogin,
+                  onPressed: _isLoading ? null : () => _handleLogin(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF5733),
                     foregroundColor: Colors.white,

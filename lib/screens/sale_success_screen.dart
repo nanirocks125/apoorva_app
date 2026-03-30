@@ -1,8 +1,10 @@
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/whatsapp_script.dart';
+import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/services/pdf_invoice_service.dart';
 import 'package:apoorva_app/services/whatsapp_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId; // Add this line
@@ -231,8 +233,19 @@ class SaleSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             TextButton(
-              onPressed: () =>
-                  Navigator.of(context).popUntil((route) => route.isFirst),
+              onPressed: () {
+                // This pops all screens (Success, Checkout, POS)
+                // until it finds the route named '/home'
+                final loggedInUser = Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                ).user;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/home',
+                  (route) => false,
+                  arguments: loggedInUser,
+                );
+              },
               child: const Text(
                 'DONE - NEW SALE',
                 style: TextStyle(
