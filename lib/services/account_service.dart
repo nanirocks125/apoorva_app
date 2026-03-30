@@ -2,8 +2,10 @@ import 'package:apoorva_app/model/internal_transfer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AccountService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  AccountService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   Future<void> executeInternalTransfer(
     String orgId,
     InternalTransfer transfer,
