@@ -50,7 +50,7 @@ class InventoryScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    item.name,
+                    '${item.billMachineNumber}. ${item.name}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
