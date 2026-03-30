@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 
 part 'app_user.g.dart'; // Named app_user to avoid conflict with Firebase 'User'
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class AppUser {
   final String id;
   final String name;

@@ -28,7 +28,7 @@ Map<String, dynamic> _$AppUserToJson(AppUser instance) => <String, dynamic>{
   'email': instance.email,
   'role': _$SystemRoleEnumMap[instance.role]!,
   'status': instance.status,
-  'assignedOrgs': instance.assignedOrgs,
+  'assignedOrgs': instance.assignedOrgs.map((e) => e.toJson()).toList(),
   'createdAt': AppUser._dateToTs(instance.createdAt),
 };
 
