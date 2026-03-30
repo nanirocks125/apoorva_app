@@ -15,8 +15,11 @@ class PlatformStats {
 }
 
 class PlatformStatsService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  // Defaults to real Firestore, but takes a Mock for tests
+  PlatformStatsService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   Future<PlatformStats> getLivePlatformStats() async {
     try {
       // 1. Count Organizations (Tenants)
