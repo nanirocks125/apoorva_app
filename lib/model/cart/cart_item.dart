@@ -1,10 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:apoorva_app/model/category/category.dart';
 
+part 'cart_item.g.dart';
+
+@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class CartItem {
   final Category category;
-  final double stickerPrice; // Price from the manual sticker [cite: 25, 36]
-  double discountPercent; // e.g., 5.0 or 10.0
-  int quantity;
+  final double stickerPrice;
+  final double discountPercent;
+  final int quantity;
 
   CartItem({
     required this.category,
@@ -13,7 +17,24 @@ class CartItem {
     this.quantity = 1,
   });
 
-  // Smart Calculator Logic: Calculates the final price for this item
+  // --- JSON Logic ---
+  factory CartItem.fromJson(Map<String, dynamic> json) =>
+      _$CartItemFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CartItemToJson(this);
+
+  // --- Logic ---
   double get finalPrice =>
       (stickerPrice * quantity) * (1 - (discountPercent / 100));
+
+  // Bridge method to convert to SaleItem (for Zero Discrepancy)
+  // we can use this when confirming the sale.
+  /*
+  SaleItem toSaleItem() => SaleItem(
+    categoryId: category.id,
+    qty: quantity,
+    stickerPrice: stickerPrice,
+    finalPrice: finalPrice,
+  );
+  */
 }

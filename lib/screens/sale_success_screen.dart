@@ -1,9 +1,8 @@
 import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:apoorva_app/services/pdf_invoice_service.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // Light-weight import
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:apoorva_app/services/whatsapp_service.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId; // Add this line
@@ -314,45 +313,29 @@ class SaleSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                // Fetching scripts from the organization's library
-                stream: FirebaseFirestore.instance
-                    .collection('organizations')
-                    .doc(orgId)
-                    .collection('scripts')
-                    .snapshots(),
+              child: StreamBuilder<List<WhatsAppScript>>(
+                stream: WhatsAppService().getScriptsStream(orgId),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData)
-                    return const Center(child: CircularProgressIndicator());
-
-                  final scripts = snapshot.data!.docs;
-                  if (scripts.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No scripts available.\nPlease add some in Admin settings.',
-                      ),
-                    );
+                  if (!snapshot.hasData) {
+                    return const CircularProgressIndicator();
                   }
+                  final scripts = snapshot.data ?? [];
+
                   return ListView.builder(
                     itemCount: scripts.length,
                     itemBuilder: (context, index) {
-                      final script =
-                          scripts[index].data() as Map<String, dynamic>;
+                      final script = scripts[index];
                       return ListTile(
-                        title: Text(script['title']),
-                        subtitle: Text(
-                          script['language'],
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: const Icon(
-                          Icons.send,
-                          color: Color(0xFF25D366),
-                        ),
-                        onTap: () => _sendWhatsAppMessage(
-                          phoneNumber,
-                          script['content'],
-                          sale,
-                        ),
+                        title: Text(script.title),
+                        subtitle: Text(script.language),
+                        onTap: () {
+                          // మోడల్ లో ఉన్న formatMessage ని వాడుకోవడం
+                          final String message = script.formatMessage(sale);
+                          WhatsAppService().launchWhatsApp(
+                            phone: phoneNumber,
+                            message: message,
+                          );
+                        },
                       );
                     },
                   );
@@ -363,50 +346,5 @@ class SaleSuccessScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _sendWhatsAppMessage(
-    String phone,
-    String template,
-    Sale sale,
-  ) async {
-    // 1. Process Placeholders
-    String message = template
-        .replaceAll('[NAME]', sale.customerName)
-        .replaceAll('[AMOUNT]', sale.netPayable.toStringAsFixed(2))
-        .replaceAll('[ID]', sale.id);
-
-    // 2. Add Mandatory Care Instructions [cite: 43, 44]
-    message +=
-        "\n\n✨ Care Tip: Keep your jewelry away from perfumes and water to maintain its high-res shine!";
-
-    // 3. Platform-Specific URI Construction
-    Uri url;
-    if (kIsWeb) {
-      // Web version uses the universal wa.me link
-      url = Uri.parse(
-        "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
-      );
-    } else {
-      // Mobile version can use the specific whatsapp scheme for faster app switching
-      url = Uri.parse(
-        "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
-      );
-    }
-
-    try {
-      // On Web, canLaunchUrl can sometimes be restrictive,
-      // so we attempt the launch with an external application mode.
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint("Platform Launch Error: $e");
-      // Fallback for mobile if whatsapp:// fails (e.g., app not installed)
-      if (!kIsWeb) {
-        final Uri fallbackUrl = Uri.parse(
-          "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
-        );
-        await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
-      }
-    }
   }
 }

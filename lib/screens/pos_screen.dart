@@ -1,9 +1,11 @@
 import 'package:apoorva_app/model/cart/cart_item.dart';
+import 'package:apoorva_app/model/cart/draft_cart.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/checkout_screen.dart';
+import 'package:apoorva_app/services/draft_cart_service.dart';
 import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,21 +51,16 @@ class _PosScreenState extends State<PosScreen> {
             onPressed: _cart.items.isEmpty ? null : _holdCurrentBill,
           ),
           // 2. డ్రాఫ్ట్స్ లిస్ట్ చూసే బటన్ (With Badge)
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('organizations')
-                .doc(widget.organization.id)
-                .collection('drafts')
-                .snapshots(),
+          StreamBuilder<List<DraftCart>>(
+            stream: DraftCartService().getDraftsStream(widget.organization.id),
             builder: (context, snapshot) {
-              int count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+              int count = snapshot.hasData ? snapshot.data!.length : 0;
               return Badge(
                 label: Text(count.toString()),
-                isLabelVisible: count > 0,
                 child: IconButton(
                   icon: const Icon(Icons.folder_open),
                   onPressed: () =>
-                      _showDraftsList(context, snapshot.data?.docs ?? []),
+                      _showDraftsList(context, snapshot.data ?? []),
                 ),
               );
             },
@@ -443,10 +440,7 @@ class _PosScreenState extends State<PosScreen> {
   }
 
   // 2. హోల్డ్ లో ఉన్న బిల్లుల లిస్ట్ చూపించడం
-  void _showDraftsList(
-    BuildContext context,
-    List<QueryDocumentSnapshot> drafts,
-  ) {
+  void _showDraftsList(BuildContext context, List<DraftCart> drafts) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -464,23 +458,22 @@ class _PosScreenState extends State<PosScreen> {
                   : ListView.builder(
                       itemCount: drafts.length,
                       itemBuilder: (context, index) {
-                        final data =
-                            drafts[index].data() as Map<String, dynamic>;
+                        final draftCart = drafts[index];
                         return ListTile(
                           title: Text(
-                            data['customerName'].isEmpty
+                            draftCart.customerName.isEmpty
                                 ? "Walk-in"
-                                : data['customerName'],
+                                : draftCart.customerName,
                           ),
                           subtitle: Text(
-                            "${data['items'].length} items • ₹${data['total']}",
+                            "${draftCart.items.length} items • ₹${draftCart.total}",
                           ),
                           trailing: const Icon(
                             Icons.play_arrow,
                             color: Colors.green,
                           ),
                           onTap: () {
-                            _resumeDraft(drafts[index].id, data);
+                            _resumeDraft(drafts[index].id, draftCart);
                             Navigator.pop(context);
                           },
                         );
@@ -494,19 +487,19 @@ class _PosScreenState extends State<PosScreen> {
   }
 
   // 3. డ్రాఫ్ట్ ని మళ్ళీ కార్ట్ లోకి తీసుకురావడం
-  void _resumeDraft(String draftId, Map<String, dynamic> data) {
+  void _resumeDraft(String draftId, DraftCart draftCart) {
     _updateCart(() {
       _activeDraftId = draftId;
       _cart.items.clear();
-      _customerNameController.text = data['customerName'] ?? '';
-      _customerPhoneController.text = data['customerPhone'] ?? '';
+      _customerNameController.text = draftCart.customerName;
+      _customerPhoneController.text = draftCart.customerPhone;
 
-      for (var item in data['items']) {
+      for (var item in draftCart.items) {
         // ఇక్కడ Category ఆబ్జెక్ట్ ని క్రియేట్ చేయాలి (లేదా సర్వీస్ నుండి ఫెచ్ చేయాలి)
         // ప్రస్తుతానికి డమ్మీ ఐడి తో క్రియేట్ చేస్తున్నాను
         final categoryStub = Category(
-          id: item['categoryId'] ?? '',
-          name: item['categoryName'] ?? 'Unknown',
+          id: item.category.id,
+          name: item.category.name,
           currentStock: 0,
           isHotkey: false,
           billMachineNumber: 0,
@@ -515,8 +508,8 @@ class _PosScreenState extends State<PosScreen> {
         _cart.items.add(
           CartItem(
             category: categoryStub,
-            stickerPrice: (item['stickerPrice'] ?? 0).toDouble(),
-            discountPercent: (item['discountPercent'] ?? 0).toDouble(),
+            stickerPrice: item.stickerPrice,
+            discountPercent: item.discountPercent,
           ),
         );
       }
