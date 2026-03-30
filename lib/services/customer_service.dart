@@ -2,8 +2,11 @@ import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  // Defaults to real Firestore in production, uses Fake in tests
+  CustomerService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   // Stream of customers for real-time updates in Mangalagiri
   Stream<List<Customer>> getCustomers(String orgId) {
     return _db

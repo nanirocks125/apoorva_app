@@ -56,6 +56,8 @@ dev_dependencies:
   json_serializable: ^6.1.4
   build_runner: ^2.4.13
   fake_cloud_firestore: ^4.1.0+1
+  firebase_auth_mocks: ^0.15.1
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

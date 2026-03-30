@@ -2,15 +2,18 @@ import 'package:apoorva_app/model/cart/draft_cart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DraftCartService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
+  // Defaults to real Firestore, but accepts a fake one for tests
+  DraftCartService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
   // 1. Get Live Drafts Stream (Typed Models)
   Stream<List<DraftCart>> getDraftsStream(String orgId) {
     return _db
         .collection('organizations')
         .doc(orgId)
         .collection('drafts')
-        .orderBy('created_at', descending: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) =>
