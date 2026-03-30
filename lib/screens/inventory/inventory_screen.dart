@@ -1,5 +1,6 @@
 import 'package:apoorva_app/components/category_form.dart';
-import 'package:apoorva_app/services/organization_service.dart';
+import 'package:apoorva_app/model/category/category.dart';
+import 'package:apoorva_app/services/inventory_service.dart';
 import 'package:flutter/material.dart';
 
 class InventoryScreen extends StatelessWidget {
@@ -10,8 +11,8 @@ class InventoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Inventory Management')),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: OrganizationService().getInventory(orgId),
+      body: StreamBuilder<List<Category>>(
+        stream: InventoryService().getCategories(orgId),
         builder: (context, snapshot) {
           // 1. Check for Errors (Critical for Permission Denied issues)
           if (snapshot.hasError) {
@@ -40,22 +41,20 @@ class InventoryScreen extends StatelessWidget {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: item['is_hotkey'] == true
+                    backgroundColor: item.isHotkey
                         ? Colors.orange
                         : Colors.grey.shade200,
                     child: Icon(
                       Icons.category,
-                      color: item['is_hotkey'] == true
-                          ? Colors.white
-                          : Colors.grey,
+                      color: item.isHotkey ? Colors.white : Colors.grey,
                     ),
                   ),
                   title: Text(
-                    item['name'],
+                    item.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    'Stock: ${item['current_stock']} | Hotkey: ${item['is_hotkey'] ? "Yes" : "No"}',
+                    'Stock: ${item.currentStock} | Hotkey: ${item.isHotkey ? "Yes" : "No"}',
                   ),
                   trailing: const Icon(Icons.edit_outlined),
                   onTap: () => _showCategoryForm(context, item: item),
@@ -72,11 +71,11 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
-  void _showCategoryForm(BuildContext context, {Map<String, dynamic>? item}) {
+  void _showCategoryForm(BuildContext context, {Category? item}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CategoryForm(orgId: orgId, initialData: item),
+      builder: (context) => CategoryForm(orgId: orgId, catogory: item),
     );
   }
 }

@@ -1,10 +1,11 @@
+import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:flutter/material.dart';
 
 class CategoryForm extends StatefulWidget {
   final String orgId;
-  final Map<String, dynamic>? initialData;
-  const CategoryForm({super.key, required this.orgId, this.initialData});
+  final Category? catogory;
+  const CategoryForm({super.key, required this.orgId, this.catogory});
 
   @override
   State<CategoryForm> createState() => _CategoryFormState();
@@ -19,11 +20,11 @@ class _CategoryFormState extends State<CategoryForm> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialData != null) {
-      _nameController.text = widget.initialData!['name'];
-      _stockController.text = widget.initialData!['current_stock'].toString();
-      _socialController.text = widget.initialData!['social_media_link'] ?? '';
-      _isHotkey = widget.initialData!['is_hotkey'] ?? false;
+    if (widget.catogory != null) {
+      _nameController.text = widget.catogory!.name;
+      _stockController.text = widget.catogory!.currentStock.toString();
+      _socialController.text = widget.catogory!.socialMediaLink ?? '';
+      _isHotkey = widget.catogory!.isHotkey;
     }
   }
 
@@ -70,9 +71,9 @@ class _CategoryFormState extends State<CategoryForm> {
                 'social_media_link': _socialController.text,
                 'is_hotkey': _isHotkey,
                 'last_sold_date':
-                    widget.initialData?['last_sold_date'] ??
+                    widget.catogory?.lastSoldDate ??
                     DateTime.now().toIso8601String(),
-              }, catId: widget.initialData?['id']);
+              }, catId: widget.catogory?.id);
               Navigator.pop(context);
             },
             child: const Text('Save Category'),
