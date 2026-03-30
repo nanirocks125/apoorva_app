@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 
 part 'app_user.g.dart'; // Named app_user to avoid conflict with Firebase 'User'
 
-enum UserRole {
+enum OrganizationUserRole {
   @JsonValue('owner')
   owner,
   @JsonValue('admin')

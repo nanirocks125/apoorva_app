@@ -17,7 +17,7 @@ class UserAssignmentPicker extends StatefulWidget {
 class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
   final UserService _userService = UserService();
   String? _configuringUserId;
-  UserRole _selectedRole = UserRole.staff;
+  OrganizationUserRole _selectedRole = OrganizationUserRole.staff;
   bool _isSaving = false;
 
   @override
@@ -171,13 +171,13 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
       child: Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<UserRole>(
+            child: DropdownButtonFormField<OrganizationUserRole>(
               value: _selectedRole,
               decoration: const InputDecoration(
                 labelText: 'Assigned Role',
                 border: OutlineInputBorder(),
               ),
-              items: UserRole.values
+              items: OrganizationUserRole.values
                   .map(
                     (r) => DropdownMenuItem(
                       value: r,

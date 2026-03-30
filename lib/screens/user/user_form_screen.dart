@@ -25,7 +25,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   SystemRole _selectedSystemRole = SystemRole.standard;
-  UserRole _selectedUserRole = UserRole.staff; // Default organizational role
+  OrganizationUserRole _selectedUserRole =
+      OrganizationUserRole.staff; // Default organizational role
 
   bool _isLoading = false; // 1. Add this state variable
   bool _isAuthorized = false;
@@ -74,17 +75,17 @@ class _UserFormScreenState extends State<UserFormScreen> {
         final roleString = orgUserDoc.data()?['orgRole'] as String?;
 
         // Convert the string to an enum value safely
-        final role = UserRole.values.firstWhere(
+        final role = OrganizationUserRole.values.firstWhere(
           (e) => e.name == roleString,
-          orElse: () => UserRole.staff, // Default fallback
+          orElse: () => OrganizationUserRole.staff, // Default fallback
         );
 
         print('role: $role');
         // Check for 'owner' or 'manager' roles
         // ignore: unrelated_type_equality_checks
-        if (role == UserRole.admin ||
-            role == UserRole.manager ||
-            role == UserRole.owner) {
+        if (role == OrganizationUserRole.admin ||
+            role == OrganizationUserRole.manager ||
+            role == OrganizationUserRole.owner) {
           if (mounted) {
             setState(() {
               _isAuthorized = true;
@@ -266,15 +267,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
               ),
             ] else ...[
               // Shop-level: Owner/Manager adding staff to their specific branch
-              DropdownButtonFormField<UserRole>(
+              DropdownButtonFormField<OrganizationUserRole>(
                 value: _selectedUserRole,
                 decoration: const InputDecoration(
                   labelText: 'Staff Position',
                   prefixIcon: Icon(Icons.badge),
                 ),
                 // We exclude 'Owner' usually as that's a platform-level assignment
-                items: UserRole.values
-                    .where((r) => r != UserRole.owner)
+                items: OrganizationUserRole.values
+                    .where((r) => r != OrganizationUserRole.owner)
                     .map(
                       (r) => DropdownMenuItem(
                         value: r,
