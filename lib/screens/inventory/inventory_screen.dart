@@ -57,7 +57,7 @@ class InventoryScreen extends StatelessWidget {
                     'Stock: ${item.currentStock} | Hotkey: ${item.isHotkey ? "Yes" : "No"}',
                   ),
                   trailing: const Icon(Icons.edit_outlined),
-                  onTap: () => _showCategoryForm(context, item: item),
+                  onTap: () => {_showCategoryForm(context, item: item)},
                 ),
               );
             },
@@ -72,10 +72,13 @@ class InventoryScreen extends StatelessWidget {
   }
 
   void _showCategoryForm(BuildContext context, {Category? item}) {
+    print(
+      'showing form for item: ${item?.name ?? "New Category"}',
+    ); // Debug Log
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CategoryForm(orgId: orgId, catogory: item),
+      builder: (context) => CategoryForm(orgId: orgId, category: item),
     );
   }
 }
