@@ -56,7 +56,26 @@ class InventoryScreen extends StatelessWidget {
                   subtitle: Text(
                     'Stock: ${item.currentStock} | Hotkey: ${item.isHotkey ? "Yes" : "No"}',
                   ),
-                  trailing: const Icon(Icons.edit_outlined),
+                  // Inside ListView.builder -> ListTile
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize
+                        .min, // Critical: keeps the row from taking full width
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => _showCategoryForm(context, item: item),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                        ),
+                        onPressed: () => _confirmDelete(context, item),
+                      ),
+                    ],
+                  ),
+                  // Remove the onTap from ListTile if you want specific icon clicks,
+                  // or keep it for editing and use the icons for specific actions.,
                   onTap: () => {_showCategoryForm(context, item: item)},
                 ),
               );
@@ -80,5 +99,48 @@ class InventoryScreen extends StatelessWidget {
       isScrollControlled: true,
       builder: (context) => CategoryForm(orgId: orgId, category: item),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, Category item) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Category'),
+        content: Text(
+          'Are you sure you want to delete "${item.name}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Assuming 'id' is the unique identifier in your Category model
+        print('deleting category with id: ${item.id}'); // Debug Log
+        await InventoryService().deleteCategory(orgId, item.id);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${item.name} deleted')));
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting category: $e')),
+          );
+        }
+      }
+    }
   }
 }

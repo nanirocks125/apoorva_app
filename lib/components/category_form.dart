@@ -111,13 +111,25 @@ class _CategoryFormState extends State<CategoryForm> {
                     int.tryParse(_billMachineNumberController.text) ?? 0,
               );
 
-              // 2. Use the dedicated InventoryService with Atomic Logic
-              await InventoryService().saveCategory(
-                widget.orgId,
-                updatedCategory,
-              );
+              try {
+                await InventoryService().saveCategory(
+                  widget.orgId,
+                  updatedCategory,
+                );
+                if (mounted) Navigator.pop(context); // Close form on success
+              } catch (e) {
+                // Extract the message from Exception('...')
+                final errorMessage = e.toString().replaceAll('Exception: ', '');
 
-              if (mounted) Navigator.pop(context);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text(
               'Save Category',
