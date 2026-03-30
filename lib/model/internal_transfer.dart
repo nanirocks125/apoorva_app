@@ -1,11 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:apoorva_app/utilities/timestamp_converter.dart'; // మీ పాత కన్వర్టర్
 
+part 'internal_transfer.g.dart';
+
+@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class InternalTransfer {
+  @JsonKey(includeToJson: true) // మీరు ID ని JSON లో ఉంచాలనుకున్నారు కాబట్టి
   final String id;
+
   final String fromAccountId;
   final String toAccountId;
   final double amount;
-  final String type; // Bank Deposit, Petty Cash Refill
+  final String transferType; // 'type' ని 'transferType' గా మ్యాప్ చేశాను
+
+  @TimestampConverter()
   final DateTime timestamp;
 
   InternalTransfer({
@@ -13,17 +22,28 @@ class InternalTransfer {
     required this.fromAccountId,
     required this.toAccountId,
     required this.amount,
-    required this.type,
+    required this.transferType,
     required this.timestamp,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'from_account_id': fromAccountId,
-      'to_account_id': toAccountId,
-      'amount': amount,
-      'transfer_type': type,
-      'timestamp': FieldValue.serverTimestamp(),
-    };
+  // --- JSON Logic ---
+  factory InternalTransfer.fromJson(Map<String, dynamic> json) =>
+      _$InternalTransferFromJson(json);
+
+  Map<String, dynamic> toJson() => _$InternalTransferToJson(this);
+
+  // --- Firestore Bridge (ID == DocID) ---
+  factory InternalTransfer.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return InternalTransfer.fromJson(data).copyWithId(doc.id);
   }
+
+  InternalTransfer copyWithId(String newId) => InternalTransfer(
+    id: newId,
+    fromAccountId: fromAccountId,
+    toAccountId: toAccountId,
+    amount: amount,
+    transferType: transferType,
+    timestamp: timestamp,
+  );
 }
