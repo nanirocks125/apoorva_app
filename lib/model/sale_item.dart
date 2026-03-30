@@ -19,6 +19,11 @@ class SaleItem {
     required this.finalPrice,
   });
 
+  double get discountPercent {
+    if (stickerPrice == 0) return 0.0;
+    return ((stickerPrice - finalPrice) / stickerPrice) * 100;
+  }
+
   // --- JSON Logic ---
   factory SaleItem.fromJson(Map<String, dynamic> json) =>
       _$SaleItemFromJson(json);

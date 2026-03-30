@@ -1,5 +1,7 @@
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
+import 'package:apoorva_app/model/category/category.dart';
+import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/screens/checkout_screen.dart';
 import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
@@ -30,12 +32,13 @@ class _PosScreenState extends State<PosScreen> {
     super.dispose();
   }
 
-  void _openSmartCalculator(
-    Map<String, dynamic> category, {
+  // 1. Named parameters వాడటం వల్ల కోడ్ క్లీన్ గా ఉంటుంది
+  void _openSmartCalculator({
+    Category? category,
     CartItem? existingItem,
     int? index,
   }) {
-    // If editing, use the existing price; otherwise, start empty
+    // ఎడిట్ చేస్తుంటే పాత ప్రైస్, లేకపోతే ఖాళీ
     final TextEditingController priceController = TextEditingController(
       text: existingItem != null
           ? existingItem.stickerPrice.toStringAsFixed(0)
@@ -43,6 +46,11 @@ class _PosScreenState extends State<PosScreen> {
     );
 
     double selectedDiscount = existingItem?.discountPercent ?? 0.0;
+
+    // కేటగిరీ ఆబ్జెక్ట్ ని ఎంచుకోవడం
+    final currentCategory = existingItem?.category ?? category;
+
+    if (currentCategory == null) return; // Safety check
 
     showModalBottomSheet(
       context: context,
@@ -60,8 +68,8 @@ class _PosScreenState extends State<PosScreen> {
             children: [
               Text(
                 existingItem != null
-                    ? 'Edit ${category['name']}'
-                    : 'Adding ${category['name']}',
+                    ? 'Edit ${currentCategory.name}'
+                    : 'Adding ${currentCategory.name}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -78,44 +86,22 @@ class _PosScreenState extends State<PosScreen> {
                 keyboardType: TextInputType.number,
                 autofocus: true,
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [0.0, 5.0, 10.0, 15.0]
-                    .map(
-                      (pct) => ChoiceChip(
-                        label: Text('${pct.toInt()}% Off'),
-                        selected: selectedDiscount == pct,
-                        onSelected: (selected) =>
-                            setModalState(() => selectedDiscount = pct),
-                      ),
-                    )
-                    .toList(),
-              ),
+              // ... (Discount Selection Row) ...
               const SizedBox(height: 20),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  backgroundColor: existingItem != null
-                      ? Colors.blue
-                      : const Color(0xFFFF5733),
-                ),
                 onPressed: () {
                   final double? price = double.tryParse(priceController.text);
                   if (price != null && price > 0) {
                     _updateCart(() {
                       final updatedItem = CartItem(
-                        categoryId: category['id'],
-                        categoryName: category['name'],
+                        category: currentCategory, // Correct Category Object
                         stickerPrice: price,
                         discountPercent: selectedDiscount,
                       );
 
                       if (index != null) {
-                        // UPDATE: Replace existing item at index
                         _cart.items[index] = updatedItem;
                       } else {
-                        // CREATE: Add new item
                         _cart.items.add(updatedItem);
                       }
                     });
@@ -126,7 +112,6 @@ class _PosScreenState extends State<PosScreen> {
                   existingItem != null ? 'UPDATE ITEM' : 'ADD TO CART',
                 ),
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -253,7 +238,7 @@ class _PosScreenState extends State<PosScreen> {
   }
 
   Widget _buildCategoryGrid() {
-    return StreamBuilder<List<Map<String, dynamic>>>(
+    return StreamBuilder<List<Category>>(
       stream: _orgService.getLiveCategories(widget.orgId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -285,11 +270,9 @@ class _PosScreenState extends State<PosScreen> {
             final cat = categories[index];
             return _buildCategoryCard(
               context,
-              cat['name'],
-              cat['current_stock'].toString(),
-              cat['is_hotkey'] ?? false,
-              cat['social_media_link'],
-              () => _openSmartCalculator(cat),
+              cat,
+              () =>
+                  _openSmartCalculator(category: cat), // Named parameter వాడాలి
             );
           },
         );
@@ -299,10 +282,7 @@ class _PosScreenState extends State<PosScreen> {
 
   Widget _buildCategoryCard(
     BuildContext context,
-    String name,
-    String stock,
-    bool isHotkey,
-    String? socialLink,
+    Category category,
     VoidCallback onTap,
   ) {
     return InkWell(
@@ -313,8 +293,10 @@ class _PosScreenState extends State<PosScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isHotkey ? const Color(0xFFFF5733) : Colors.grey.shade200,
-            width: isHotkey ? 2 : 1, // హాట్-కీ అయితే హైలైట్ అవుతుంది
+            color: category.isHotkey
+                ? const Color(0xFFFF5733)
+                : Colors.grey.shade200,
+            width: category.isHotkey ? 2 : 1, // హాట్-కీ అయితే హైలైట్ అవుతుంది
           ),
         ),
         child: Stack(
@@ -339,7 +321,7 @@ class _PosScreenState extends State<PosScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    name,
+                    category.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -347,7 +329,7 @@ class _PosScreenState extends State<PosScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Stock: $stock',
+                    'Stock: ${category.currentStock}',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                   ),
                 ],
@@ -380,11 +362,7 @@ class _PosScreenState extends State<PosScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             // --- Reuse the Smart Calculator for Editing ---
-            onTap: () => _openSmartCalculator(
-              {'id': item.categoryId, 'name': item.categoryName},
-              existingItem: item,
-              index: index,
-            ),
+            onTap: () => _openSmartCalculator(existingItem: item, index: index),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -393,7 +371,9 @@ class _PosScreenState extends State<PosScreen> {
                   CircleAvatar(
                     backgroundColor: const Color(0xFFFF5733).withOpacity(0.1),
                     child: Text(
-                      item.categoryName[0].toUpperCase(),
+                      item.category.name
+                          .substring(0, 1)
+                          .toUpperCase(), // First letter only
                       style: const TextStyle(
                         color: Color(0xFFFF5733),
                         fontWeight: FontWeight.bold,
@@ -408,7 +388,7 @@ class _PosScreenState extends State<PosScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.categoryName,
+                          item.category.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -498,8 +478,11 @@ class _PosScreenState extends State<PosScreen> {
                           builder: (context) => CheckoutScreen(
                             cart: _cart,
                             orgId: widget.orgId,
-                            customerName: _customerNameController.text,
-                            customerPhone: _customerPhoneController.text,
+                            customer: Customer(
+                              name: _customerNameController.text,
+                              phone: _customerPhoneController.text,
+                              createdAt: DateTime.now(),
+                            ),
                             activeDraftId: _activeDraftId,
                           ),
                         ),
@@ -604,22 +587,30 @@ class _PosScreenState extends State<PosScreen> {
   // 3. డ్రాఫ్ట్ ని మళ్ళీ కార్ట్ లోకి తీసుకురావడం
   void _resumeDraft(String draftId, Map<String, dynamic> data) {
     _updateCart(() {
-      _activeDraftId = draftId; // Link this session to the draft
+      _activeDraftId = draftId;
       _cart.items.clear();
-      _customerNameController.text = data['customerName'];
-      _customerPhoneController.text = data['customerPhone'];
+      _customerNameController.text = data['customerName'] ?? '';
+      _customerPhoneController.text = data['customerPhone'] ?? '';
 
       for (var item in data['items']) {
+        // ఇక్కడ Category ఆబ్జెక్ట్ ని క్రియేట్ చేయాలి (లేదా సర్వీస్ నుండి ఫెచ్ చేయాలి)
+        // ప్రస్తుతానికి డమ్మీ ఐడి తో క్రియేట్ చేస్తున్నాను
+        final categoryStub = Category(
+          id: item['categoryId'] ?? '',
+          name: item['categoryName'] ?? 'Unknown',
+          currentStock: 0,
+          isHotkey: false,
+          billMachineNumber: 0,
+        );
+
         _cart.items.add(
           CartItem(
-            categoryId: item['categoryId'],
-            categoryName: item['categoryName'],
-            stickerPrice: item['stickerPrice'],
-            discountPercent: item['discountPercent'],
+            category: categoryStub,
+            stickerPrice: (item['stickerPrice'] ?? 0).toDouble(),
+            discountPercent: (item['discountPercent'] ?? 0).toDouble(),
           ),
         );
       }
     });
-    // REMOVED: DraftService().deleteDraft(widget.orgId, draftId);
   }
 }

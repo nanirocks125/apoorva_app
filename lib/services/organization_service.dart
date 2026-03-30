@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/category/category.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 
@@ -102,40 +103,27 @@ class OrganizationService {
     return query.docs.map((doc) => Organization.fromJson(doc.data())).toList();
   }
 
-  Stream<List<Map<String, dynamic>>> getLiveCategories(String orgId) {
+  Stream<List<Category>> getLiveCategories(String orgId) {
     return FirebaseFirestore.instance
         .collection('organizations')
         .doc(orgId)
-        .collection('inventory') // మీ PRD ప్రకారం inventory సబ్-కలెక్షన్
-        .orderBy('is_hotkey', descending: true) // హాట్-కీలు పైన ఉంటాయి
-        .orderBy('name')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => {'id': doc.id, ...doc.data()})
-              .toList(),
-        );
-  }
-
-  // Fetch categories in real-time
-  Stream<List<Map<String, dynamic>>> getInventory(String orgId) {
-    return _db
-        .collection('organizations')
-        .doc(orgId)
         .collection('inventory')
+        // 1. Ensure 'isHotkey' spelling matches your model (no capital K)
+        .orderBy('isHotkey', descending: true)
         .orderBy('name')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => {'id': doc.id, ...doc.data()})
-              .toList(),
-        );
+        .map((snapshot) {
+          // 2. We must map over 'snapshot.docs' to get a list
+          return snapshot.docs.map((doc) {
+            return Category.fromFirestore(doc); // Use the bridge we built
+          }).toList();
+        });
   }
 
   // Add or Update a Category
   Future<void> saveCategory(
     String orgId,
-    Map<String, dynamic> data, {
+    Category category, {
     String? catId,
   }) async {
     final ref = _db
@@ -143,9 +131,9 @@ class OrganizationService {
         .doc(orgId)
         .collection('inventory');
     if (catId == null) {
-      await ref.add(data); // Create new
+      await ref.add(category.toJson()); // Create new
     } else {
-      await ref.doc(catId).update(data); // Update existing
+      await ref.doc(catId).update(category.toJson()); // Update existing
     }
   }
 }

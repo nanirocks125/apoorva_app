@@ -17,8 +17,8 @@ class DraftService {
       'items': items
           .map(
             (i) => {
-              'categoryId': i.categoryId,
-              'categoryName': i.categoryName,
+              'categoryId': i.category.id,
+              'categoryName': i.category.name,
               'stickerPrice': i.stickerPrice,
               'discountPercent': i.discountPercent,
             },

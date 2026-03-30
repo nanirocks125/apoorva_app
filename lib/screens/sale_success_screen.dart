@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/services/pdf_invoice_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // Light-weight import
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,46 +7,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId; // Add this line
-  final String saleId;
-  final String customerPhone;
-  final String customerName;
-  final List<dynamic> items; // List of items sold
-  final double subtotal;
-  final double overallDiscountAmount;
-  final double roundOff;
-  final double netPayable;
-  final Map<String, double> payments;
+  final Sale sale;
 
-  const SaleSuccessScreen({
-    super.key,
-    required this.saleId,
-    required this.customerPhone,
-    required this.customerName,
-    required this.items,
-    required this.subtotal,
-    required this.overallDiscountAmount,
-    required this.roundOff,
-    required this.netPayable,
-    required this.payments,
-    required this.orgId,
-  });
-
-  Map<String, dynamic> get _saleSummaryData => {
-    'id': saleId,
-    'customerName': customerName,
-    'netPayable': netPayable,
-  };
+  const SaleSuccessScreen({super.key, required this.sale, required this.orgId});
 
   @override
   Widget build(BuildContext context) {
     // Calculate total discount (Item-level + Overall + Round-off)
     double totalItemSavings = 0.0;
 
-    double itemTotalDiscounts = items.fold(
+    double itemTotalDiscounts = sale.items.fold(
       0.0,
-      (sum, item) => sum + (item['stickerPrice'] - item['finalPrice']),
+      (sum, item) => sum + (item.stickerPrice - item.finalPrice),
     );
-    double totalSavings = itemTotalDiscounts + overallDiscountAmount + roundOff;
+    double totalSavings =
+        itemTotalDiscounts + sale.overallDiscountAmount + sale.roundOff;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -65,15 +41,15 @@ class SaleSuccessScreen extends StatelessWidget {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(
-              'ID: $saleId',
+              'ID: ${sale.id}',
               style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
 
             const Divider(height: 40),
 
             _buildSectionHeader('ITEMS'),
-            ...items.map((item) {
-              double itemSaving = item['stickerPrice'] - item['finalPrice'];
+            ...sale.items.map((item) {
+              double itemSaving = item.stickerPrice - item.finalPrice;
               totalItemSavings += itemSaving; // Summing up item-level savings
 
               return Padding(
@@ -84,11 +60,11 @@ class SaleSuccessScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${item['name']} (₹${item['stickerPrice'].toStringAsFixed(0)})',
+                          '${item.categoryId} (₹${item.stickerPrice.toStringAsFixed(0)})',
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          '₹${item['finalPrice'].toStringAsFixed(2)}',
+                          '₹${item.finalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -97,7 +73,7 @@ class SaleSuccessScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Saved: ₹${itemSaving.toStringAsFixed(2)} (${(item['itemDiscountPercent'] ?? 0).toInt()}% Off)',
+                        'Saved: ₹${itemSaving.toStringAsFixed(2)} (${(item.discountPercent).toInt()}% Off)',
                         style: TextStyle(
                           color: Colors.green.shade700,
                           fontSize: 12,
@@ -113,7 +89,10 @@ class SaleSuccessScreen extends StatelessWidget {
 
             // --- 2. UPDATED FINANCIAL SUMMARY ---
             _buildSectionHeader('FINANCIAL SUMMARY'),
-            _receiptRow('Cart Subtotal', '₹${subtotal.toStringAsFixed(2)}'),
+            _receiptRow(
+              'Cart Subtotal',
+              '₹${sale.subtotal.toStringAsFixed(2)}',
+            ),
 
             // Displaying the sum of item savings explicitly
             if (totalItemSavings > 0)
@@ -123,17 +102,17 @@ class SaleSuccessScreen extends StatelessWidget {
                 color: Colors.green,
               ),
 
-            if (overallDiscountAmount > 0)
+            if (sale.overallDiscountAmount > 0)
               _receiptRow(
                 'Extra Overall Discount',
-                '-₹${overallDiscountAmount.toStringAsFixed(2)}',
+                '-₹${sale.overallDiscountAmount.toStringAsFixed(2)}',
                 color: Colors.green,
               ),
 
-            if (roundOff > 0)
+            if (sale.roundOff > 0)
               _receiptRow(
                 'Final Round-off',
-                '-₹${roundOff.toStringAsFixed(2)}',
+                '-₹${sale.roundOff.toStringAsFixed(2)}',
                 color: Colors.green,
               ),
 
@@ -141,17 +120,20 @@ class SaleSuccessScreen extends StatelessWidget {
 
             // --- 2. DISCOUNT & TAX SUMMARY ---
             _buildSectionHeader('FINANCIAL SUMMARY'),
-            _receiptRow('Cart Subtotal', '₹${subtotal.toStringAsFixed(2)}'),
-            if (overallDiscountAmount > 0)
+            _receiptRow(
+              'Cart Subtotal',
+              '₹${sale.subtotal.toStringAsFixed(2)}',
+            ),
+            if (sale.overallDiscountAmount > 0)
               _receiptRow(
                 'Overall Discount',
-                '-₹${overallDiscountAmount.toStringAsFixed(2)}',
+                '-₹${sale.overallDiscountAmount.toStringAsFixed(2)}',
                 color: Colors.green,
               ),
-            if (roundOff > 0)
+            if (sale.roundOff > 0)
               _receiptRow(
                 'Final Round-off',
-                '-₹${roundOff.toStringAsFixed(2)}',
+                '-₹${sale.roundOff.toStringAsFixed(2)}',
                 color: Colors.green,
               ),
 
@@ -166,7 +148,7 @@ class SaleSuccessScreen extends StatelessWidget {
                 children: [
                   _receiptRow(
                     'NET PAYABLE',
-                    '₹${netPayable.toStringAsFixed(2)}',
+                    '₹${sale.netPayable.toStringAsFixed(2)}',
                     isBold: true,
                   ),
                   _receiptRow(
@@ -183,11 +165,11 @@ class SaleSuccessScreen extends StatelessWidget {
 
             // --- 3. PAYMENT BREAKDOWN (Tender Splitting) ---
             _buildSectionHeader('PAYMENT DETAILS'),
-            ...payments.entries
+            ...sale.payments.entries
                 .where((e) => e.value > 0)
                 .map(
                   (e) => _receiptRow(
-                    e.key,
+                    e.key.name, // Enum name (e.g., 'Cash', 'Card')
                     '₹${e.value.toStringAsFixed(2)}',
                     isBold: e.key == 'Cash',
                   ),
@@ -204,10 +186,10 @@ class SaleSuccessScreen extends StatelessWidget {
                 ),
               ),
               onPressed: () => PdfInvoiceService.createAndShareInvoice(
-                customerName: customerName,
-                netPayable: netPayable.toString(),
-                saleId: saleId,
-                items: items, // Pass your cart items list here
+                customerName: sale.customerName,
+                netPayable: sale.netPayable.toString(),
+                saleId: sale.id,
+                items: sale.items, // Pass your cart items list here
               ),
               icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
               label: const Text(
@@ -230,14 +212,14 @@ class SaleSuccessScreen extends StatelessWidget {
               ),
               onPressed: () {
                 // ఫోన్ నంబర్ లేకపోతే అలర్ట్ చూపండి
-                if (customerPhone.isEmpty) {
+                if (sale.customerName.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Phone number not provided!')),
                   );
                   return;
                 }
                 // స్క్రిప్ట్ లైబ్రరీని ఓపెన్ చేయండి
-                _openScriptLibrary(context, customerPhone, _saleSummaryData);
+                _openScriptLibrary(context, sale.customerPhone, sale);
               },
               icon: const Icon(Icons.share, color: Colors.white),
               label: const Text(
@@ -316,11 +298,7 @@ class SaleSuccessScreen extends StatelessWidget {
     );
   }
 
-  void _openScriptLibrary(
-    BuildContext context,
-    String phoneNumber,
-    Map<String, dynamic> saleData,
-  ) {
+  void _openScriptLibrary(BuildContext context, String phoneNumber, Sale sale) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -373,7 +351,7 @@ class SaleSuccessScreen extends StatelessWidget {
                         onTap: () => _sendWhatsAppMessage(
                           phoneNumber,
                           script['content'],
-                          saleData,
+                          sale,
                         ),
                       );
                     },
@@ -390,13 +368,13 @@ class SaleSuccessScreen extends StatelessWidget {
   Future<void> _sendWhatsAppMessage(
     String phone,
     String template,
-    Map<String, dynamic> data,
+    Sale sale,
   ) async {
     // 1. Process Placeholders
     String message = template
-        .replaceAll('[NAME]', data['customerName'] ?? 'Customer')
-        .replaceAll('[AMOUNT]', (data['netPayable'] ?? 0.0).toStringAsFixed(2))
-        .replaceAll('[ID]', data['id'] ?? 'N/A');
+        .replaceAll('[NAME]', sale.customerName)
+        .replaceAll('[AMOUNT]', sale.netPayable.toStringAsFixed(2))
+        .replaceAll('[ID]', sale.id);
 
     // 2. Add Mandatory Care Instructions [cite: 43, 44]
     message +=

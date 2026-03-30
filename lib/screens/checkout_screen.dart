@@ -1,24 +1,25 @@
+import 'package:apoorva_app/enum/payment_mode.dart';
+import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/model/sale_item.dart';
 import 'package:apoorva_app/screens/sale_success_screen.dart';
-import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/sale_service.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final PosCart cart;
   final String orgId;
-  final String customerName; // Pass these from PosScreen
-  final String customerPhone;
+  final Customer customer;
   final String? activeDraftId; // NEW: To handle draft deletion
 
   const CheckoutScreen({
     super.key,
     required this.cart,
     required this.orgId,
-    required this.customerName,
-    required this.customerPhone,
+    required this.customer,
     this.activeDraftId,
   });
 
@@ -30,15 +31,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _discountController = TextEditingController(text: '0');
 
   // Payment State
-  final Map<String, bool> _selectedModes = {
-    'Cash': true,
-    'UPI': false,
-    'Card': false,
+  final Map<PaymentMode, bool> _selectedModes = {
+    PaymentMode.cash: true,
+    PaymentMode.upi: false,
+    PaymentMode.card: false,
   };
-  final Map<String, TextEditingController> _paymentControllers = {
-    'Cash': TextEditingController(),
-    'UPI': TextEditingController(),
-    'Card': TextEditingController(),
+  final Map<PaymentMode, TextEditingController> _paymentControllers = {
+    PaymentMode.cash: TextEditingController(),
+    PaymentMode.upi: TextEditingController(),
+    PaymentMode.card: TextEditingController(),
   };
 
   bool _isProcessing = false;
@@ -206,16 +207,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.customerName.isEmpty
+            widget.customer.name.isEmpty
                 ? 'Walk-in Customer'
-                : widget.customerName,
+                : widget.customer.name,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
-            widget.customerPhone.isEmpty
+            widget.customer.phone.isEmpty
                 ? 'No Phone Provided'
-                : widget.customerPhone,
+                : widget.customer.phone,
             style: TextStyle(color: Colors.grey.shade700),
           ),
         ],
@@ -223,7 +224,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPaymentRow(String mode) {
+  Widget _buildPaymentRow(PaymentMode mode) {
     bool isSelected = _selectedModes[mode]!;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -241,7 +242,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           CheckboxListTile(
             title: Text(
-              mode,
+              mode.displayName,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             value: isSelected,
@@ -385,7 +386,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _finalizeSale() async {
     setState(() => _isProcessing = true);
 
-    Map<String, double> payments = {};
+    // 1. Collect Payments using Enum
+    Map<PaymentMode, double> payments = {};
     _selectedModes.forEach((mode, isSelected) {
       if (isSelected) {
         payments[mode] =
@@ -394,59 +396,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
 
     try {
-      // Calling the new Atomic Service Method
-      final String saleId = await SaleService().confirmSaleWithAtomicCleanup(
-        orgId: widget.orgId,
-        customerName: widget.customerName,
-        customerPhone: widget.customerPhone,
-        items: widget.cart.items
-            .map(
-              (i) => {
-                'name': i.categoryName,
-                'stickerPrice': i.stickerPrice,
-                'finalPrice': i.finalPrice,
-                'discountPercent': i.discountPercent,
-              },
-            )
-            .toList(),
+      // 2. Map CartItems to SaleItems (The serialized model)
+      final saleItems = widget.cart.items
+          .map(
+            (i) => SaleItem(
+              categoryId: i.category.id,
+              qty: 1, // Change if you support multiple quantities
+              stickerPrice: i.stickerPrice,
+              finalPrice: i.finalPrice,
+            ),
+          )
+          .toList();
+
+      // 3. Pre-generate ID to keep ID == DocID consistent
+      final String newSaleId = FirebaseFirestore.instance
+          .collection('organizations')
+          .doc(widget.orgId)
+          .collection('sales')
+          .doc()
+          .id;
+
+      // 4. Create the Sale Model Object
+      final newSale = Sale(
+        id: newSaleId,
+        customerName: widget.customer.name.isEmpty
+            ? 'Walk-in'
+            : widget.customer.name,
+        customerPhone: widget.customer.phone,
+        staffId: FirebaseAuth.instance.currentUser?.uid ?? 'Unknown',
+        items: saleItems,
         subtotal: widget.cart.totalPayable,
         overallDiscountPercent: _overallDiscountPercent,
         overallDiscountAmount: _overallDiscountAmount,
         roundOff: double.tryParse(_discountController.text) ?? 0.0,
         netPayable: _finalTotal,
         payments: payments,
-        activeDraftId:
-            widget.activeDraftId, // Batch ensures this is deleted on success
+        timestamp: DateTime.now(),
+        source: 'POS', // Or detect from widget
+        status: 'Completed',
       );
 
-      print("Atomic Transaction Success: Sale recorded and Draft removed.");
+      // 5. Execute Atomic Transaction
+      await SaleService().confirmSaleWithAtomicCleanup(
+        widget.orgId,
+        newSale,
+        widget.activeDraftId,
+      );
 
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => SaleSuccessScreen(
-              saleId: saleId,
-              customerPhone: widget.customerPhone,
-              customerName: widget.customerName.isEmpty
-                  ? 'Walk-in'
-                  : widget.customerName,
-              items: widget.cart.items
-                  .map(
-                    (i) => {
-                      'name': i.categoryName,
-                      'stickerPrice': i.stickerPrice,
-                      'finalPrice': i.finalPrice,
-                    },
-                  )
-                  .toList(),
-              subtotal: widget.cart.totalPayable,
-              overallDiscountAmount: _overallDiscountAmount,
-              roundOff: double.tryParse(_discountController.text) ?? 0.0,
-              netPayable: _finalTotal,
-              payments: payments,
+              sale: newSale,
               orgId: widget.orgId,
-            ),
+            ), // Just pass the whole object!
           ),
         );
       }
