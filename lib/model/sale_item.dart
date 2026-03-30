@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'sale_item.g.dart';
 
-@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
+@JsonSerializable(explicitToJson: true)
 class SaleItem {
   // Keeping 'cat_id' for backwards compatibility with your existing data
   @JsonKey(name: 'cat_id')
