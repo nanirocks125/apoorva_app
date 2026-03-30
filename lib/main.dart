@@ -8,6 +8,7 @@ import 'package:apoorva_app/screens/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
+import 'package:apoorva_app/screens/organization/organization_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
@@ -36,7 +37,11 @@ class ApoorvaApp extends StatelessWidget {
       title: 'Apoorva Retail Management',
       initialRoute: '/login',
       // 2. Named Routes Table
-      routes: {'/login': (context) => const LoginScreen()},
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/users': (context) => const UserScreen(),
+        '/organizations': (context) => OrganizationScreen(),
+      },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
       onGenerateRoute: (settings) {

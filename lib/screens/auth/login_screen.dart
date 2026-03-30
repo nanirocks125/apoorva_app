@@ -69,9 +69,9 @@ class _LoginScreenState extends State<LoginScreen> {
     // TODO: implement initState
     super.initState();
 
-    // _emailController.text = "nanirocks125@gmail.com";
-    // _passwordController.text = "Nandam@125";
-    // return;
+    _emailController.text = "nanirocks125@gmail.com";
+    _passwordController.text = "Nandam@125";
+    return;
     _emailController.text = "lavanya@gmail.com";
     _passwordController.text = "Apoorva@123";
   }

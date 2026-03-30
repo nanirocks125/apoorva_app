@@ -18,27 +18,47 @@ class PlatformStatsService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<PlatformStats> getLivePlatformStats() async {
-    // 1. Count Organizations (Tenants)
-    final orgsCount = await _db
-        .collection('organizations')
-        .where('status', isEqualTo: 'Active')
-        .count()
-        .get();
+    try {
+      // 1. Count Organizations (Tenants)
+      final orgsCount = await _db
+          .collection('organizations')
+          .where('status', isEqualTo: 'Active')
+          .count()
+          .get();
 
-    // 2. Count Global Users
-    final usersCount = await _db.collection('users').count().get();
+      // 2. Count Global Users
+      final usersCount = await _db.collection('users').count().get();
 
-    // 3. Count New Requests (e.g., Orgs with 'Pending' status)
-    final requestsCount = await _db
-        .collection('organizations')
-        .where('status', isEqualTo: 'Pending')
-        .count()
-        .get();
+      // 3. Count New Requests (e.g., Orgs with 'Pending' status)
+      final requestsCount = await _db
+          .collection('organizations')
+          .where('status', isEqualTo: 'Pending')
+          .count()
+          .get();
 
-    return PlatformStats(
-      activeOrgs: orgsCount.count ?? 0,
-      globalUsers: usersCount.count ?? 0,
-      newRequests: requestsCount.count ?? 0,
-    );
+      return PlatformStats(
+        activeOrgs: orgsCount.count ?? 0,
+        globalUsers: usersCount.count ?? 0,
+        newRequests: requestsCount.count ?? 0,
+        systemHealth: 'Optimal',
+      );
+    } on FirebaseException catch (e) {
+      // Return a fallback object so the UI can still render with error status
+      return PlatformStats(
+        activeOrgs: 0,
+        globalUsers: 0,
+        newRequests: 0,
+        systemHealth: 'Degraded: ${e.code}',
+      );
+    } catch (e) {
+      // Catch-all for any other Dart/Runtime errors
+
+      return PlatformStats(
+        activeOrgs: 0,
+        globalUsers: 0,
+        newRequests: 0,
+        systemHealth: 'Error',
+      );
+    }
   }
 }

@@ -2,7 +2,6 @@ import 'package:apoorva_app/components/global_drawer.dart';
 import 'package:apoorva_app/enum/form_mode.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
-import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/services/auth_service.dart';
@@ -70,7 +69,8 @@ class SuperAdminDashboard extends StatelessWidget {
                       'New Requests',
                       isLoading
                           ? '...'
-                          : '${stats?.newRequests.toString().padLeft(2, '0') ?? '00'}',
+                          : stats?.newRequests.toString().padLeft(2, '0') ??
+                                '00',
                       Icons.pending_actions,
                       Colors.amber,
                     ),
