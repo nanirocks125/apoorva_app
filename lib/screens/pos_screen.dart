@@ -128,13 +128,25 @@ class _PosScreenState extends State<PosScreen> {
     if (_cart.items.isEmpty) {
       return const SliverToBoxAdapter(
         child: Padding(
-          padding: EdgeInsets.all(40.0),
-          child: Center(
-            child: Text('Cart is empty', style: TextStyle(color: Colors.grey)),
+          padding: EdgeInsets.symmetric(vertical: 60),
+          child: Column(
+            children: [
+              Icon(
+                Icons.shopping_basket_outlined,
+                size: 48,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Cart is empty',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+            ],
           ),
         ),
       );
     }
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       sliver: SliverList.builder(
@@ -142,7 +154,90 @@ class _PosScreenState extends State<PosScreen> {
         itemBuilder: (context, index) {
           final item = _cart.items[index];
           return Card(
-            // ... (Your existing Card/ListTile code here)
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey.shade100),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              // Tapping an item opens the calculator to edit price/discount
+              onTap: () =>
+                  _openSmartCalculator(existingItem: item, index: index),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // 1. Icon Badge
+                    CircleAvatar(
+                      backgroundColor: const Color(
+                        0xFFFF5733,
+                      ).withOpacity(0.08),
+                      child: Text(
+                        item.category.name.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          color: Color(0xFFFF5733),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // 2. Item Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.category.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color(0xFF2D3436),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '₹${item.stickerPrice.toStringAsFixed(0)} • ${item.discountPercent.toInt()}% Off',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 3. Price & Remove Action
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '₹${item.finalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Color(0xFF2D3436),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () =>
+                              _updateCart(() => _cart.items.removeAt(index)),
+                          child: Icon(
+                            Icons.remove_circle_outline,
+                            color: Colors.red.shade300,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -151,35 +246,56 @@ class _PosScreenState extends State<PosScreen> {
 
   Widget _buildCustomerDataHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Column(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Colors.grey.shade50,
+      child: Row(
         children: [
-          // 1. Customer Name Field
-          TextField(
-            controller: _customerNameController,
-            decoration: InputDecoration(
-              labelText: 'Customer Name',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: _customerNameController,
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Customer Name',
+                prefixIcon: const Icon(Icons.person_outline, size: 18),
+                filled: true,
+                fillColor: Colors.white,
+                isDense: true,
+                contentPadding: const EdgeInsets.all(12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
               ),
-              prefixIcon: const Icon(Icons.person_outline, size: 20),
             ),
           ),
-
-          const SizedBox(height: 12), // Vertical gap instead of horizontal
-          // 2. Phone Number Field
-          TextField(
-            controller: _customerPhoneController,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              labelText: 'Phone Number',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 1,
+            child: TextField(
+              controller: _customerPhoneController,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Phone',
+                prefixIcon: const Icon(Icons.phone_iphone_outlined, size: 18),
+                filled: true,
+                fillColor: Colors.white,
+                isDense: true,
+                contentPadding: const EdgeInsets.all(12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
               ),
-              prefixIcon: const Icon(Icons.phone_outlined, size: 20),
             ),
           ),
         ],
@@ -235,42 +351,87 @@ class _PosScreenState extends State<PosScreen> {
     Category category,
     VoidCallback onTap,
   ) {
+    final bool isHotkey = category.isHotkey;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: category.isHotkey
-                ? const Color(0xFFFF5733)
-                : Colors.grey.shade200,
-            width: category.isHotkey ? 2 : 1, // హాట్-కీ అయితే హైలైట్ అవుతుంది
-          ),
-        ),
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${category.billMachineNumber} - ${category.name}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Stock: ${category.currentStock}',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                  ),
-                ],
-              ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+          border: Border.all(
+            color: isHotkey
+                ? const Color(0xFFFF5733).withOpacity(0.5)
+                : Colors.grey.shade100,
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              // Hotkey indicator bar
+              if (isHotkey)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(height: 3, color: const Color(0xFFFF5733)),
+                ),
+
+              // Bill Number Badge (Top-Left)
+              Positioned(
+                top: 6,
+                left: 8,
+                child: Text(
+                  '#${category.billMachineNumber}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        category.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14, // Reduced size to prevent overflow
+                          color: Color(0xFF2D3436),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'STK: ${category.currentStock}',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 10,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -375,74 +536,62 @@ class _PosScreenState extends State<PosScreen> {
 
   Widget _buildCartSummary() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Items: ${_cart.items.length}',
-                style: const TextStyle(fontSize: 16),
+                '${_cart.items.length} ITEMS',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
-                'Total: ₹${_cart.totalPayable.toStringAsFixed(2)}',
+                '₹${_cart.totalPayable.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF2D3436),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              backgroundColor: _cart.items.isEmpty ? Colors.grey : Colors.green,
-            ),
-            onPressed: _cart.items.isEmpty
-                ? null
-                : () =>
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CheckoutScreen(
-                            cart: _cart,
-                            orgId: widget.organization.id,
-                            customer: Customer(
-                              name: _customerNameController.text,
-                              phone: _customerPhoneController.text,
-                              createdAt: DateTime.now(),
-                            ),
-                            activeDraftId: _activeDraftId,
-                          ),
-                        ),
-                      ).then((sold) {
-                        if (sold == true) {
-                          // 1. If it was a resumed draft, delete it now that payment is confirmed
-                          if (_activeDraftId != null) {
-                            DraftService().deleteDraft(
-                              widget.organization.id,
-                              _activeDraftId!,
-                            );
-                          }
-
-                          // 2. Clear state for the next customer
-                          _updateCart(() {
-                            _activeDraftId = null;
-                            _cart.items.clear();
-                            _customerNameController.clear();
-                            _customerPhoneController.clear();
-                          });
-                        }
-                      }),
-            child: const Text(
-              'CHECKOUT',
-              style: TextStyle(color: Colors.white),
+          const SizedBox(width: 24),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(
+                  0xFF00B894,
+                ), // Clean Professional Green
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _cart.items.isEmpty
+                  ? null
+                  : () => _navigateToCheckout(),
+              child: const Text(
+                'PROCEED TO CHECKOUT',
+                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
             ),
           ),
         ],
@@ -884,5 +1033,38 @@ class _PosScreenState extends State<PosScreen> {
         ),
       ),
     );
+  }
+
+  void _navigateToCheckout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          cart: _cart,
+          orgId: widget.organization.id,
+          customer: Customer(
+            name: _customerNameController.text,
+            phone: _customerPhoneController.text,
+            createdAt: DateTime.now(),
+          ),
+          activeDraftId: _activeDraftId,
+        ),
+      ),
+    ).then((sold) {
+      if (sold == true) {
+        // 1. If it was a resumed draft, delete it now that payment is confirmed
+        if (_activeDraftId != null) {
+          DraftService().deleteDraft(widget.organization.id, _activeDraftId!);
+        }
+
+        // 2. Clear state for the next customer
+        _updateCart(() {
+          _activeDraftId = null;
+          _cart.items.clear();
+          _customerNameController.clear();
+          _customerPhoneController.clear();
+        });
+      }
+    });
   }
 }
