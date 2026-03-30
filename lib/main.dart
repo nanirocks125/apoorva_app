@@ -97,11 +97,11 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/pos') {
-          final orgId =
+          final organization =
               settings.arguments
-                  as String; // Extract the user passed from Login
+                  as Organization; // Extract the user passed from Login
           return MaterialPageRoute(
-            builder: (context) => PosScreen(orgId: orgId),
+            builder: (context) => PosScreen(organization: organization),
           );
         }
 

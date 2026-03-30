@@ -2,6 +2,7 @@ import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/checkout_screen.dart';
 import 'package:apoorva_app/services/draft_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
@@ -9,8 +10,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class PosScreen extends StatefulWidget {
-  const PosScreen({super.key, required this.orgId});
-  final String orgId;
+  const PosScreen({super.key, required this.organization});
+  final Organization organization;
 
   @override
   State<PosScreen> createState() => _PosScreenState();
@@ -32,98 +33,6 @@ class _PosScreenState extends State<PosScreen> {
     super.dispose();
   }
 
-  // 1. Named parameters వాడటం వల్ల కోడ్ క్లీన్ గా ఉంటుంది
-  void _openSmartCalculator({
-    Category? category,
-    CartItem? existingItem,
-    int? index,
-  }) {
-    // ఎడిట్ చేస్తుంటే పాత ప్రైస్, లేకపోతే ఖాళీ
-    final TextEditingController priceController = TextEditingController(
-      text: existingItem != null
-          ? existingItem.stickerPrice.toStringAsFixed(0)
-          : '',
-    );
-
-    double selectedDiscount = existingItem?.discountPercent ?? 0.0;
-
-    // కేటగిరీ ఆబ్జెక్ట్ ని ఎంచుకోవడం
-    final currentCategory = existingItem?.category ?? category;
-
-    if (currentCategory == null) return; // Safety check
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                existingItem != null
-                    ? 'Edit ${currentCategory.name}'
-                    : 'Adding ${currentCategory.name}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(
-                  labelText: 'Sticker Price',
-                  prefixText: '₹ ',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                autofocus: true,
-              ),
-              // ... (Discount Selection Row) ...
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  final double? price = double.tryParse(priceController.text);
-                  if (price != null && price > 0) {
-                    _updateCart(() {
-                      final updatedItem = CartItem(
-                        category: currentCategory, // Correct Category Object
-                        stickerPrice: price,
-                        discountPercent: selectedDiscount,
-                      );
-
-                      if (index != null) {
-                        _cart.items[index] = updatedItem;
-                      } else {
-                        _cart.items.add(updatedItem);
-                      }
-                    });
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text(
-                  existingItem != null ? 'UPDATE ITEM' : 'ADD TO CART',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Helper to refresh UI
-  void _updateCart(VoidCallback fn) {
-    setState(fn);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,7 +52,7 @@ class _PosScreenState extends State<PosScreen> {
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('organizations')
-                .doc(widget.orgId)
+                .doc(widget.organization.id)
                 .collection('drafts')
                 .snapshots(),
             builder: (context, snapshot) {
@@ -239,7 +148,7 @@ class _PosScreenState extends State<PosScreen> {
 
   Widget _buildCategoryGrid() {
     return StreamBuilder<List<Category>>(
-      stream: _orgService.getLiveCategories(widget.orgId),
+      stream: _orgService.getLiveCategories(widget.organization.id),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -477,7 +386,7 @@ class _PosScreenState extends State<PosScreen> {
                         MaterialPageRoute(
                           builder: (context) => CheckoutScreen(
                             cart: _cart,
-                            orgId: widget.orgId,
+                            orgId: widget.organization.id,
                             customer: Customer(
                               name: _customerNameController.text,
                               phone: _customerPhoneController.text,
@@ -491,7 +400,7 @@ class _PosScreenState extends State<PosScreen> {
                           // 1. If it was a resumed draft, delete it now that payment is confirmed
                           if (_activeDraftId != null) {
                             DraftService().deleteDraft(
-                              widget.orgId,
+                              widget.organization.id,
                               _activeDraftId!,
                             );
                           }
@@ -518,7 +427,7 @@ class _PosScreenState extends State<PosScreen> {
   // 1. ప్రస్తుత బిల్లును హోల్డ్ చేయడం
   Future<void> _holdCurrentBill() async {
     await DraftService().saveDraft(
-      orgId: widget.orgId,
+      orgId: widget.organization.id,
       customerName: _customerNameController.text,
       customerPhone: _customerPhoneController.text,
       items: _cart.items,
@@ -612,5 +521,97 @@ class _PosScreenState extends State<PosScreen> {
         );
       }
     });
+  }
+
+  // 1. Named parameters వాడటం వల్ల కోడ్ క్లీన్ గా ఉంటుంది
+  void _openSmartCalculator({
+    Category? category,
+    CartItem? existingItem,
+    int? index,
+  }) {
+    // ఎడిట్ చేస్తుంటే పాత ప్రైస్, లేకపోతే ఖాళీ
+    final TextEditingController priceController = TextEditingController(
+      text: existingItem != null
+          ? existingItem.stickerPrice.toStringAsFixed(0)
+          : '',
+    );
+
+    double selectedDiscount = existingItem?.discountPercent ?? 0.0;
+
+    // కేటగిరీ ఆబ్జెక్ట్ ని ఎంచుకోవడం
+    final currentCategory = existingItem?.category ?? category;
+
+    if (currentCategory == null) return; // Safety check
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                existingItem != null
+                    ? 'Edit ${currentCategory.name}'
+                    : 'Adding ${currentCategory.name}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(
+                  labelText: 'Sticker Price',
+                  prefixText: '₹ ',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                autofocus: true,
+              ),
+              // ... (Discount Selection Row) ...
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  final double? price = double.tryParse(priceController.text);
+                  if (price != null && price > 0) {
+                    _updateCart(() {
+                      final updatedItem = CartItem(
+                        category: currentCategory, // Correct Category Object
+                        stickerPrice: price,
+                        discountPercent: selectedDiscount,
+                      );
+
+                      if (index != null) {
+                        _cart.items[index] = updatedItem;
+                      } else {
+                        _cart.items.add(updatedItem);
+                      }
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text(
+                  existingItem != null ? 'UPDATE ITEM' : 'ADD TO CART',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper to refresh UI
+  void _updateCart(VoidCallback fn) {
+    setState(fn);
   }
 }

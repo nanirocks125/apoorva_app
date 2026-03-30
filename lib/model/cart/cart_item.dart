@@ -1,5 +1,3 @@
-// Individual Item in the Cart
-
 import 'package:apoorva_app/model/category/category.dart';
 
 class CartItem {
