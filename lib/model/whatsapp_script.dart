@@ -10,14 +10,12 @@ class WhatsAppScript {
   final String title;
   final String content;
   final String language; // 'Telugu', 'English', 'Tanglish'
-  final bool isActive;
 
   WhatsAppScript({
     required this.id,
     required this.title,
     required this.content,
     required this.language,
-    this.isActive = true,
   });
 
   // --- JSON Logic ---
@@ -36,7 +34,6 @@ class WhatsAppScript {
     title: title,
     content: content,
     language: language,
-    isActive: isActive,
   );
 
   // --- Helper: Placeholder Processor ---

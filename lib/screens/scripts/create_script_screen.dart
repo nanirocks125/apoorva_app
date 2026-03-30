@@ -1,3 +1,5 @@
+import 'package:apoorva_app/model/whatsapp_script.dart';
+import 'package:apoorva_app/services/whatsapp_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -23,16 +25,15 @@ class _CreateScriptScreenState extends State<CreateScriptScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await FirebaseFirestore.instance
-          .collection('organizations')
-          .doc(widget.orgId)
-          .collection('scripts')
-          .add({
-            'title': _titleController.text.trim(),
-            'content': _contentController.text.trim(),
-            'language': _selectedLanguage,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+      await WhatsAppService().saveScript(
+        widget.orgId,
+        WhatsAppScript(
+          id: '', // Firestore will generate this
+          title: _titleController.text.trim(),
+          content: _contentController.text.trim(),
+          language: _selectedLanguage,
+        ),
+      );
 
       if (mounted) {
         Navigator.pop(context);

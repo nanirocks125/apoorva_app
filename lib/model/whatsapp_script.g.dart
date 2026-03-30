@@ -12,7 +12,6 @@ WhatsAppScript _$WhatsAppScriptFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       content: json['content'] as String,
       language: json['language'] as String,
-      isActive: json['isActive'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$WhatsAppScriptToJson(WhatsAppScript instance) =>
@@ -21,5 +20,4 @@ Map<String, dynamic> _$WhatsAppScriptToJson(WhatsAppScript instance) =>
       'title': instance.title,
       'content': instance.content,
       'language': instance.language,
-      'isActive': instance.isActive,
     };

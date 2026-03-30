@@ -7,13 +7,31 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class WhatsAppService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<void> saveScript(String orgId, WhatsAppScript script) async {
+    try {
+      // 1. Create a reference to a NEW document (this doesn't save it yet)
+      final docRef = _db
+          .collection('organizations')
+          .doc(orgId)
+          .collection('scripts')
+          .doc(); // No ID passed = Firestore generates one
+
+      // 2. Update the script object with the newly generated ID
+      final scriptWithId = script.copyWithId(docRef.id);
+
+      // 3. Save the JSON (now containing the correct ID) to that specific reference
+      await docRef.set(scriptWithId.toJson());
+    } catch (e) {
+      throw Exception('Failed to save script to Apoorva library: $e');
+    }
+  }
+
   // 1. Get Live Scripts Stream (Typed Models)
   Stream<List<WhatsAppScript>> getScriptsStream(String orgId) {
     return _db
         .collection('organizations')
         .doc(orgId)
         .collection('scripts')
-        .where('is_active', isEqualTo: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

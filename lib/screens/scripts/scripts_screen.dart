@@ -95,32 +95,32 @@ class ScriptsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: script.content));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Script copied to clipboard!'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.copy, size: 20),
-                  label: const Text('COPY'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF25D366),
-                    foregroundColor: Colors.white,
-                  ),
-                  // 2. Using our Service Launch Logic
-                  onPressed: () => WhatsAppService().launchWhatsApp(
-                    phone: '', // General share, no specific phone here
-                    message: script.content,
-                  ),
-                  icon: const Icon(Icons.chat_bubble_outline, size: 20),
-                  label: const Text('SHARE'),
-                ),
+                // TextButton.icon(
+                //   onPressed: () {
+                //     Clipboard.setData(ClipboardData(text: script.content));
+                //     ScaffoldMessenger.of(context).showSnackBar(
+                //       const SnackBar(
+                //         content: Text('Script copied to clipboard!'),
+                //       ),
+                //     );
+                //   },
+                //   icon: const Icon(Icons.copy, size: 20),
+                //   label: const Text('COPY'),
+                // ),
+                // const SizedBox(width: 8),
+                // ElevatedButton.icon(
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: const Color(0xFF25D366),
+                //     foregroundColor: Colors.white,
+                //   ),
+                //   // 2. Using our Service Launch Logic
+                //   onPressed: () => WhatsAppService().launchWhatsApp(
+                //     phone: '', // General share, no specific phone here
+                //     message: script.content,
+                //   ),
+                //   icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                //   label: const Text('SHARE'),
+                // ),
               ],
             ),
           ],
