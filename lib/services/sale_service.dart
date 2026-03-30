@@ -1,6 +1,5 @@
 import 'package:apoorva_app/model/sale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:apoorva_app/model/cart/pos_cart.dart';
 
 class SaleService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

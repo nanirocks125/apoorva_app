@@ -20,6 +20,14 @@ Map<String, dynamic> _$CategoryToJson(Category instance) => <String, dynamic>{
   'name': instance.name,
   'currentStock': instance.currentStock,
   'billMachineNumber': instance.billMachineNumber,
-  'lastSoldDate': const TimestampConverter().toJson(instance.lastSoldDate),
+  'lastSoldDate': _$JsonConverterToJson<dynamic, DateTime>(
+    instance.lastSoldDate,
+    const TimestampConverter().toJson,
+  ),
   'isHotkey': instance.isHotkey,
 };
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

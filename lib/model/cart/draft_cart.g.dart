@@ -14,7 +14,7 @@ DraftCart _$DraftCartFromJson(Map<String, dynamic> json) => DraftCart(
       .map((e) => CartItem.fromJson(e as Map<String, dynamic>))
       .toList(),
   total: (json['total'] as num).toDouble(),
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  createdAt: const TimestampConverter().fromJson(json['createdAt']),
 );
 
 Map<String, dynamic> _$DraftCartToJson(DraftCart instance) => <String, dynamic>{
@@ -23,5 +23,5 @@ Map<String, dynamic> _$DraftCartToJson(DraftCart instance) => <String, dynamic>{
   'customerPhone': instance.customerPhone,
   'items': instance.items.map((e) => e.toJson()).toList(),
   'total': instance.total,
-  'createdAt': instance.createdAt.toIso8601String(),
+  'createdAt': const TimestampConverter().toJson(instance.createdAt),
 };

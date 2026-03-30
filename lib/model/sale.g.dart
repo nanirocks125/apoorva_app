@@ -23,7 +23,7 @@ Sale _$SaleFromJson(Map<String, dynamic> json) => Sale(
     (k, e) =>
         MapEntry($enumDecode(_$PaymentModeEnumMap, k), (e as num).toDouble()),
   ),
-  timestamp: DateTime.parse(json['timestamp'] as String),
+  timestamp: const TimestampConverter().fromJson(json['timestamp']),
   source: json['source'] as String,
   status: json['status'] as String,
   whatsappStatus: json['whatsappStatus'] as String? ?? 'unsent',
@@ -43,7 +43,7 @@ Map<String, dynamic> _$SaleToJson(Sale instance) => <String, dynamic>{
   'payments': instance.payments.map(
     (k, e) => MapEntry(_$PaymentModeEnumMap[k]!, e),
   ),
-  'timestamp': instance.timestamp.toIso8601String(),
+  'timestamp': const TimestampConverter().toJson(instance.timestamp),
   'source': instance.source,
   'status': instance.status,
   'whatsappStatus': instance.whatsappStatus,

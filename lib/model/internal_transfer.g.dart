@@ -13,7 +13,7 @@ InternalTransfer _$InternalTransferFromJson(Map<String, dynamic> json) =>
       toAccountId: json['toAccountId'] as String,
       amount: (json['amount'] as num).toDouble(),
       transferType: json['transferType'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: const TimestampConverter().fromJson(json['timestamp']),
     );
 
 Map<String, dynamic> _$InternalTransferToJson(InternalTransfer instance) =>
@@ -23,5 +23,5 @@ Map<String, dynamic> _$InternalTransferToJson(InternalTransfer instance) =>
       'toAccountId': instance.toAccountId,
       'amount': instance.amount,
       'transferType': instance.transferType,
-      'timestamp': instance.timestamp.toIso8601String(),
+      'timestamp': const TimestampConverter().toJson(instance.timestamp),
     };
