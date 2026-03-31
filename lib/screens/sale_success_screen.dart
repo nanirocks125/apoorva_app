@@ -263,7 +263,7 @@ class SaleSuccessScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 // ఫోన్ నంబర్ లేకపోతే అలర్ట్ చూపండి
                 if (sale.customerName.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -271,6 +271,13 @@ class SaleSuccessScreen extends StatelessWidget {
                   );
                   return;
                 }
+
+                // STEP 1: Open the chat with the text summary instantly
+                // This puts this customer at the very top of "Recent Chats"
+                await _sendWhatsAppTextOnly(sale);
+
+                // STEP 2: Wait a tiny bit for the OS to register the interaction
+                await Future.delayed(const Duration(milliseconds: 800));
                 // స్క్రిప్ట్ లైబ్రరీని ఓపెన్ చేయండి
                 // _openScriptLibrary(context, sale.customerPhone, sale);
                 _handleSendInvoice(context, sale, sale.id);
@@ -443,7 +450,7 @@ class SaleSuccessScreen extends StatelessWidget {
           "We hope to see you again in Mangalagiri soon!";
 
       // 4. Call your WhatsApp Service to trigger the Share Sheet
-      await WhatsAppService().sendInvoiceWithPDF(
+      await WhatsAppService().sendInvoiceDirectToWhatsapp(
         phone: sale.customerPhone,
         message: whatsappMessage,
         saleId: saleId,
@@ -622,6 +629,22 @@ class SaleSuccessScreen extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Could not open SMS app")));
+    }
+  }
+
+  Future<void> _sendWhatsAppTextOnly(Sale sale) async {
+    String phone = sale.customerPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phone.length == 10) phone = "91$phone";
+
+    final String text =
+        "Hello ${sale.customerName}, your digital bill from Apoorva is ready! 🙏";
+
+    final Uri url = Uri.parse(
+      "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(text)}",
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
     }
   }
 }

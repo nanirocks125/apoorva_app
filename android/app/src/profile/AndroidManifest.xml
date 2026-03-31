@@ -3,5 +3,8 @@
          the Flutter tool needs it to communicate with the running application
          to allow setting breakpoints, to provide hot reload, etc.
     -->
+    <queries>
+    <package android:name="com.whatsapp" />
+    <package android:name="com.whatsapp.w4b" /> </queries>
     <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>
