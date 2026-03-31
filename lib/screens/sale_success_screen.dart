@@ -5,7 +5,9 @@ import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/services/pdf_invoice_service.dart';
 import 'package:apoorva_app/services/whatsapp_service.dart';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
@@ -188,12 +190,39 @@ class SaleSuccessScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: () => PdfInvoiceService.createAndShareInvoice(
-                customerName: sale.customerName,
-                netPayable: sale.netPayable.toString(),
-                saleId: sale.id,
-                items: sale.items, // Pass your cart items list here
+              onPressed: () => _printReceiptViaBluetooth(context, sale),
+              // onPressed: () => PdfInvoiceService.createAndShareInvoice(
+              //   customerName: sale.customerName,
+              //   netPayable: sale.netPayable.toString(),
+              //   saleId: sale.id,
+              //   items: sale.items, // Pass your cart items list here
+              // ),
+              icon: const Icon(Icons.print, color: Colors.white),
+              label: const Text(
+                'Print Receipt',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+            ),
+            const SizedBox(height: 12),
+
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey,
+                minimumSize: const Size.fromHeight(55),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => _handlePrintReceipt(context, sale),
+              // onPressed: () => PdfInvoiceService.createAndShareInvoice(
+              //   customerName: sale.customerName,
+              //   netPayable: sale.netPayable.toString(),
+              //   saleId: sale.id,
+              //   items: sale.items, // Pass your cart items list here
+              // ),
               icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
               label: const Text(
                 'GENERATE & SHARE PDF',
@@ -203,6 +232,7 @@ class SaleSuccessScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
 
             // ACTION BUTTONS
             ElevatedButton.icon(
@@ -400,6 +430,100 @@ class SaleSuccessScreen extends StatelessWidget {
       // Handle any errors (like if the user cancels or the file system fails)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _printReceiptViaBluetooth(BuildContext context, Sale sale) async {
+    BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+    try {
+      // 1. Check if Bluetooth is even on
+      bool? isConnected = await bluetooth.isConnected;
+
+      // 2. Get list of paired (bonded) devices
+      List<BluetoothDevice> devices = await bluetooth.getBondedDevices();
+
+      // 3. Find the Seznik printer in the list
+      // Thermal printers often show up as 'MPT-II', 'Seznik', or 'Bluetooth Printer'
+      BluetoothDevice? seznik = devices.firstWhere(
+        (d) =>
+            d.name!.toLowerCase().contains("seznik") ||
+            d.name!.toLowerCase().contains("mpt") ||
+            d.name!.toLowerCase().contains("printer"),
+        orElse: () =>
+            throw "Seznik Printer not found. Please pair it in Android Bluetooth settings first.",
+      );
+
+      // 4. Connect if not already connected
+      if (!isConnected!) {
+        await bluetooth.connect(seznik);
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Printing Receipt...")));
+
+      // 5. Generate the 48mm bytes
+      final Uint8List pdfBytes = await PdfInvoiceService.generate48mmReceipt(
+        customerName: sale.customerName,
+        netPayable: sale.netPayable.toString(),
+        saleId: sale.id,
+        items: sale.items,
+      );
+
+      // 6. Rasterize PDF to Image
+      // Thermal printers print dots, so we convert the PDF page to a PNG image
+      await for (var page in Printing.raster(pdfBytes, pages: [0], dpi: 200)) {
+        final imageBytes = await page.toPng();
+
+        // 7. Send to Printer
+        await bluetooth.printImageBytes(imageBytes);
+
+        // Feed paper so it can be torn off
+        await bluetooth.printNewLine();
+        await bluetooth.printNewLine();
+        await bluetooth.printNewLine();
+      }
+    } catch (e) {
+      print('bluetooth error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Bluetooth Error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handlePrintReceipt(BuildContext context, Sale sale) async {
+    try {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Connecting to Printer...")));
+
+      // 1. Generate the narrow 48mm PDF bytes
+      final Uint8List receiptBytes =
+          await PdfInvoiceService.generate48mmReceipt(
+            customerName: sale.customerName,
+            netPayable: sale.netPayable.toString(),
+            saleId: sale.id,
+            items: sale.items,
+          );
+
+      // 2. Send directly to the paired Bluetooth printer
+      // This will open the system print spooler optimized for the Seznik
+      await Printing.layoutPdf(
+        onLayout: (format) async => receiptBytes,
+        name: 'Apoorva_Receipt_${sale.id.substring(0, 4)}',
+        dynamicLayout: true, // Crucial for roll-fed thermal printers
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Printing Error: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
