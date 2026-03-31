@@ -1,8 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:html' as html;
 
 class WhatsAppService {
   final FirebaseFirestore _db;
@@ -85,6 +91,39 @@ class WhatsAppService {
     } catch (e) {
       // ఎక్సెప్షన్ వచ్చినా వెబ్ లింక్ ట్రై చేయండి
       await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> sendInvoiceWithPDF({
+    required String phone,
+    required String message,
+    required String saleId,
+    required Uint8List pdfBytes,
+  }) async {
+    if (kIsWeb) {
+      // --- WEB IMPLEMENTATION ---
+
+      // 1. Trigger the PDF Download
+      final blob = html.Blob([pdfBytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute("download", "Invoice_$saleId.pdf")
+        ..click();
+      html.Url.revokeObjectUrl(url);
+
+      // 2. Open WhatsApp Web with the message
+      // Note: Browsers cannot automatically attach a file to WhatsApp.
+      final String encodedMsg = Uri.encodeComponent(message);
+      final String whatsappUrl = "https://wa.me/$phone?text=$encodedMsg";
+      html.window.open(whatsappUrl, '_blank');
+    } else {
+      // --- MOBILE IMPLEMENTATION ---
+
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/Invoice_$saleId.pdf').create();
+      await file.writeAsBytes(pdfBytes);
+
+      await Share.shareXFiles([XFile(file.path)], text: message);
     }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
@@ -220,7 +222,8 @@ class SaleSuccessScreen extends StatelessWidget {
                   return;
                 }
                 // స్క్రిప్ట్ లైబ్రరీని ఓపెన్ చేయండి
-                _openScriptLibrary(context, sale.customerPhone, sale);
+                // _openScriptLibrary(context, sale.customerPhone, sale);
+                _handleSendInvoice(context, sale, sale.id);
               },
               icon: const Icon(Icons.share, color: Colors.white),
               label: const Text(
@@ -359,5 +362,45 @@ class SaleSuccessScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleSendInvoice(
+    BuildContext context,
+    Sale sale,
+    String saleId,
+  ) async {
+    try {
+      // 1. Show a loading indicator (Good for UX)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Generating Invoice PDF...")),
+      );
+
+      // 2. Generate the PDF Bytes using your Service
+      final Uint8List pdfBytes = await PdfInvoiceService.generateInvoiceBytes(
+        customerName: sale.customerName,
+        netPayable: sale.netPayable.toString(),
+        saleId: saleId,
+        items: sale.items, // This is your List<SaleItem>
+      );
+
+      // 3. Define your WhatsApp Message (Pull from your Scripts if you have them)
+      final String whatsappMessage =
+          "Hello ${sale.customerName}! Thank you for shopping at Apoorva Jewelry. 🙏 "
+          "Attached is your invoice for Bill ID: ${saleId.substring(0, 8)}. "
+          "We hope to see you again in Mangalagiri soon!";
+
+      // 4. Call your WhatsApp Service to trigger the Share Sheet
+      await WhatsAppService().sendInvoiceWithPDF(
+        phone: sale.customerPhone,
+        message: whatsappMessage,
+        saleId: saleId,
+        pdfBytes: pdfBytes,
+      );
+    } catch (e) {
+      // Handle any errors (like if the user cancels or the file system fails)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
 }

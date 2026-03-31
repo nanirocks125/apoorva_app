@@ -92,4 +92,26 @@ class PdfInvoiceService {
       name: 'Apoorva_Bill_${saleId.substring(0, 4)}.pdf',
     );
   }
+
+  // Inside PdfInvoiceService class
+  static Future<Uint8List> generateInvoiceBytes({
+    required String customerName,
+    required String netPayable,
+    required String saleId,
+    required List<SaleItem> items,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          // ... (Keep all your existing pw.Column code here) ...
+          return pw.Column(children: [/* your existing code */]);
+        },
+      ),
+    );
+
+    return pdf.save(); // Return the bytes instead of calling layoutPdf
+  }
 }
