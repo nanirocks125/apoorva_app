@@ -60,31 +60,31 @@ class WhatsAppService {
   }
 
   // 2. Core Launch Logic
+  // WhatsAppService లోపల:
   Future<void> launchWhatsApp({
     required String phone,
     required String message,
   }) async {
-    Uri url;
-    if (kIsWeb) {
-      url = Uri.parse(
-        "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
-      );
-    } else {
-      url = Uri.parse(
-        "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
-      );
-    }
+    final String messageEncoded = Uri.encodeComponent(message);
+    final Uri appUrl = Uri.parse(
+      "whatsapp://send?phone=$phone&text=$messageEncoded",
+    );
+    final Uri webUrl = Uri.parse("https://wa.me/$phone?text=$messageEncoded");
 
     try {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      // Fallback for mobile if whatsapp:// fails
-      if (!kIsWeb) {
-        final fallbackUrl = Uri.parse(
-          "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
-        );
-        await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+      // 🟢 లాంచ్ అయిందో లేదో వెరిఫై చేయండి
+      final bool launched = await launchUrl(
+        appUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      // ఒకవేళ లాంచ్ అవ్వకపోతే (false వస్తే), వెబ్ లింక్ ట్రై చేయండి
+      if (!launched) {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
       }
+    } catch (e) {
+      // ఎక్సెప్షన్ వచ్చినా వెబ్ లింక్ ట్రై చేయండి
+      await launchUrl(webUrl, mode: LaunchMode.externalApplication);
     }
   }
 }
