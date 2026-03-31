@@ -408,9 +408,12 @@ class SaleSuccessScreen extends StatelessWidget {
       // 2. Generate the PDF Bytes using your Service
       final Uint8List pdfBytes = await PdfInvoiceService.generateInvoiceBytes(
         customerName: sale.customerName,
-        netPayable: sale.netPayable.toString(),
+        netPayable: sale.netPayable.toStringAsFixed(2),
         saleId: saleId,
-        items: sale.items, // This is your List<SaleItem>
+        items: sale.items,
+        subTotal: sale.subtotal,
+        totalSavings: sale.totalSavings,
+        roundOff: sale.roundOff, // This is your List<SaleItem>
       );
 
       // 3. Define your WhatsApp Message (Pull from your Scripts if you have them)
@@ -467,7 +470,7 @@ class SaleSuccessScreen extends StatelessWidget {
       // 5. Generate the 48mm bytes
       final Uint8List pdfBytes = await PdfInvoiceService.generate48mmReceipt(
         customerName: sale.customerName,
-        netPayable: sale.netPayable.toString(),
+        netPayable: sale.netPayable.toStringAsFixed(2),
         saleId: sale.id,
         items: sale.items,
         subTotal: sale.subtotal, // Pass subtotal for accurate receipt
@@ -507,9 +510,9 @@ class SaleSuccessScreen extends StatelessWidget {
 
       // 1. Generate the narrow 48mm PDF bytes
       final Uint8List receiptBytes =
-          await PdfInvoiceService.generate48mmReceipt(
+          await PdfInvoiceService.generateInvoiceBytes(
             customerName: sale.customerName,
-            netPayable: sale.netPayable.toString(),
+            netPayable: sale.netPayable.toStringAsFixed(2),
             saleId: sale.id,
             items: sale.items,
             subTotal: sale.subtotal, // Pass subtotal for accurate receipt
