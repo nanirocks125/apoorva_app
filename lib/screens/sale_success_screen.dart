@@ -470,6 +470,9 @@ class SaleSuccessScreen extends StatelessWidget {
         netPayable: sale.netPayable.toString(),
         saleId: sale.id,
         items: sale.items,
+        subTotal: sale.subtotal, // Pass subtotal for accurate receipt
+        totalSavings: sale.totalSavings, // Calculate total savings
+        roundOff: sale.roundOff, // Pass round-off if needed
       );
 
       // 6. Rasterize PDF to Image
@@ -509,6 +512,9 @@ class SaleSuccessScreen extends StatelessWidget {
             netPayable: sale.netPayable.toString(),
             saleId: sale.id,
             items: sale.items,
+            subTotal: sale.subtotal, // Pass subtotal for accurate receipt
+            totalSavings: sale.totalSavings, // Calculate total savings
+            roundOff: sale.roundOff, // Pass round-off if needed
           );
 
       // 2. Send directly to the paired Bluetooth printer

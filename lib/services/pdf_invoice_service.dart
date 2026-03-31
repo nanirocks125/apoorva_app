@@ -120,151 +120,266 @@ class PdfInvoiceService {
     required String netPayable,
     required String saleId,
     required List<SaleItem> items,
+    required double subTotal,
+    double totalSavings = 0.0,
+    double roundOff = 0.0, // Added Round Off parameter
   }) async {
     final pdf = pw.Document();
-
-    // 48mm converted to points
     const double rollWidth = 48 * PdfPageFormat.mm;
+    const divider = "- - - - - - - - - - - - - - - - - - - - - - -";
 
     pdf.addPage(
       pw.Page(
-        // 1. Set margins to 0 so the white background covers the entire roll width
         pageFormat: const PdfPageFormat(
           rollWidth,
           double.infinity,
           marginAll: 0,
         ),
         build: (pw.Context context) {
-          // 2. Wrap EVERYTHING in a white Container
           return pw.Container(
             color: PdfColors.white,
-            // 3. Move the padding here instead of page margins
-            padding: const pw.EdgeInsets.all(2 * PdfPageFormat.mm),
+            padding: const pw.EdgeInsets.symmetric(
+              horizontal: 3 * PdfPageFormat.mm,
+              vertical: 5 * PdfPageFormat.mm,
+            ),
             child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              mainAxisSize: pw.MainAxisSize.min,
               children: [
-                // Branding Header
-                pw.Center(
-                  child: pw.Text(
-                    "APOORVA",
-                    style: pw.TextStyle(
-                      fontSize: 16,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.black, // Explicitly set black text
-                    ),
+                // --- BRANDING ---
+                pw.Text(
+                  "APOORVA",
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                    letterSpacing: 2,
                   ),
                 ),
-                pw.Center(
-                  child: pw.Text(
-                    "Mangalagiri",
-                    style: const pw.TextStyle(
-                      fontSize: 8,
-                      color: PdfColors.black,
-                    ),
-                  ),
+                pw.Text(
+                  "1 Gram Jewellery & Fancy",
+                  style: const pw.TextStyle(fontSize: 7),
                 ),
-                pw.Divider(thickness: 0.5, color: PdfColors.black),
+                pw.Text(
+                  "Mangalagiri, AP",
+                  style: const pw.TextStyle(fontSize: 7),
+                ),
+                pw.SizedBox(height: 4),
+                pw.Text(divider, style: const pw.TextStyle(fontSize: 7)),
 
-                // Bill Details
-                pw.Text(
-                  "Bill: ${saleId.substring(0, 6)}",
-                  style: const pw.TextStyle(
-                    fontSize: 8,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  "Date: ${DateTime.now().toString().split(' ')[0]}",
-                  style: const pw.TextStyle(
-                    fontSize: 8,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  "Cust: $customerName",
-                  style: const pw.TextStyle(
-                    fontSize: 8,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.SizedBox(height: 5),
-
-                // Items list
-                pw.Divider(thickness: 0.2, color: PdfColors.black),
+                // --- METADATA ---
                 pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Expanded(
-                      child: pw.Text(
-                        "Item",
-                        style: pw.TextStyle(
-                          fontSize: 8,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
+                    pw.Text(
+                      "Bill: ${saleId.substring(0, 8)}",
+                      style: const pw.TextStyle(fontSize: 7),
                     ),
                     pw.Text(
-                      "Price",
-                      style: pw.TextStyle(
-                        fontSize: 8,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+                      DateTime.now().toString().split(' ')[0],
+                      style: const pw.TextStyle(fontSize: 7),
                     ),
                   ],
                 ),
-                pw.Divider(thickness: 0.2, color: PdfColors.black),
+                pw.Align(
+                  alignment: pw.Alignment.centerLeft,
+                  child: pw.Text(
+                    "Cust: ${customerName.toUpperCase()}",
+                    style: pw.TextStyle(
+                      fontSize: 7,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Text(divider, style: const pw.TextStyle(fontSize: 7)),
 
-                ...items.map(
-                  (item) => pw.Padding(
-                    padding: const pw.EdgeInsets.symmetric(vertical: 1),
-                    child: pw.Row(
+                // --- ITEMS LIST ---
+                pw.SizedBox(height: 2),
+                ...items.map((item) {
+                  final double itemDiscount =
+                      item.stickerPrice - item.finalPrice;
+                  return pw.Padding(
+                    padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Expanded(
-                          child: pw.Text(
-                            item.categoryName,
-                            style: const pw.TextStyle(fontSize: 8),
+                        pw.Text(
+                          item.categoryName.toUpperCase(),
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
                           ),
                         ),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                          children: [
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.RichText(
+                                  text: pw.TextSpan(
+                                    children: [
+                                      pw.TextSpan(
+                                        text: "MRP: Rs.",
+                                        style: const pw.TextStyle(
+                                          fontSize: 7,
+                                          color: PdfColors.grey700,
+                                        ),
+                                      ),
+                                      pw.TextSpan(
+                                        text: item.stickerPrice.toStringAsFixed(
+                                          0,
+                                        ),
+                                        style: pw.TextStyle(
+                                          fontSize: 7,
+                                          color: PdfColors.grey700,
+                                          decoration:
+                                              pw.TextDecoration.lineThrough,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (itemDiscount > 0)
+                                  pw.Text(
+                                    "Discount: -Rs.${itemDiscount.toStringAsFixed(0)}",
+                                    style: const pw.TextStyle(
+                                      fontSize: 7,
+                                      color: PdfColors.grey700,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            pw.Text(
+                              "Rs.${item.finalPrice.toStringAsFixed(2)}",
+                              style: pw.TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                pw.Text(divider, style: const pw.TextStyle(fontSize: 7)),
+
+                // --- FINAL SUMMARY SECTION ---
+
+                // 1. Grand Total (Before Rounding)
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      "GRAND TOTAL",
+                      style: const pw.TextStyle(fontSize: 8.5),
+                    ),
+                    pw.Text(
+                      "Rs.${subTotal.toStringAsFixed(2)}",
+                      style: const pw.TextStyle(fontSize: 8.5),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 2),
+
+                // 1. Round Off Row (Only shows if there is a value)
+                if (roundOff != 0)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 2),
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
                         pw.Text(
-                          item.finalPrice.toString(),
+                          "Additional Discount",
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.Text(
+                          "${roundOff > 0 ? '-' : ''}${roundOff.toStringAsFixed(2)}",
                           style: const pw.TextStyle(fontSize: 8),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                pw.Divider(thickness: 0.5, color: PdfColors.black),
-
-                // Total Section
+                // 2. Net Total
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      "TOTAL:",
+                      "NET TOTAL",
                       style: pw.TextStyle(
                         fontSize: 10,
                         fontWeight: pw.FontWeight.bold,
                       ),
                     ),
                     pw.Text(
-                      "Rs. $netPayable",
+                      "Rs.$netPayable",
                       style: pw.TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
 
+                // 3. Savings Box
+                if (totalSavings > 0)
+                  pw.Container(
+                    width: double.infinity,
+                    margin: const pw.EdgeInsets.only(top: 6),
+                    padding: const pw.EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 2,
+                    ),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.black, width: 0.8),
+                      borderRadius: const pw.BorderRadius.all(
+                        pw.Radius.circular(1),
+                      ),
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Text(
+                          "CONGRATULATIONS!",
+                          style: pw.TextStyle(
+                            fontSize: 7,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 1),
+                        pw.Text(
+                          "YOU SAVED Rs.${totalSavings.toStringAsFixed(2)}",
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 pw.SizedBox(height: 10),
-                pw.Center(
-                  child: pw.Text(
-                    "Thank You! Visit Again",
-                    style: const pw.TextStyle(fontSize: 8),
+
+                // --- QR & FOOTER ---
+                pw.BarcodeWidget(
+                  barcode: pw.Barcode.qrCode(),
+                  data: "https://www.instagram.com/apoorva.online/",
+                  width: 48,
+                  height: 48,
+                ),
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  "Scan to follow @apoorva.online",
+                  style: const pw.TextStyle(fontSize: 6.5),
+                ),
+                pw.SizedBox(height: 6),
+                pw.Text(
+                  "Thank You! Visit Again",
+                  style: pw.TextStyle(
+                    fontSize: 8,
+                    fontStyle: pw.FontStyle.italic,
                   ),
                 ),
-                pw.SizedBox(height: 30), // Space for tearing
+                pw.SizedBox(height: 30),
               ],
             ),
           );

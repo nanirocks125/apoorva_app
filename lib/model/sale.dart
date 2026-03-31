@@ -75,4 +75,14 @@ class Sale {
     status: status,
     whatsappStatus: whatsappStatus,
   );
+
+  double get totalItemSavings => items.fold(
+    0.0,
+    (sum, item) => sum + (item.stickerPrice - item.finalPrice) * item.qty,
+  );
+
+  /// The grand total of all savings (Item discounts + Overall + Round-off)
+  /// This is the "Huge Impact" number for your customers.
+  double get totalSavings =>
+      totalItemSavings + overallDiscountAmount + roundOff;
 }
