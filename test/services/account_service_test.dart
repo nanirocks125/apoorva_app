@@ -2,7 +2,6 @@ import 'package:apoorva_app/model/internal_transfer.dart';
 import 'package:apoorva_app/services/account_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeDb;
