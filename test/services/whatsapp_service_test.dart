@@ -6,7 +6,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:apoorva_app/model/whatsapp_script.dart';
-import 'package:apoorva_app/model/sale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FakeLaunchOptions extends Fake implements LaunchOptions {}
