@@ -26,7 +26,21 @@ import 'firebase_options.dart'; // Ensure you've run 'flutterfire configure'
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Check if any Firebase apps are already initialized
+  try {
+    // Attempt initialization
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // If it fails because it already exists, we check if it's actually there
+    if (e.toString().contains('duplicate-app')) {
+      debugPrint('Firebase already initialized, skipping...');
+    } else {
+      // If it's a different error, rethrow it so you can see it
+      rethrow;
+    }
+  }
   runApp(
     MultiProvider(
       providers: [
