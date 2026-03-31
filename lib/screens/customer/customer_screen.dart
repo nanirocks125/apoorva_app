@@ -43,6 +43,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       body: StreamBuilder<List<Customer>>(
         stream: CustomerService().getCustomers(widget.orgId),
         builder: (context, snapshot) {
+          print('no of customers in stream: ${snapshot.data?.length ?? 0}');
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }

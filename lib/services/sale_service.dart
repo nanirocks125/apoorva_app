@@ -25,6 +25,32 @@ class SaleService {
 
     batch.set(saleRef, sale.toJson());
 
+    // 2. Prepare the Customer Reference (The Missing Part!)
+    // We use the phone number as the document ID to prevent duplicates
+    if (sale.customerPhone.isNotEmpty) {
+      final customerRef = _db
+          .collection('organizations')
+          .doc(orgId)
+          .collection('customers')
+          .doc(
+            sale.customerPhone,
+          ); // Using phone as ID is great for quick lookups
+
+      // Update or create the customer record
+      batch.set(
+        customerRef,
+        {
+          'name': sale.customerName,
+          'phone': sale.customerPhone,
+          'lastPurchaseDate': Timestamp.now(),
+          'totalSales': FieldValue.increment(
+            1,
+          ), // Cool trick: auto-increment their visit count
+        },
+        SetOptions(merge: true),
+      ); // Merge ensures we don't overwrite existing data like address
+    }
+
     if (activeDraftId != null && activeDraftId.isNotEmpty) {
       // ✅ Ensure the draft reference also uses _db
       final draftRef = _db

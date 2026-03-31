@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:apoorva_app/model/sale_item.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -8,7 +9,7 @@ class PdfInvoiceService {
     required String customerName,
     required String netPayable,
     required String saleId,
-    required List<dynamic> items, // Your cart items
+    required List<SaleItem> items, // Your cart items
   }) async {
     final pdf = pw.Document();
 
@@ -43,7 +44,9 @@ class PdfInvoiceService {
               pw.TableHelper.fromTextArray(
                 headers: ['Item', 'Price'],
                 data: items
-                    .map((item) => [item['name'], "Rs. ${item['price']}"])
+                    .map(
+                      (item) => [item.categoryName, "Rs. ${item.finalPrice}"],
+                    )
                     .toList(),
               ),
 
@@ -80,6 +83,8 @@ class PdfInvoiceService {
         },
       ),
     );
+
+    print('laying out pdf');
 
     // 6. Preview & Share (This opens the native Print/Share dialog)
     await Printing.layoutPdf(

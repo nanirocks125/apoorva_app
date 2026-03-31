@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>719122164711-kmvm7eeq16nnghgld73999je7hu7jsfj.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.719122164711-kmvm7eeq16nnghgld73999je7hu7jsfj</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAfsMgLqnOpw1b9i6IeqRegA6II-W9MIKM</string>
+	<string>AIzaSyAop17MIeTjW7kmuP5Zjt7WCXmJZTRHC5k</string>
 	<key>GCM_SENDER_ID</key>
-	<string>942263598354</string>
+	<string>719122164711</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.apoorvaApp</string>
+	<string>com.apoorva.app</string>
 	<key>PROJECT_ID</key>
-	<string>apoorva-4ad68</string>
+	<string>apoorva-debug-8f9eb</string>
 	<key>STORAGE_BUCKET</key>
-	<string>apoorva-4ad68.firebasestorage.app</string>
+	<string>apoorva-debug-8f9eb.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:942263598354:ios:f893a97cdeef1f277247cb</string>
+	<string>1:719122164711:ios:ecf15c5a09b085689d6b42</string>
 </dict>
 </plist>

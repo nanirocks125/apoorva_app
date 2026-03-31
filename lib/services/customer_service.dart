@@ -23,15 +23,21 @@ class CustomerService {
 
   // Future for one-time fetches (e.g., during checkout)
   Future<void> saveCustomer(String orgId, Customer customer) async {
+    print("Attempting to save to: organizations/$orgId/customers");
     final ref = _db
         .collection('organizations')
         .doc(orgId)
         .collection('customers');
 
-    if (customer.id == null) {
-      await ref.add(customer.toJson());
-    } else {
-      await ref.doc(customer.id).update(customer.toJson());
+    try {
+      if (customer.id == null) {
+        await ref.add(customer.toJson());
+      } else {
+        await ref.doc(customer.id).update(customer.toJson());
+      }
+      print("✅ Save successful!");
+    } catch (e) {
+      print("❌ Save failed: $e");
     }
   }
 }
