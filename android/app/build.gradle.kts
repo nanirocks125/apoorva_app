@@ -25,6 +25,24 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    flavorDimensions += "default"
+
+    productFlavors {
+        // 2. 'create' కీవర్డ్ మరియు '=' వాడాలి
+        create("dev") {
+            dimension = "default"
+            applicationId = "com.apoorva.app.dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Apoorva POS Dev")
+        }
+
+        create("prod") {
+            dimension = "default"
+            applicationId = "com.apoorva.app"
+            resValue("string", "app_name", "Apoorva POS")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

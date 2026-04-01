@@ -19,19 +19,23 @@ import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart'; // Ensure you've run 'flutterfire configure'
+import 'package:apoorva_app/firebase_options_dev.dart' as dev;
+import 'package:apoorva_app/firebase_options_prod.dart' as prod;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Check if any Firebase apps are already initialized
   try {
-    // Attempt initialization
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    // బిల్డ్ మోడ్ ని బట్టి ఆప్షన్స్ సెలెక్ట్ చేయడం
+    final options = kReleaseMode
+        ? prod.DefaultFirebaseOptions.currentPlatform
+        : dev.DefaultFirebaseOptions.currentPlatform;
+
+    await Firebase.initializeApp(options: options);
   } catch (e) {
     // If it fails because it already exists, we check if it's actually there
     if (e.toString().contains('duplicate-app')) {

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "838267045796",
+    "project_id": "apoorva-production",
+    "storage_bucket": "apoorva-production.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838267045796:android:8b3a9176f97991e5842331",
+        "android_client_info": {
+          "package_name": "com.apoorva.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "838267045796-7hljrlq5i8m74r88u6kvq23fkevla3kb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCi4H-qYhakuccppfOS_OlNnVRMKGh-V9g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "838267045796-7hljrlq5i8m74r88u6kvq23fkevla3kb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "838267045796-sg2k3s052851emsgf4mp0e3g4pn1hvs9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apoorva.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

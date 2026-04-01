@@ -2,7 +2,6 @@ import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class SalesHistoryScreen extends StatefulWidget {
@@ -117,7 +116,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                             (item) => Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                '• ${item.categoryId} - ₹${item.finalPrice} (Qty: ${item.qty})',
+                                '• ${item.categoryName} - ₹${item.finalPrice} (Qty: ${item.qty})',
                               ),
                             ),
                           ),
