@@ -9,6 +9,7 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_share2/whatsapp_share2.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId; // Add this line
@@ -275,16 +276,10 @@ class SaleSuccessScreen extends StatelessWidget {
                 // STEP 1: Open the chat with the text summary instantly
                 // This puts this customer at the very top of "Recent Chats"
                 await _sendWhatsAppTextOnly(sale);
-
-                // STEP 2: Wait a tiny bit for the OS to register the interaction
-                await Future.delayed(const Duration(milliseconds: 800));
-                // స్క్రిప్ట్ లైబ్రరీని ఓపెన్ చేయండి
-                // _openScriptLibrary(context, sale.customerPhone, sale);
-                _handleSendInvoice(context, sale, sale.id);
               },
               icon: const Icon(Icons.share, color: Colors.white),
               label: const Text(
-                'SHARE VIA WHATSAPP',
+                'SHARE WHATSAPP Message',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -292,6 +287,39 @@ class SaleSuccessScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF25D366),
+                minimumSize: const Size.fromHeight(55),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                // ఫోన్ నంబర్ లేకపోతే అలర్ట్ చూపండి
+                if (sale.customerName.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Phone number not provided!')),
+                  );
+                  return;
+                }
+
+                // STEP 1: Open the chat with the text summary instantly
+                // This puts this customer at the very top of "Recent Chats"
+                _handleSendInvoice(context, sale, sale.id);
+              },
+              icon: const Icon(Icons.share, color: Colors.white),
+              label: const Text(
+                'SHARE Document',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             TextButton(
               onPressed: () {
                 // This pops all screens (Success, Checkout, POS)
@@ -633,18 +661,74 @@ class SaleSuccessScreen extends StatelessWidget {
   }
 
   Future<void> _sendWhatsAppTextOnly(Sale sale) async {
+    // 1. Build a visually rich Item List
+    String itemsList = sale.items
+        .asMap()
+        .entries
+        .map((entry) {
+          int idx = entry.key + 1;
+          var item = entry.value;
+          double itemDiscount = item.stickerPrice - item.finalPrice;
+
+          // Use * for bold and ~ for strikethrough on WhatsApp
+          return "$idx. *${item.categoryName.toUpperCase()}*\n"
+              "   MRP: ~Rs ${item.stickerPrice.toStringAsFixed(0)}~  →  *Rs ${item.finalPrice.toStringAsFixed(2)}*\n"
+              "   _Saved: Rs ${itemDiscount.toStringAsFixed(0)}_";
+        })
+        .join("\n\n");
+
+    // 2. Summary Section with Emojis
+    String summarySection =
+        "🧾 *BILL SUMMARY:*\n"
+        "Subtotal: Rs ${sale.subtotal.toStringAsFixed(2)}";
+
+    if (sale.roundOff != 0) {
+      summarySection +=
+          "\n✨ Extra Disc: -Rs ${sale.roundOff.abs().toStringAsFixed(2)}";
+    }
+
+    summarySection +=
+        "\n💰 *NET PAYABLE: Rs ${sale.netPayable.toStringAsFixed(2)}*";
+
+    // 3. High-Impact Savings Message
+    String savingsMessage = "";
+    if (sale.totalSavings > 0) {
+      savingsMessage =
+          "━━━━━━━━━━━━━━━\n"
+          "🥳 *CONGRATULATIONS!*\n"
+          "✨ *YOU SAVED Rs ${sale.totalSavings.toStringAsFixed(2)}!* ✨\n"
+          "━━━━━━━━━━━━━━━";
+    }
+
+    // 4. Final Message Assembly
+    final String message =
+        "✨ *APOORVA JEWELLERY* ✨\n"
+        "      _Mangalagiri, AP_\n\n"
+        "Hello ${sale.customerName},\n"
+        "Thank you for shopping! Your digital bill is ready. 🙏\n\n"
+        "📦 *ITEMS:* \n"
+        "$itemsList\n\n"
+        "$summarySection\n\n"
+        "$savingsMessage\n\n"
+        "🆔 *Bill ID:* ${sale.id.substring(0, 8)}\n"
+        "📸 *Follow:* instagram.com/apoorva.online\n\n"
+        "Visit Again! ✨";
+
+    // 5. Launch Logic
     String phone = sale.customerPhone.replaceAll(RegExp(r'[^0-9]'), '');
     if (phone.length == 10) phone = "91$phone";
 
-    final String text =
-        "Hello ${sale.customerName}, your digital bill from Apoorva is ready! 🙏";
-
     final Uri url = Uri.parse(
-      "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(text)}",
+      "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
     );
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      }
+    } catch (e) {
+      // If you have a BuildContext here, you could show a SnackBar
+      debugPrint("Could not launch WhatsApp: $e");
     }
   }
 }
