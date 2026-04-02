@@ -3,51 +3,91 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/user/app_user.dart';
 
+enum AuthStatus { initial, loading, authenticated, unauthenticated }
+
 class AuthProvider with ChangeNotifier {
-  // Add these fields
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final UserService _userService = UserService();
+  final FirebaseAuth _auth;
+  final UserService _userService;
 
   AppUser? _user;
+  AuthStatus _status = AuthStatus.initial;
 
-  AppUser? get user => _user;
-  bool get isAuthenticated => _user != null;
-
-  void setUser(AppUser user) {
-    _user = user;
-    notifyListeners(); // This notifies all screens to update
+  AuthProvider({FirebaseAuth? auth, UserService? userService})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _userService = userService ?? UserService() {
+    // Automatically check for existing session on startup
+    _initialize();
   }
 
-  void logout() {
-    _user = null;
+  // Getters
+  AppUser? get user => _user;
+  AuthStatus get status => _status;
+  bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isLoading => _status == AuthStatus.loading;
+
+  /// Check if a user is already signed in when the app starts
+  Future<void> _initialize() async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser != null) {
+      await _fetchAndSetUserProfile(firebaseUser.uid);
+    } else {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+    }
+  }
+
+  /// Helper to fetch profile and update state
+  Future<void> _fetchAndSetUserProfile(String uid) async {
+    try {
+      final profile = await _userService.getUserById(uid);
+      if (profile != null) {
+        _user = profile;
+        _status = AuthStatus.authenticated;
+      } else {
+        _status = AuthStatus.unauthenticated;
+      }
+    } catch (_) {
+      _status = AuthStatus.unauthenticated;
+    }
     notifyListeners();
   }
 
   Future<void> signIn(String email, String password) async {
+    _status = AuthStatus.loading;
+    notifyListeners();
+
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final AppUser? user = await _userService.getUserById(
-        credential.user!.uid,
-      );
+      final profile = await _userService.getUserById(credential.user!.uid);
 
-      if (user == null) {
-        // If profile doesn't exist, sign them out immediately
-        await _auth.signOut();
+      if (profile == null) {
+        await logout(); // Clean up if no profile exists
         throw 'User profile not found. Please contact support.';
       }
 
-      _user = user;
+      _user = profile;
+      _status = AuthStatus.authenticated;
       notifyListeners();
     } on FirebaseAuthException catch (e) {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
       throw _determineError(e.code);
     } catch (e) {
-      // Catch-all for database errors or null pointers
-      throw e.toString();
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      throw 'An unexpected error occurred.';
     }
+  }
+
+  Future<void> logout() async {
+    await _auth.signOut();
+    _user = null;
+    _status = AuthStatus.unauthenticated;
+    notifyListeners();
   }
 
   String _determineError(String errorCode) {
