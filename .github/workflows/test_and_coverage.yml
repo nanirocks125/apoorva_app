@@ -25,8 +25,18 @@ jobs:
       - name: Run Tests & Generate Coverage
         run: flutter test --coverage
 
+        # OPTIONAL: Clean the coverage report to exclude generated files
+      # This ensures your 0.66% or 21% is based on your actual code.
+      - name: Install LCOV
+        run: sudo apt-get install -y lcov
+
+      - name: Remove unwanted files from coverage
+        run: |
+          lcov --remove coverage/lcov.info 'lib/firebase_options*.dart' 'lib/**/*.g.dart' 'lib/**/*.freezed.dart' -o coverage/lcov.info --ignore-errors unused
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # Get this from codecov.io
           files: coverage/lcov.info
