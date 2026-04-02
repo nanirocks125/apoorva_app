@@ -8,12 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class HotkeyRowSection extends StatelessWidget {
-  const HotkeyRowSection({super.key});
+  final OrganizationService? service; // Add this
+  const HotkeyRowSection({super.key, this.service});
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PosProvider>(context);
-    final orgService = OrganizationService();
+    final orgService = service ?? OrganizationService();
 
     return SliverToBoxAdapter(
       child: StreamBuilder<List<Category>>(
