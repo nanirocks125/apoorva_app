@@ -32,7 +32,7 @@ jobs:
 
       - name: Remove unwanted files from coverage
         run: |
-          lcov --remove coverage/lcov.info 'lib/firebase_options*.dart' 'lib/**/*.g.dart' 'lib/**/*.freezed.dart' -o coverage/lcov.info
+          lcov --remove coverage/lcov.info 'lib/firebase_options*.dart' 'lib/**/*.g.dart' 'lib/**/*.freezed.dart' -o coverage/lcov.info --ignore-errors unused
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
