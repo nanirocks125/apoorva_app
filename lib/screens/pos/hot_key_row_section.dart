@@ -26,9 +26,13 @@ class HotkeyRowSection extends StatelessWidget {
       child: StreamBuilder<List<Category>>(
         stream: orgService.getLiveCategories(orgId),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            debugPrint('HotkeyRowSection stream error: ${snapshot.error}');
+            return const SizedBox.shrink();
+          }
           if (!snapshot.hasData) return const SizedBox.shrink();
-
-          final hotkeys = snapshot.data!.where((c) => c.isHotkey).toList();
+          final categories = snapshot.data!;
+          final hotkeys = categories.where((c) => c.isHotkey).toList();
 
           return Container(
             height: 100,
