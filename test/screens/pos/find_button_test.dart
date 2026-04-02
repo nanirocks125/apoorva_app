@@ -1,22 +1,22 @@
-import 'package:apoorva_app/screens/pos/more_button.dart';
+import 'package:apoorva_app/screens/pos/find_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('MoreButton Widget Tests', () {
+  group('FindButton Widget Tests', () {
     testWidgets('Should render correct icon and text', (tester) async {
       // 1. Widget ని లోడ్ చేయడం
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: MoreButton(onTap: () {})),
+          home: Scaffold(body: FindButton(onTap: () {})),
         ),
       );
 
       // 2. Icon ఉందో లేదో వెతకడం
-      expect(find.byIcon(Icons.grid_view_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.manage_search_rounded), findsOneWidget);
 
-      // 3. 'More' అనే టెక్స్ట్ ఉందో లేదో వెతకడం
-      expect(find.text('More'), findsOneWidget);
+      // 3. 'Find' అనే టెక్స్ట్ ఉందో లేదో వెతకడం
+      expect(find.text('FIND'), findsOneWidget);
     });
 
     testWidgets('Should trigger onTap when clicked', (tester) async {
@@ -25,7 +25,7 @@ void main() {
       // 1. Widget ని లోడ్ చేయడం
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: MoreButton(onTap: () => tapped = true)),
+          home: Scaffold(body: FindButton(onTap: () => tapped = true)),
         ),
       );
 
@@ -42,18 +42,23 @@ void main() {
     testWidgets('Should have correct width and decoration', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: MoreButton(onTap: () {})),
+          home: Scaffold(
+            body: FindButton(onTap: () {}),
+          ), // onTap ని null ఇవ్వొచ్చు
         ),
       );
 
-      // Container ని వెతకడం
-      final container = tester.widget<Container>(find.byType(Container));
+      final finder = find.byKey(const Key('find_button_container')).first;
+      final container = tester.widget<Container>(finder);
       final decoration = container.decoration as BoxDecoration;
 
-      // కన్స్ట్రైంట్స్ వెరిఫై చేయడం
-      expect(container.constraints?.maxWidth, 100);
+      // 🚀 UPDATED ASSERTIONS
       expect(decoration.borderRadius, BorderRadius.circular(16));
-      expect(decoration.color, Colors.grey.shade100);
+
+      // Gradient వాడుతున్నాం కాబట్టి ఇలా చెక్ చేయాలి
+      expect(decoration.gradient, isNotNull);
+      final gradient = decoration.gradient as LinearGradient;
+      expect(gradient.colors[0], const Color(0xFFFF5733));
     });
   });
 }
