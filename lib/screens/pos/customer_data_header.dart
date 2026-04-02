@@ -39,7 +39,7 @@ class CustomerDataHeader extends StatelessWidget {
     bool isPhone = false,
   }) {
     return SizedBox(
-      height: 42, // కొంచెం హైట్ పెంచితే నీట్ గా ఉంటుంది
+      height: 48,
       child: TextField(
         controller: controller,
         keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
@@ -51,7 +51,7 @@ class CustomerDataHeader extends StatelessWidget {
           filled: true,
           fillColor: const Color(0xFFF1F3F6), // కొంచెం స్పష్టంగా కనిపించే గ్రే
           isDense: true, // హైట్ అడ్జస్ట్మెంట్ కి ఇది ముఖ్యం
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide.none,

@@ -64,8 +64,8 @@ class HotkeyRowSection extends StatelessWidget {
                     // 1. COMPACT GRID (Left Side)
                     Expanded(
                       child: SizedBox(
-                        // హైట్ అడ్జస్ట్మెంట్: (Card height * 2) + spacing
-                        height: 150,
+                        // Height: 2 rows of cards + spacing
+                        height: 120,
                         child: GridView.builder(
                           // Vertical scrolling enabled within the fixed height
                           scrollDirection: Axis.vertical,
