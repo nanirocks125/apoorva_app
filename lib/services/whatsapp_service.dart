@@ -8,7 +8,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:universal_html/html.dart' as html;
-import 'package:whatsapp_share2/whatsapp_share2.dart';
 
 class WhatsAppService {
   final FirebaseFirestore _db;
