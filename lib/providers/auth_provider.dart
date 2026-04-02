@@ -65,8 +65,9 @@ class AuthProvider with ChangeNotifier {
       final profile = await _userService.getUserById(credential.user!.uid);
 
       if (profile == null) {
-        await logout(); // Clean up if no profile exists
-        throw 'User profile not found. Please contact support.';
+        await logout();
+        // Instead of a raw string, throwing an Exception is better practice
+        throw Exception('User profile not found. Please contact support.');
       }
 
       _user = profile;
@@ -76,7 +77,13 @@ class AuthProvider with ChangeNotifier {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       throw _determineError(e.code);
+    } on Exception catch (e) {
+      // Catch specific Exceptions (like our profile error)
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      rethrow; // This sends the 'User profile not found' error up to the UI
     } catch (e) {
+      // Catch unknown/runtime errors
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       throw 'An unexpected error occurred.';

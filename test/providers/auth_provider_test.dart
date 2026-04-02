@@ -143,17 +143,32 @@ void main() {
             password: tPassword,
           ),
         ).thenAnswer((_) async => mockCredential);
+
+        // Return null to trigger the "profile not found" logic
         when(
           () => mockUserService.getUserById(tUid),
-        ).thenAnswer((_) async => null); // Profile not found
+        ).thenAnswer((_) async => null);
+
         when(() => mockAuth.signOut()).thenAnswer((_) async => {});
 
         // Act & Assert
-        expect(
-          () => authProvider.signIn(tEmail, tPassword),
-          throwsA(contains('User profile not found')),
+        // 1. Use expectLater and AWAIT it to ensure the async process finishes
+        // 1. Use expectLater and AWAIT it to ensure the async process finishes
+        await expectLater(
+          authProvider.signIn(tEmail, tPassword),
+          // We check if it's an Exception AND if its toString contains our text
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('User profile not found'),
+            ),
+          ),
         );
+
+        // 2. Now that the flow is finished, check if signOut was called
         verify(() => mockAuth.signOut()).called(1);
+
         expect(authProvider.status, AuthStatus.unauthenticated);
       },
     );
