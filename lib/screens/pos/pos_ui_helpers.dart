@@ -33,7 +33,7 @@ class PosUIHelpers {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => CalculatorSheet(
+      builder: (context) => ItemPriceCalculator(
         provider: provider,
         category: existingItem?.category ?? category,
         existingItem: existingItem,
