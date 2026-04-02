@@ -11,32 +11,26 @@ class CustomerDataHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: Colors.grey.shade50,
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: provider.nameController, // Provider నుండి వస్తుంది
-              decoration: const InputDecoration(
-                hintText: 'Customer Name',
-                prefixIcon: Icon(Icons.person_outline),
-                filled: true,
-                fillColor: Colors.white,
-              ),
+          TextField(
+            controller: provider.nameController, // Provider నుండి వస్తుంది
+            decoration: const InputDecoration(
+              hintText: 'Customer Name',
+              prefixIcon: Icon(Icons.person_outline),
+              filled: true,
+              fillColor: Colors.white,
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 1,
-            child: TextField(
-              controller: provider.phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: 'Phone',
-                prefixIcon: Icon(Icons.phone_iphone_outlined),
-                filled: true,
-                fillColor: Colors.white,
-              ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: provider.phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              hintText: 'Phone',
+              prefixIcon: Icon(Icons.phone_iphone_outlined),
+              filled: true,
+              fillColor: Colors.white,
             ),
           ),
         ],
