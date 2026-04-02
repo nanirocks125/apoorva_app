@@ -1,9 +1,7 @@
-import 'package:provider/provider.dart'; // Gives you .read and .watch
-import 'package:apoorva_app/providers/auth_provider.dart'; // Gives you the AuthProvider class
-import 'package:apoorva_app/model/user/app_user.dart';
-import 'package:apoorva_app/services/user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:apoorva_app/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,76 +11,25 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  UserService _userService = UserService();
-
-  Future<void> _handleLogin(BuildContext context) async {
-    setState(() => _isLoading = true);
-    try {
-      print(
-        'email: ${_emailController.text.trim()}, password: ${_passwordController.text.trim()}',
-      );
-      UserCredential user = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
-
-      print('after sign in methods: ${user.user?.email}');
-
-      final AppUser? loggedInUser = await _userService.getUserById(
-        user.user!.uid,
-      );
-
-      if (loggedInUser == null) {
-        // This happens if a user is in Auth but you haven't created their /users/ doc yet
-        throw 'User profile not found. Please contact the administrator.';
-      }
-
-      if (mounted) {
-        // Save user to global state
-        // Instead of context.read<AuthProvider>()
-        Provider.of<AuthProvider>(context, listen: false).setUser(loggedInUser);
-        Navigator.pushReplacementNamed(
-          context,
-          '/home',
-          arguments:
-              loggedInUser, // Passing the AppUser object as the required argument
-        );
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(
-        //     builder: (context) => HomeScreen(loggedInUser: loggedInUser),
-        //   ),
-        //   // MaterialPageRoute(builder: (context) => OrganizationScreen()),
-        // );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      // Handle error
-      print('error in login: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login failed. Please check your credentials.'),
-        ),
-      );
+  @override
+  void initState() {
+    super.initState();
+    if (kDebugMode) {
+      _emailController.text = "lavanya@gmail.com";
+      _passwordController.text = "Apoorva@123";
     }
   }
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    // _emailController.text = "nanirocks125@gmail.com";
-    // _passwordController.text = "Nandam@125";
-    // return;
-    _emailController.text = "lavanya@gmail.com";
-    _passwordController.text = "Apoorva@123";
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -91,54 +38,95 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Placeholder for Apoorva Logo
-              const Icon(Icons.storefront, size: 80, color: Color(0xFFFF5733)),
-              const SizedBox(height: 16),
-              Text(
-                'Apoorva',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFFF5733),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.storefront,
+                  size: 80,
+                  color: Color(0xFFFF5733),
                 ),
-              ),
-              const Text('Login'),
-              const SizedBox(height: 40),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56, // Large touch target for speed
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : () => _handleLogin(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF5733),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Login to Dashboard',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text('Apoorva', style: _logoStyle(context)),
+                const Text('Login'),
+                const SizedBox(height: 40),
+                _buildEmailField(),
+                const SizedBox(height: 16),
+                _buildPasswordField(),
+                const SizedBox(height: 32),
+                _buildLoginButton(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+// --- LOGIC EXTENSION ---
+// We extend the State class specifically so we have access to context, setState, and controllers.
+extension _LoginLogic on _LoginScreenState {
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      await authProvider.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Helper UI methods can also live here to keep the build method even cleaner
+  TextStyle? _logoStyle(BuildContext context) => Theme.of(context)
+      .textTheme
+      .headlineMedium
+      ?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFFFF5733));
+
+  Widget _buildEmailField() => TextFormField(
+    controller: _emailController,
+    decoration: const InputDecoration(labelText: 'Email'),
+    keyboardType: TextInputType.emailAddress,
+    validator: (v) =>
+        (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+  );
+
+  Widget _buildPasswordField() => TextFormField(
+    controller: _passwordController,
+    decoration: const InputDecoration(labelText: 'Password'),
+    obscureText: true,
+    validator: (v) => (v == null || v.length < 6) ? 'Password too short' : null,
+  );
+
+  Widget _buildLoginButton() => SizedBox(
+    width: double.infinity,
+    height: 56,
+    child: ElevatedButton(
+      onPressed: _isLoading ? null : _handleLogin,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFFF5733),
+        foregroundColor: Colors.white,
+      ),
+      child: _isLoading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : const Text('Login to Dashboard', style: TextStyle(fontSize: 18)),
+    ),
+  );
 }
