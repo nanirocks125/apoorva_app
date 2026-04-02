@@ -28,7 +28,7 @@ class AuthWrapper extends StatelessWidget {
         if (user == null) return const LoginScreen();
 
         // Role-Based Routing
-        if (user.role == 'super_admin') {
+        if (user.role == .superAdmin) {
           return SuperAdminDashboard(user: user);
         } else {
           return HomeScreen(loggedInUser: user);
