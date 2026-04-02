@@ -50,11 +50,7 @@ void main() {
 
       // Hotkey indicator అనేది ఒక Container (height: 3)
       // దాన్ని వెతకడానికి మనం Type లేదా Specific logic వాడొచ్చు
-      final hotkeyIndicator = find.byType(Container);
-      expect(
-        hotkeyIndicator,
-        findsWidgets,
-      ); // Indicators + The card container itself
+      expect(find.byKey(const Key('hotkey_bar')), findsOneWidget);
 
       // Test with Hotkey = false
       await tester.pumpWidget(

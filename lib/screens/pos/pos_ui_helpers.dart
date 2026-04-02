@@ -14,8 +14,8 @@ class PosUIHelpers {
     int? index,
   }) {
     final currentCategory = existingItem?.category ?? category;
-    debugPrint('openCalculator called without category or existingItem');
     if (currentCategory == null) {
+      debugPrint('openCalculator called without category or existingItem');
       return;
     }
 
@@ -161,6 +161,8 @@ class PosUIHelpers {
     PosProvider provider,
     List<Category> categories,
   ) {
+    final parentContext = context;
+
     String searchQuery = "";
 
     showModalBottomSheet(
@@ -218,9 +220,9 @@ class PosUIHelpers {
                             category: filtered[idx],
                             onTap: () {
                               Navigator.pop(context);
-                              if (!context.mounted) return;
+                              if (!parentContext.mounted) return;
                               openCalculator(
-                                context,
+                                parentContext,
                                 provider,
                                 category: filtered[idx],
                               );

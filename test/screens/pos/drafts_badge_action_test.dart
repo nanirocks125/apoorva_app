@@ -30,8 +30,8 @@ void main() {
     // దాన్ని టెస్ట్ చేయడం కష్టం. ఒక సీనియర్ డెవలపర్ గా మీరు దాన్ని DI (Dependency Injection) కి మార్చాలి.
   });
 
-  tearDown(() {
-    streamController.close();
+  tearDown(() async {
+    await streamController.close();
   });
 
   Widget createWidgetUnderTest() {

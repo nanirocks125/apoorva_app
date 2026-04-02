@@ -37,7 +37,11 @@ class CategoryCard extends StatelessWidget {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: Container(height: 3, color: const Color(0xFFFF5733)),
+                child: Container(
+                  key: const Key('hotkey_bar'),
+                  height: 3,
+                  color: const Color(0xFFFF5733),
+                ),
               ),
             Center(
               child: Column(

@@ -28,8 +28,8 @@ void main() {
     when(() => mockProvider.orgId).thenReturn('apoorva_mangalagiri');
   });
 
-  tearDown(() {
-    streamController.close();
+  tearDown(() async {
+    await streamController.close();
   });
 
   Widget createWidgetUnderTest() {
