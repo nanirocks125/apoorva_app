@@ -24,6 +24,15 @@ class HotkeyRowSection extends StatelessWidget {
     return StreamBuilder<List<Category>>(
       stream: orgService.getLiveCategories(orgId),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Text('Unable to load quick items'),
+            ),
+          );
+        }
+
         if (!snapshot.hasData) {
           return const SliverToBoxAdapter(child: SizedBox.shrink());
         }

@@ -41,7 +41,7 @@ void main() {
       expect(find.textContaining('10% Off'), findsOneWidget);
 
       // 🚀 FINAL PRICE FIX: విడ్జెట్ లో .toInt() వాడారు కాబట్టి 4500 అని ఉండాలి
-      expect(find.text('₹4500'), findsOneWidget);
+      expect(find.text('₹4500.00'), findsOneWidget);
       expect(find.text('G'), findsOneWidget);
     });
 
@@ -87,6 +87,7 @@ void main() {
 
       // Remove Icon మీద క్లిక్ చేయడం
       await tester.tap(find.byIcon(Icons.remove_circle_outline_rounded));
+      await tester.pump();
       expect(removed, true);
     });
   });

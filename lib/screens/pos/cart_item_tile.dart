@@ -64,7 +64,7 @@ class CartItemTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '₹${item.finalPrice.toInt()}',
+              '₹${item.finalPrice.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 15, // 17 నుండి 15 కి

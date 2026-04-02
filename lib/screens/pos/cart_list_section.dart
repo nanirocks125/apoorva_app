@@ -20,7 +20,7 @@ class CartListSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Lottie.asset(
-                'lib/assets/animations/empty_cart.json', // 'lib/' తీసేశాను (Asset path fix)
+                'lib/assets/animations/empty_cart.json',
                 width: 200,
                 height: 200,
                 fit: BoxFit.contain,
