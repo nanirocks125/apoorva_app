@@ -1,3 +1,4 @@
+import 'package:apoorva_app/auth_wrapper.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
@@ -63,7 +64,7 @@ class ApoorvaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Apoorva Retail Management',
-      initialRoute: '/login',
+      home: const AuthWrapper(),
       // 2. Named Routes Table
       routes: {
         '/login': (context) => const LoginScreen(),

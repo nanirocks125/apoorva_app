@@ -104,11 +104,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: const Color(0xFFFF5733),
                 ),
               ),
-              const Text('Master Admin Login'),
+              const Text('Login'),
               const SizedBox(height: 40),
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Admin Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
