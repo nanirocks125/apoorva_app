@@ -18,6 +18,10 @@ class HotkeyRowSection extends StatelessWidget {
 
     final orgService = service ?? OrganizationService();
 
+    if (orgId.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     return SliverToBoxAdapter(
       child: StreamBuilder<List<Category>>(
         stream: orgService.getLiveCategories(orgId),
