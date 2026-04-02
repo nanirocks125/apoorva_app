@@ -74,7 +74,7 @@ class CartItemTile extends StatelessWidget {
                     icon: const Icon(
                       Icons.remove_circle_outline,
                       color: Colors.red,
-                      size: 20,
+                      size: 24,
                     ),
                     onPressed: onRemove,
                   ),

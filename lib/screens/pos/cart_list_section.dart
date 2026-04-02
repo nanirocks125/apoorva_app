@@ -1,6 +1,7 @@
 import 'package:apoorva_app/screens/pos/cart_item_tile.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 class CartListSection extends StatelessWidget {
@@ -10,9 +11,39 @@ class CartListSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<PosProvider>(context);
 
+    // EMPTY STATE LOGIC
     if (provider.cart.items.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: Center(child: Text("Cart is empty")),
+      return SliverFillRemaining(
+        hasScrollBody: false, // Scroll అవసరం లేదు కాబట్టి
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 1. LOTTIE ANIMATION
+              Lottie.asset(
+                'lib/assets/animations/empty_cart.json', // మీ యానిమేషన్ పాత్
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 16),
+              // 2. TEXT FEEDBACK
+              Text(
+                "Your cart is empty",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Add some items to start billing",
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -20,7 +51,6 @@ class CartListSection extends StatelessWidget {
       delegate: SliverChildBuilderDelegate((context, index) {
         final item = provider.cart.items[index];
         return CartItemTile(
-          // మీరు ఆల్రెడీ రాసిన ఆ Stateless Widget
           item: item,
           // TODO: open edit modal
           onTap: () => {}, // logic here

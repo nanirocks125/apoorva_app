@@ -55,6 +55,7 @@ dependencies:
   http: ^1.6.0
   whatsapp_share2: ^2.1.1
   flutter_launcher_icons: ^0.14.4
+  lottie: ^3.3.2
 
 dev_dependencies:
   flutter_test:
@@ -88,3 +89,4 @@ flutter:
 
   assets:
   - images/
+  - lib/assets/animations/

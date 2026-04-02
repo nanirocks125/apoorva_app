@@ -8,72 +8,102 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class HotkeyRowSection extends StatelessWidget {
-  final OrganizationService? service; // Add this
+  final OrganizationService? service;
   const HotkeyRowSection({super.key, this.service});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<PosProvider>();
     final orgId = context.select<PosProvider, String>((p) => p.orgId);
-
     final orgService = service ?? OrganizationService();
 
     if (orgId.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return SliverToBoxAdapter(
-      child: StreamBuilder<List<Category>>(
-        stream: orgService.getLiveCategories(orgId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            debugPrint('HotkeyRowSection stream error: ${snapshot.error}');
-            return const SizedBox.shrink();
-          }
-          if (!snapshot.hasData) return const SizedBox.shrink();
-          final categories = snapshot.data!;
-          final hotkeys = categories.where((c) => c.isHotkey).toList();
+    return StreamBuilder<List<Category>>(
+      stream: orgService.getLiveCategories(orgId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
 
-          return Container(
-            height: 100,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: hotkeys.length + 1,
-              itemBuilder: (context, index) {
-                if (index < hotkeys.length) {
-                  final cat = hotkeys[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: SizedBox(
-                      width: 120,
-                      child: CategoryCard(
-                        // Reuse your card widget
-                        category: cat,
-                        onTap: () => PosUIHelpers.openCalculator(
-                          context,
-                          provider,
-                          category: cat,
+        final categories = snapshot.data!;
+        final hotkeys = categories.where((c) => c.isHotkey).toList();
+
+        return SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Text(
+                  "QUICK ITEMS",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.blueGrey,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. COMPACT GRID (Left Side)
+                    Expanded(
+                      child: SizedBox(
+                        // హైట్ అడ్జస్ట్మెంట్: (Card height * 2) + spacing
+                        height: 150,
+                        child: GridView.builder(
+                          // Vertical scrolling enabled within the fixed height
+                          scrollDirection: Axis.vertical,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount:
+                                    4, // 4 columns for smaller cards
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                                childAspectRatio: 1.0, // Square cards
+                              ),
+                          itemCount: hotkeys.length,
+                          itemBuilder: (context, index) {
+                            return CategoryCard(
+                              category: hotkeys[index],
+                              onTap: () => PosUIHelpers.openCalculator(
+                                context,
+                                provider,
+                                category: hotkeys[index],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
-                  );
-                }
-                return MoreButton(
-                  onTap: () => PosUIHelpers.showCategoryPicker(
-                    context,
-                    provider,
-                    snapshot.data!,
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      ),
+                    const SizedBox(width: 8),
+
+                    // 2. DOUBLE HEIGHT MORE BUTTON (Right Side)
+                    SizedBox(
+                      width: 70,
+                      height: 120, // Matches the grid height
+                      child: MoreButton(
+                        onTap: () => PosUIHelpers.showCategoryPicker(
+                          context,
+                          provider,
+                          categories,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
     );
   }
-
-  // logic for _openCalculator and _showAllCategories goes here or in a separate helper
 }
