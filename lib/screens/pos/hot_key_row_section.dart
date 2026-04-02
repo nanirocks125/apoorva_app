@@ -40,10 +40,10 @@ class HotkeyRowSection extends StatelessWidget {
                 child: Text(
                   "QUICK ITEMS",
                   style: TextStyle(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.bold,
                     color: Colors.blueGrey,
                     fontSize: 12,
-                    letterSpacing: 1,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ),
@@ -88,7 +88,7 @@ class HotkeyRowSection extends StatelessWidget {
                     SizedBox(
                       width: 70,
                       height: 120, // Matches the grid height
-                      child: MoreButton(
+                      child: FindButton(
                         onTap: () => PosUIHelpers.showCategoryPicker(
                           context,
                           provider,
