@@ -13,12 +13,14 @@ class HotkeyRowSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<PosProvider>(context);
+    final provider = context.read<PosProvider>();
+    final orgId = context.select<PosProvider, String>((p) => p.orgId);
+
     final orgService = service ?? OrganizationService();
 
     return SliverToBoxAdapter(
       child: StreamBuilder<List<Category>>(
-        stream: orgService.getLiveCategories(provider.orgId),
+        stream: orgService.getLiveCategories(orgId),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const SizedBox.shrink();
 

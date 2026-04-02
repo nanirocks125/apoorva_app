@@ -20,11 +20,17 @@ class PosProvider extends ChangeNotifier {
   }
 
   void removeItem(int index) {
+    // Guard index-based cart mutations to avoid RangeError
+    if (index < 0 || index >= cart.items.length) return;
+
     cart.items.removeAt(index);
     notifyListeners();
   }
 
   void updateItem(int index, CartItem newItem) {
+    // Guard index-based cart mutations to avoid RangeError
+    if (index < 0 || index >= cart.items.length) return;
+
     cart.items[index] = newItem;
     notifyListeners();
   }
@@ -32,18 +38,24 @@ class PosProvider extends ChangeNotifier {
   Future<void> holdCurrentBill() async {
     if (cart.items.isEmpty) return;
 
-    await DraftCartService().saveDraft(
-      orgId,
-      DraftCart(
-        id: '',
-        customerName: nameController.text,
-        customerPhone: phoneController.text,
-        items: List.from(cart.items),
-        total: cart.totalPayable,
-        createdAt: DateTime.now(),
-      ),
-    );
-    clearCart();
+    try {
+      await DraftCartService().saveDraft(
+        orgId,
+        DraftCart(
+          id: activeDraftId ?? '',
+          customerName: nameController.text,
+          customerPhone: phoneController.text,
+          items: List.from(cart.items),
+          total: cart.totalPayable,
+          createdAt: DateTime.now(),
+        ),
+      );
+      clearCart();
+    } catch (e) {
+      debugPrint('Failed to save draft: $e');
+      // Optionally rethrow or notify UI
+      rethrow;
+    }
   }
 
   void resumeDraft(String draftId, DraftCart draft) {

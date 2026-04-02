@@ -10,11 +10,12 @@ class DraftsBadgeAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<PosProvider>(context);
+    final provider = context.read<PosProvider>();
+    final orgId = context.select<PosProvider, String>((p) => p.orgId);
     final effectiveService = service ?? DraftCartService();
 
     return StreamBuilder<List<DraftCart>>(
-      stream: effectiveService.getDraftsStream(provider.orgId),
+      stream: effectiveService.getDraftsStream(orgId),
       builder: (context, snapshot) {
         int count = snapshot.hasData ? snapshot.data!.length : 0;
         return Badge(

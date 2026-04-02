@@ -13,13 +13,18 @@ class PosUIHelpers {
     CartItem? existingItem,
     int? index,
   }) {
+    final currentCategory = existingItem?.category ?? category;
+    debugPrint('openCalculator called without category or existingItem');
+    if (currentCategory == null) {
+      return;
+    }
+
     final TextEditingController priceController = TextEditingController(
       text: existingItem != null
           ? existingItem.stickerPrice.toStringAsFixed(0)
           : '',
     );
     double selectedDiscount = existingItem?.discountPercent ?? 0.0;
-    final currentCategory = existingItem?.category ?? category;
 
     showModalBottomSheet(
       context: context,
@@ -213,6 +218,7 @@ class PosUIHelpers {
                             category: filtered[idx],
                             onTap: () {
                               Navigator.pop(context);
+                              if (!context.mounted) return;
                               openCalculator(
                                 context,
                                 provider,

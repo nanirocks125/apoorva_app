@@ -22,6 +22,7 @@ class CartListSection extends StatelessWidget {
         return CartItemTile(
           // మీరు ఆల్రెడీ రాసిన ఆ Stateless Widget
           item: item,
+          // TODO: open edit modal
           onTap: () => {}, // logic here
           onRemove: () => provider.removeItem(index),
         );

@@ -32,6 +32,10 @@ void main() {
     posProvider = PosProvider(orgId: testOrgId);
   });
 
+  tearDown(() {
+    posProvider.dispose();
+  });
+
   group('PosProvider - Basic Cart Operations', () {
     test('Initial state should be empty', () {
       expect(posProvider.cart.items.isEmpty, true);

@@ -32,7 +32,9 @@ class CartItemTile extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: const Color(0xFFFF5733).withOpacity(0.08),
                 child: Text(
-                  item.category.name[0].toUpperCase(),
+                  item.category.name.isNotEmpty
+                      ? item.category.name[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(
                     color: Color(0xFFFF5733),
                     fontWeight: FontWeight.bold,
