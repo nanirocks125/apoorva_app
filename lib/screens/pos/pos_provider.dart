@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../model/cart/cart_item.dart';
-import '../../model/cart/pos_cart.dart';
-import '../../model/cart/draft_cart.dart';
-import '../../services/draft_cart_service.dart';
+import 'package:apoorva_app/model/cart/cart_item.dart';
+import 'package:apoorva_app/model/cart/pos_cart.dart';
+import 'package:apoorva_app/model/cart/draft_cart.dart';
+import 'package:apoorva_app/services/draft_cart_service.dart';
 
 class PosProvider extends ChangeNotifier {
   final String orgId;
