@@ -5,14 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class DraftsBadgeAction extends StatelessWidget {
-  const DraftsBadgeAction({super.key});
+  final DraftCartService? service;
+  const DraftsBadgeAction({super.key, this.service});
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PosProvider>(context);
+    final effectiveService = service ?? DraftCartService();
 
     return StreamBuilder<List<DraftCart>>(
-      stream: DraftCartService().getDraftsStream(provider.orgId),
+      stream: effectiveService.getDraftsStream(provider.orgId),
       builder: (context, snapshot) {
         int count = snapshot.hasData ? snapshot.data!.length : 0;
         return Badge(
