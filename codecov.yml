@@ -8,3 +8,8 @@ coverage:
       default:
         target: 80%     # కొత్తగా యాడ్ చేసే ప్రతి ఫైల్ కి కనీసం 80% కవరేజ్ ఉండాలి
         threshold: 0%   # No Compromise: కొత్త కోడ్ కి కవరేజ్ తగ్గకూడదు
+
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+  require_changes: false  # కవరేజ్ లో మార్పు లేకపోయినా రిపోర్ట్ చూపిస్తుంది
