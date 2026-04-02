@@ -1,5 +1,4 @@
 import 'package:apoorva_app/enum/app_user_role.dart';
-import 'package:apoorva_app/enum/system_role.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
