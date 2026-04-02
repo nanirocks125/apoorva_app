@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:apoorva_app/screens/pos/category_card.dart';
 import 'package:apoorva_app/screens/pos/hot_key_row_section.dart';
-import 'package:apoorva_app/screens/pos/more_button.dart';
+import 'package:apoorva_app/screens/pos/find_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -57,7 +57,7 @@ void main() {
       // No data added to stream yet
 
       expect(find.byType(CategoryCard), findsNothing);
-      expect(find.byType(MoreButton), findsNothing);
+      expect(find.byType(FindButton), findsNothing);
     });
 
     testWidgets('Should only show categories where isHotkey is true', (
@@ -94,7 +94,7 @@ void main() {
       expect(find.text('Normal Item'), findsNothing);
 
       // 'More' button కచ్చితంగా ఉండాలి
-      expect(find.byType(MoreButton), findsOneWidget);
+      expect(find.byType(FindButton), findsOneWidget);
     });
 
     testWidgets('Should render correct number of hotkey cards', (tester) async {

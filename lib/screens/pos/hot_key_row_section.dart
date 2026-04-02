@@ -1,6 +1,6 @@
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/category_card.dart';
-import 'package:apoorva_app/screens/pos/more_button.dart';
+import 'package:apoorva_app/screens/pos/find_button.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:apoorva_app/screens/pos/pos_ui_helpers.dart';
 import 'package:apoorva_app/services/organization_service.dart';

@@ -7,6 +7,7 @@ class FindButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: const Key('find_button_container'),
       decoration: BoxDecoration(
         // 1. MODERN GRADIENT (To avoid a flat look)
         gradient: const LinearGradient(

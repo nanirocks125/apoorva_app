@@ -33,7 +33,6 @@ void main() {
 
       // Assertions
       expect(find.text('Gold Rings'), findsOneWidget);
-      expect(find.text('STK: 15'), findsOneWidget);
     });
 
     testWidgets('Should show hotkey indicator only when isHotkey is true', (

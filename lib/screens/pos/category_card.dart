@@ -35,6 +35,7 @@ class CategoryCard extends StatelessWidget {
               // 1. HOTKEY INDICATOR
               if (isHotkey)
                 Positioned(
+                  key: const Key('hotkey_bar'),
                   top: 0,
                   left: 0,
                   right: 0,

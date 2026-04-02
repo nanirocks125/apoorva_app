@@ -44,7 +44,7 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text("Cart is empty"), findsOneWidget);
+      expect(find.text("Your cart is empty"), findsOneWidget);
       expect(find.byType(CartItemTile), findsNothing);
     });
 
@@ -107,7 +107,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // CartItemTile లోపల ఉన్న IconButton ని క్లిక్ చేయడం
-      await tester.tap(find.byIcon(Icons.remove_circle_outline));
+      await tester.tap(find.byIcon(Icons.remove_circle_outline_rounded));
       await tester.pump();
 
       verify(() => mockProvider.removeItem(0)).called(1);
