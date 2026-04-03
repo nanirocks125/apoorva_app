@@ -1,4 +1,3 @@
-import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/enum/organization_user_role.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
@@ -9,16 +8,25 @@ import 'package:flutter/material.dart';
 
 class ShopAssignmentPicker extends StatefulWidget {
   final AppUser user;
-  const ShopAssignmentPicker({super.key, required this.user});
+  final OrganizationService? orgService; // Add this
+  final UserService? userService; // Add this
+
+  const ShopAssignmentPicker({
+    super.key,
+    this.orgService,
+    this.userService,
+    required this.user,
+  });
 
   @override
   State<ShopAssignmentPicker> createState() => _ShopAssignmentPickerState();
 }
 
 class _ShopAssignmentPickerState extends State<ShopAssignmentPicker> {
-  final OrganizationService _orgService = OrganizationService();
-  final UserService _userService = UserService();
-
+  // Use lazy initialization to use provided service or create new one
+  late final OrganizationService _orgService =
+      widget.orgService ?? OrganizationService();
+  late final UserService _userService = widget.userService ?? UserService();
   String? _selectedOrgId;
   OrganizationUserRole _selectedRole = OrganizationUserRole.staff;
   bool _isSaving = false;

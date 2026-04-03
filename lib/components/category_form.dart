@@ -5,8 +5,14 @@ import 'package:flutter/material.dart';
 class CategoryForm extends StatefulWidget {
   final String orgId;
   final Category? category; // Fixed spelling from 'catogory'
+  final InventoryService? inventoryService; // Add this
 
-  const CategoryForm({super.key, required this.orgId, this.category});
+  const CategoryForm({
+    super.key,
+    required this.orgId,
+    this.category,
+    this.inventoryService,
+  });
 
   @override
   State<CategoryForm> createState() => _CategoryFormState();
@@ -112,7 +118,7 @@ class _CategoryFormState extends State<CategoryForm> {
               );
 
               try {
-                await InventoryService().saveCategory(
+                await widget.inventoryService!.saveCategory(
                   widget.orgId,
                   updatedCategory,
                 );
