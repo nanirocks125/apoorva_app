@@ -26,6 +26,13 @@ jobs:
       - name: Run Tests with Coverage
         run: flutter test --coverage
 
+      - name: Install LCOV
+        run: sudo apt-get install -y lcov
+
+      - name: Remove generated files from coverage
+        run: |
+          lcov --remove coverage/lcov.info 'lib/firebase_options*.dart' 'lib/**/*.g.dart' 'lib/**/*.freezed.dart' -o coverage/lcov.info --ignore-errors unused
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
