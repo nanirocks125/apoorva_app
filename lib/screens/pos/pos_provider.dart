@@ -27,12 +27,9 @@ class PosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateItem(CartItem updatedItem) {
+  void updateItem(CartItem updatedItem, int index) {
     // Guard index-based cart mutations to avoid RangeError
 
-    final index = cart.items.indexWhere(
-      (item) => item.category.id == updatedItem.category.id,
-    );
     if (index < 0 || index >= cart.items.length) return;
 
     cart.items[index] = updatedItem;

@@ -26,7 +26,7 @@ void main() {
   setUp(() {
     mockProvider = MockPosProvider();
     when(() => mockProvider.addItem(any())).thenReturn(null);
-    when(() => mockProvider.updateItem(any())).thenReturn(null);
+    when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
 
     // Register fallback values for mocktail any()
     registerFallbackValue(
@@ -163,5 +163,171 @@ void main() {
       expect(find.text('Gold Ring'), findsNothing);
       expect(find.text('Silver Chain'), findsOneWidget);
     });
+  });
+
+  group('PosUIHelpers - openCalculator Tests', () {
+    // 1. ADD MODE (Already implemented, kept for completeness)
+    testWidgets('Should open calculator in ADD mode and call addItem', (
+      tester,
+    ) async {
+      final category = Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: true,
+        billMachineNumber: 1,
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: createTestScreen(
+            (context) => PosUIHelpers.openCalculator(
+              context,
+              mockProvider,
+              category: category,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Add Gold Ring'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, '5000');
+      await tester.pump();
+
+      await tester.tap(find.text('ADD TO BILL'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockProvider.addItem(any())).called(1);
+    });
+
+    // 2. MISSING SCENARIO: EDIT MODE
+    testWidgets('Should open calculator in EDIT mode and call updateItem', (
+      tester,
+    ) async {
+      final category = Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: true,
+        billMachineNumber: 1,
+      );
+      final existingItem = CartItem(
+        category: category,
+        stickerPrice: 2000,
+        discountPercent: 10,
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: createTestScreen(
+            (context) => PosUIHelpers.openCalculator(
+              context,
+              mockProvider,
+              existingItem: existingItem,
+              index: 0,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Check for Edit UI
+      expect(find.textContaining('Edit Gold Ring'), findsOneWidget);
+      expect(find.text('UPDATE ITEM'), findsOneWidget);
+
+      // Verify values are pre-filled
+      expect(find.text('2000'), findsOneWidget);
+
+      await tester.tap(find.text('UPDATE ITEM'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockProvider.updateItem(any(), any())).called(1);
+    });
+  });
+
+  group('PosUIHelpers - showCategoryPicker Tests', () {
+    final categories = [
+      Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: false,
+        billMachineNumber: 1,
+      ),
+      Category(
+        id: '2',
+        name: 'Silver Chain',
+        currentStock: 5,
+        isHotkey: false,
+        billMachineNumber: 1,
+      ),
+    ];
+
+    // 3. MISSING SCENARIO: EMPTY SEARCH STATE
+    testWidgets(
+      'Should show "No categories found" when search results are empty',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestScreen(
+            (context) => PosUIHelpers.showCategoryPicker(
+              context,
+              mockProvider,
+              categories,
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byType(TextField),
+          'Diamond',
+        ); // Non-existent
+        await tester.pump();
+
+        expect(find.text('No categories found'), findsOneWidget);
+      },
+    );
+
+    // 4. MISSING SCENARIO: SELECTION FLOW (PICKER -> CALCULATOR)
+    testWidgets(
+      'Should close picker and open calculator when a category is tapped',
+      (tester) async {
+        await tester.pumpWidget(
+          ChangeNotifierProvider<PosProvider>.value(
+            value: mockProvider,
+            child: createTestScreen(
+              (context) => PosUIHelpers.showCategoryPicker(
+                context,
+                mockProvider,
+                categories,
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        // Tap on Gold Ring card
+        await tester.tap(find.text('Gold Ring'));
+
+        // 🚀 Step 1: Picker should close
+        await tester.pumpAndSettle();
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+        // 🚀 Step 2: Calculator should automatically open
+        expect(find.byType(ItemPriceCalculator), findsOneWidget);
+        expect(find.textContaining('Add Gold Ring'), findsOneWidget);
+      },
+    );
   });
 }

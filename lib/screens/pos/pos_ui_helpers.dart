@@ -12,6 +12,7 @@ class PosUIHelpers {
     PosProvider provider, {
     Category? category,
     CartItem? existingItem,
+    int? index,
   }) {
     final currentCategory = existingItem?.category ?? category;
     if (currentCategory == null) {
@@ -36,6 +37,7 @@ class PosUIHelpers {
         provider: provider,
         category: existingItem?.category ?? category,
         existingItem: existingItem,
+        index: index,
       ),
     );
   }

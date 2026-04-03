@@ -103,6 +103,7 @@ class CartListSection extends StatelessWidget {
                 context,
                 provider,
                 existingItem: item,
+                index: index,
               ),
               onRemove: () => provider.removeItem(index),
             );

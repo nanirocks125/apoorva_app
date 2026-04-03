@@ -10,12 +10,14 @@ class ItemPriceCalculator extends StatefulWidget {
   final PosProvider provider;
   final Category? category;
   final CartItem? existingItem;
+  final int? index;
 
   const ItemPriceCalculator({
     super.key,
     required this.provider,
     this.category,
     this.existingItem,
+    this.index,
   });
 
   @override
@@ -36,7 +38,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
       text: widget.existingItem?.stickerPrice.toStringAsFixed(0) ?? '',
     );
     _discountInputController = TextEditingController(
-      text: widget.existingItem?.discountPercent.toStringAsFixed(0) ?? '0',
+      text: (widget.existingItem?.discountPercent ?? 0.0).toString(),
     );
   }
 
@@ -453,18 +455,20 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   }
 
   void _handleSubmit() {
-    double finalDiscountPercent = _discountType == DiscountType.percentage
-        ? _discountInput
-        : (_stickerPrice > 0 ? (_discountInput / _stickerPrice) * 100 : 0.0);
+    final effectiveDiscountValue = _discountValue;
+    final double finalDiscountPercent = _stickerPrice > 0
+        ? (effectiveDiscountValue / _stickerPrice) * 100
+        : 0.0;
 
     final newItem = CartItem(
       category: widget.category!,
       stickerPrice: _stickerPrice,
       discountPercent: finalDiscountPercent,
+      quantity: widget.existingItem?.quantity ?? 1,
     );
 
-    if (widget.existingItem != null) {
-      widget.provider.updateItem(newItem);
+    if (widget.index != null) {
+      widget.provider.updateItem(newItem, widget.index!);
     } else {
       widget.provider.addItem(newItem);
     }

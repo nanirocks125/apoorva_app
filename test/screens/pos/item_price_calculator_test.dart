@@ -40,7 +40,7 @@ void main() {
     );
   });
 
-  Widget createWidgetUnderTest({CartItem? existingItem}) {
+  Widget createWidgetUnderTest({CartItem? existingItem, int? index}) {
     return MaterialApp(
       home: Scaffold(
         body: ChangeNotifierProvider<PosProvider>.value(
@@ -49,6 +49,7 @@ void main() {
             provider: mockProvider,
             category: testCategory,
             existingItem: existingItem,
+            index: index,
           ),
         ),
       ),
@@ -164,9 +165,11 @@ void main() {
         stickerPrice: 5000,
         discountPercent: 0,
       );
-      when(() => mockProvider.updateItem(any())).thenReturn(null);
+      when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
 
-      await tester.pumpWidget(createWidgetUnderTest(existingItem: existing));
+      await tester.pumpWidget(
+        createWidgetUnderTest(existingItem: existing, index: 0),
+      );
 
       // Change price to 6000
       await tester.enterText(find.byType(TextField).first, '6000');
@@ -175,7 +178,7 @@ void main() {
       await tester.tap(find.text('UPDATE ITEM'));
       await tester.pumpAndSettle();
 
-      verify(() => mockProvider.updateItem(any())).called(1);
+      verify(() => mockProvider.updateItem(any(), any())).called(1);
     });
   });
 }
