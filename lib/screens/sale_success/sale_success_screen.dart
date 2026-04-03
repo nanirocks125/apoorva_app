@@ -15,13 +15,25 @@ class SaleSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Logic extraction for better readability
-    final double itemTotalDiscounts = sale.items.fold(
+    // 1. Calculate the values based on Checkout logic
+    final double totalMrp = sale.items.fold(
+      0.0,
+      (sum, item) => sum + item.stickerPrice,
+    );
+    final double itemDiscounts = sale.items.fold(
       0.0,
       (sum, item) => sum + (item.stickerPrice - item.finalPrice),
     );
+
+    // Subtotal = Total MRP - Item Discounts
+    final double subtotal = totalMrp - itemDiscounts;
+
+    // Bill Amount = Subtotal - Additional Discount
+    final double billAmount = subtotal - sale.overallDiscountAmount;
+
+    // Total Savings logic for the blue box
     final double totalSavings =
-        itemTotalDiscounts + sale.overallDiscountAmount + sale.roundOff;
+        itemDiscounts + sale.overallDiscountAmount + sale.roundOff;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,7 +50,14 @@ class SaleSuccessScreen extends StatelessWidget {
             const Divider(height: 40),
             _buildItemsSection(),
             const Divider(height: 32),
-            _buildFinancialSummary(itemTotalDiscounts, totalSavings),
+            // Updated Financial Summary passing new values
+            _buildFinancialSummary(
+              totalMrp: totalMrp,
+              itemDiscounts: itemDiscounts,
+              subtotal: subtotal,
+              billAmount: billAmount,
+              totalSavings: totalSavings,
+            ),
             const Divider(height: 32),
             _buildPaymentDetails(),
             const SizedBox(height: 40),
@@ -95,10 +114,14 @@ class SaleSuccessScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                Text(
-                  'Saved: ₹${itemSaving.toStringAsFixed(2)} (${item.discountPercent.toInt()}% Off)',
-                  style: TextStyle(color: Colors.green.shade700, fontSize: 12),
-                ),
+                if (itemSaving > 0)
+                  Text(
+                    'Saved: ₹${itemSaving.toStringAsFixed(2)} (${item.discountPercent.toInt()}% Off)',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           );
@@ -107,31 +130,63 @@ class SaleSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFinancialSummary(double itemSavings, double totalSavings) {
+  Widget _buildFinancialSummary({
+    required double totalMrp,
+    required double itemDiscounts,
+    required double subtotal,
+    required double billAmount,
+    required double totalSavings,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader('FINANCIAL SUMMARY'),
-        _receiptRow('Cart Subtotal', '₹${sale.subtotal.toStringAsFixed(2)}'),
-        if (itemSavings > 0)
+
+        _receiptRow('Total MRP', '₹${totalMrp.toStringAsFixed(2)}'),
+
+        if (itemDiscounts > 0)
           _receiptRow(
-            'Item Savings',
-            '-₹${itemSavings.toStringAsFixed(2)}',
+            'Item Discounts',
+            '-₹${itemDiscounts.toStringAsFixed(2)}',
             color: Colors.green,
           ),
+
+        const Divider(),
+
+        _receiptRow(
+          'Subtotal',
+          '₹${subtotal.toStringAsFixed(2)}',
+          isBold: true,
+        ),
+
         if (sale.overallDiscountAmount > 0)
           _receiptRow(
-            'Extra Discount',
+            'Additional Discount',
             '-₹${sale.overallDiscountAmount.toStringAsFixed(2)}',
             color: Colors.green,
           ),
+
+        const Divider(),
+
+        _receiptRow('Bill Amount', '₹${billAmount.toStringAsFixed(2)}'),
+
         if (sale.roundOff != 0)
           _receiptRow(
             'Round-off',
-            '₹${sale.roundOff.toStringAsFixed(2)}',
-            color: Colors.green,
+            '₹${sale.roundOff.toStringAsFixed(2)}', // Matches your "23.08" screenshot logic
+            color: Colors.brown,
           ),
+
+        const Divider(),
+
+        _receiptRow(
+          'Net Payment Amount',
+          '₹${sale.netPayable.toStringAsFixed(2)}',
+          isBold: true,
+        ),
+
         const SizedBox(height: 12),
+
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -141,7 +196,12 @@ class SaleSuccessScreen extends StatelessWidget {
           child: Column(
             children: [
               _receiptRow(
-                'NET PAYABLE',
+                'Total MRP',
+                '₹${totalMrp.toStringAsFixed(2)}',
+                isBold: true,
+              ),
+              _receiptRow(
+                'Total Bill Amount',
                 '₹${sale.netPayable.toStringAsFixed(2)}',
                 isBold: true,
               ),

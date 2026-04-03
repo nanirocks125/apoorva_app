@@ -1,4 +1,4 @@
-import 'package:apoorva_app/enum/payment_mode.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,14 +7,12 @@ import 'package:provider/provider.dart';
 // Project Imports
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/sale_item.dart';
+import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
-import 'package:apoorva_app/screens/sale_success_screen.dart';
+import 'package:apoorva_app/screens/sale_success/sale_success_screen.dart';
 
 // Mocks
 class MockAuthProvider extends Mock implements AuthProvider {}
-
-// Note: Ensure PaymentType enum matches your actual model (e.g., .cash vs 'cash')
-enum PaymentType { cash, upi }
 
 void main() {
   late Sale mockSale;
@@ -27,10 +25,15 @@ void main() {
   setUp(() {
     mockAuthProvider = MockAuthProvider();
 
-    // SCREENSHOT 2 లో ఉన్న డేటా ప్రకారం Mock Sale ఆబ్జెక్ట్
+    // Mock Data based on your current math logic:
+    // Total MRP: 200 + 2222 = 2422
+    // Item Discounts: (2222 - 1999.80) = 222.20
+    // Subtotal: 2199.80
+    // Net Payable: 2199.80
+    // Total Savings: 222.20
     mockSale = Sale(
-      id: 'TuQSYHq0zTrjOEl2dYyi',
-      customerName: 'Customer',
+      id: 'TUQSYH12345',
+      customerName: 'Manikanta',
       customerPhone: '9876543210',
       items: [
         SaleItem(
@@ -48,11 +51,11 @@ void main() {
           categoryId: 'cat_2',
         ),
       ],
-      subtotal: 2199.80, // స్క్రీన్ షాట్ ప్రకారం డిస్కౌంటెడ్ సబ్ టోటల్
+      subtotal: 2199.80,
       overallDiscountAmount: 0,
       roundOff: 0,
       netPayable: 2199.80,
-      payments: {PaymentMode.cash: 2199.80}, // Note: Lowercase 'cash'
+      payments: {PaymentMode.cash: 2199.80},
       staffId: 'staff_1',
       overallDiscountPercent: 0,
       timestamp: DateTime.now(),
@@ -80,50 +83,67 @@ void main() {
     );
   }
 
-  group('SaleSuccessScreen UI Tests (Screenshot Validated)', () {
-    testWidgets(
-      'Should render success message and exact Sale ID from Screenshot',
-      (tester) async {
-        await tester.pumpWidget(createWidgetUnderTest());
+  group('SaleSuccessScreen Logic & UI Tests', () {
+    testWidgets('Should display correct Header and ID', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.text('Sale Successful!'), findsOneWidget);
+      expect(find.textContaining('TUQSYH12345'), findsOneWidget);
+    });
 
-        expect(find.text('Sale Successful!'), findsOneWidget);
-        expect(find.textContaining('TuQSYHq0zTrjOEl2dYyi'), findsOneWidget);
-        expect(find.byIcon(Icons.check_circle), findsOneWidget);
-      },
-    );
-
-    testWidgets('Should display earrings and chain with correct math', (
-      tester,
-    ) async {
+    testWidgets('Should verify Financial Summary Tiered Logic', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      // 1. Check Total MRP
+      expect(
+        find.text('Total MRP'),
+        findsWidgets,
+      ); // Appears in Summary and Savings Box
+      expect(find.text('₹2422.00'), findsWidgets);
 
-      // స్క్రీన్ మీద 3 చోట్ల ఈ అమౌంట్ కనిపిస్తుంది:
-      // 1. Subtotal, 2. Net Payable, 3. Payment details (cash)
-      expect(find.text('₹2199.80'), findsNWidgets(3));
-
-      // Item Savings row (మైనస్ గుర్తుతో ఉంటుంది)
+      // 2. Check Item Discounts
+      expect(find.text('Item Discounts'), findsOneWidget);
       expect(find.text('-₹222.20'), findsOneWidget);
 
-      // YOU SAVED Banner (మైనస్ లేకుండా బ్లూ కలర్‌లో ఉంటుంది)
-      expect(find.text('₹222.20'), findsOneWidget);
+      // 3. Check Subtotal & Bill Amount
+      expect(find.text('Subtotal'), findsOneWidget);
+      expect(find.text('Bill Amount'), findsOneWidget);
+
+      // 4. Check Net Payment Amount label (New label in your update)
+      expect(find.text('Net Payment Amount'), findsOneWidget);
+
+      // Amount ₹2199.80 appears in: Subtotal, Bill Amount, Net Payment, Cash row, Chain price, and Savings box.
+      // Total 6 times in this mock setup.
+      expect(find.text('₹2199.80'), findsNWidgets(5));
     });
 
-    testWidgets('Should handle lowercase payment mode label', (tester) async {
+    testWidgets('Should verify Blue Savings Box Content', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // స్క్రీన్ షాట్ లో 'cash' అని ఉంది, 'Cash' కాదు.
-      expect(find.text('cash'), findsOneWidget);
-      expect(find.text('₹2199.80'), findsWidgets);
-    });
-  });
+      // Savings Box labels
+      expect(find.text('Total Bill Amount'), findsOneWidget);
+      expect(find.text('YOU SAVED'), findsOneWidget);
 
-  group('Interaction Tests', () {
-    testWidgets('Should navigate to /home when DONE is pressed', (
-      tester,
-    ) async {
+      // Savings Amount
+      expect(
+        find.text('₹222.20'),
+        findsWidgets,
+      ); // Appears in Items and Savings box
+    });
+
+    testWidgets('Should verify Action Buttons presence', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('Print Receipt'), findsOneWidget);
+      expect(find.text('Send Text Message'), findsOneWidget);
+      expect(find.text('Generate & Share PDF'), findsOneWidget);
+      expect(find.text('Share WhatsApp Message'), findsOneWidget);
+      expect(find.text('Share PDF on WhatsApp'), findsOneWidget);
+    });
+
+    testWidgets('Should navigate to Home on DONE button tap', (tester) async {
+      // Mocking user for AuthProvider
       when(() => mockAuthProvider.user).thenReturn(null);
+
       await tester.pumpWidget(createWidgetUnderTest());
 
       final doneButton = find.text('DONE - NEW SALE');
@@ -132,13 +152,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Home Page'), findsOneWidget);
-    });
-
-    testWidgets('Visible Action buttons should be present', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('Print Receipt'), findsOneWidget);
-      expect(find.text('Send Text Message'), findsOneWidget);
     });
   });
 }

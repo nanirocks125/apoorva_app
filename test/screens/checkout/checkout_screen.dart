@@ -15,7 +15,6 @@ class CheckoutScreen extends StatefulWidget {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
-  final CheckoutController? controller; // Add this
 
   const CheckoutScreen({
     super.key,
@@ -23,7 +22,6 @@ class CheckoutScreen extends StatefulWidget {
     required this.customer,
     required this.orgId,
     this.activeDraftId,
-    this.controller, // Add this
   });
 
   @override
@@ -36,14 +34,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        widget.controller ??
-        CheckoutController(
-          cart: widget.cart,
-          customer: widget.customer,
-          orgId: widget.orgId,
-          activeDraftId: widget.activeDraftId,
-        );
+    _controller = CheckoutController(
+      cart: widget.cart,
+      customer: widget.customer,
+      orgId: widget.orgId,
+      activeDraftId: widget.activeDraftId,
+    );
   }
 
   @override
@@ -92,10 +88,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                 const SizedBox(height: 24),
                 BillSummaryCard(
-                  totalMrp: widget.cart.totalMRP,
-                  totalDiscountOnMRP: widget.cart.totalDiscountOnMRP,
-                  additionalDiscount: _controller
-                      .overallDiscountAmount, // Placeholder - replace with actual additional discount if applicable
+                  totalMrp: widget.cart.totalPayable,
+                  totalDiscountOnMRP: _controller.overallDiscountAmount,
+                  additionalDiscount: 0, // Adjust this value as needed
                   netTotal: _controller.finalTotal,
                   roundOffController: _controller.roundOffController,
                 ),

@@ -8,7 +8,7 @@ import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/enum/payment_mode.dart';
-import 'package:apoorva_app/screens/sale_success_screen.dart';
+import 'package:apoorva_app/screens/sale_success/sale_success_screen.dart';
 
 // Mocks
 class MockCheckoutController extends Mock implements CheckoutController {}
