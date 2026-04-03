@@ -201,19 +201,48 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
           // 2. SHOW ONLY INPUT IN AMOUNT MODE
           TextField(
             controller: _discountInputController,
+            textAlign:
+                TextAlign.center, // 🚀 Center it to match the Price field
             keyboardType: TextInputType.number,
             autofocus: true,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w300, // 🚀 Lighter weight = Modern feel
+              color: Color(0xFF2D3436),
+            ),
             decoration: InputDecoration(
               hintText: "0",
-              prefixText: "₹ ",
+              // 🚀 Using prefixIcon instead of prefixText for better centering control
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Text(
+                  "₹",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+
+              filled: false, // 🚀 Remove that heavy grey background
               isDense: true,
-              border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade200),
-              ),
+
+              // 🚀 Use ultra-light borders
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade100),
+                borderSide: BorderSide(color: Colors.grey.shade100, width: 1),
               ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                  color: primaryColor.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
             ),
             onChanged: (_) => setState(() {}),
           ),
