@@ -6,13 +6,38 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
-class BluetoothThermalPrinterService {
-  late BlueThermalPrinter _bluetooth;
+typedef ReceiptGenerator = Future<Uint8List> Function(Sale sale);
 
-  BluetoothThermalPrinterService({BlueThermalPrinter? bluetooth}) {
-    _bluetooth = bluetooth ?? BlueThermalPrinter.instance;
+class PrinterWrapper {
+  Future<Uint8List> generateReceipt(Sale sale) {
+    return PdfInvoiceService.generate48mmReceipt(
+      customerName: sale.customerName,
+      netPayable: sale.netPayable.toStringAsFixed(2),
+      saleId: sale.id,
+      items: sale.items,
+      subTotal: sale.subtotal,
+      totalSavings: sale.totalSavings,
+      roundOff: sale.roundOff,
+    );
   }
-  void printReceiptViaBluetooth(BuildContext context, Sale sale) async {
+
+  Stream<PdfRaster> rasterize(Uint8List pdfBytes) {
+    return Printing.raster(pdfBytes, pages: [0], dpi: 200);
+  }
+}
+
+class BluetoothThermalPrinterService {
+  final BlueThermalPrinter _bluetooth;
+  final PrinterWrapper _wrapper;
+
+  // Use 'wrapper' instead of 'generator' here
+  BluetoothThermalPrinterService({
+    BlueThermalPrinter? bluetooth,
+    PrinterWrapper? wrapper,
+  }) : _bluetooth = bluetooth ?? BlueThermalPrinter.instance,
+       _wrapper = wrapper ?? PrinterWrapper();
+
+  Future<void> printReceiptViaBluetooth(BuildContext context, Sale sale) async {
     try {
       // 1. Check if Bluetooth is even on
       bool? isConnected = await _bluetooth.isConnected;
@@ -42,19 +67,11 @@ class BluetoothThermalPrinterService {
       ).showSnackBar(const SnackBar(content: Text("Printing Receipt...")));
 
       // 5. Generate the 48mm bytes
-      final Uint8List pdfBytes = await PdfInvoiceService.generate48mmReceipt(
-        customerName: sale.customerName,
-        netPayable: sale.netPayable.toStringAsFixed(2),
-        saleId: sale.id,
-        items: sale.items,
-        subTotal: sale.subtotal, // Pass subtotal for accurate receipt
-        totalSavings: sale.totalSavings, // Calculate total savings
-        roundOff: sale.roundOff, // Pass round-off if needed
-      );
+      final Uint8List pdfBytes = await _wrapper.generateReceipt(sale);
 
       // 6. Rasterize PDF to Image
       // Thermal printers print dots, so we convert the PDF page to a PNG image
-      await for (var page in Printing.raster(pdfBytes, pages: [0], dpi: 200)) {
+      await for (var page in _wrapper.rasterize(pdfBytes)) {
         final imageBytes = await page.toPng();
 
         // 7. Send to Printer
