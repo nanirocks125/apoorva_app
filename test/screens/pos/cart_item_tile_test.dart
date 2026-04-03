@@ -16,7 +16,7 @@ void main() {
 
   final testItem = CartItem(
     category: testCategory,
-    stickerPrice: 5000.0,
+    mrp: 5000.0,
     discountPercent: 10.0,
   );
 

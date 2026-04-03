@@ -24,7 +24,7 @@ void main() {
           isHotkey: false,
           billMachineNumber: 1,
         ),
-        stickerPrice: 0,
+        mrp: 0,
         discountPercent: 0,
       ),
     );
@@ -72,7 +72,7 @@ void main() {
     ) async {
       final existing = CartItem(
         category: testCategory,
-        stickerPrice: 5000,
+        mrp: 5000,
         discountPercent: 10,
       );
       await tester.pumpWidget(
@@ -165,7 +165,7 @@ void main() {
     testWidgets('calls updateItem on provider when editing', (tester) async {
       final existing = CartItem(
         category: testCategory,
-        stickerPrice: 5000,
+        mrp: 5000,
         discountPercent: 0,
       );
       when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
@@ -191,7 +191,7 @@ void main() {
     ) async {
       final existing = CartItem(
         category: testCategory,
-        stickerPrice: 1000,
+        mrp: 1000,
         discountPercent: 15, // 15% of 1000 = 150
         // Assuming your model now supports storing the type
         discountType: DiscountType.amount,

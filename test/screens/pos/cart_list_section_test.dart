@@ -58,7 +58,7 @@ void main() {
             isHotkey: true,
             billMachineNumber: 1,
           ),
-          stickerPrice: 1000,
+          mrp: 1000,
           discountPercent: 0,
         ),
         CartItem(
@@ -69,7 +69,7 @@ void main() {
             isHotkey: false,
             billMachineNumber: 2,
           ),
-          stickerPrice: 500,
+          mrp: 500,
           discountPercent: 10,
         ),
       ];
@@ -96,7 +96,7 @@ void main() {
             isHotkey: true,
             billMachineNumber: 1,
           ),
-          stickerPrice: 1000,
+          mrp: 1000,
           discountPercent: 0,
         ),
       ];

@@ -7,14 +7,14 @@ part 'cart_item.g.dart';
 @JsonSerializable(explicitToJson: true)
 class CartItem {
   final Category category;
-  final double stickerPrice;
+  final double mrp;
   final double discountPercent;
   final int quantity;
   final DiscountType discountType;
 
   CartItem({
     required this.category,
-    required this.stickerPrice,
+    required this.mrp,
     this.discountPercent = 0.0,
     this.quantity = 1,
     this.discountType = DiscountType.percentage,
@@ -27,8 +27,7 @@ class CartItem {
   Map<String, dynamic> toJson() => _$CartItemToJson(this);
 
   // --- Logic ---
-  double get finalPrice =>
-      (stickerPrice * quantity) * (1 - (discountPercent / 100));
+  double get finalPrice => (mrp * quantity) * (1 - (discountPercent / 100));
 
   // Bridge method to convert to SaleItem (for Zero Discrepancy)
   // we can use this when confirming the sale.

@@ -57,7 +57,7 @@ class CartItemTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '₹${item.stickerPrice} • ${item.discountPercent.toInt()}% Off',
+          '₹${item.mrp} • ${item.discountPercent.toInt()}% Off',
           style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 11),
         ),
         trailing: Row(
