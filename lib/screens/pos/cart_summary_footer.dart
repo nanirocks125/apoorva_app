@@ -1,4 +1,4 @@
-import 'package:apoorva_app/screens/checkout_screen.dart';
+import 'package:apoorva_app/screens/checkout/checkout_screen.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

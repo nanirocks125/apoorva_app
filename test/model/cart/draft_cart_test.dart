@@ -17,7 +17,7 @@ void main() {
   final mockItems = [
     CartItem(
       category: mockCategory,
-      stickerPrice: 2000.0,
+      mrp: 2000.0,
       discountPercent: 10.0,
       quantity: 1,
     ),

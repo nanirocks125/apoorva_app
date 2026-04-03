@@ -17,7 +17,7 @@ void main() {
       test('should calculate correctly with 0% discount and 1 quantity', () {
         final item = CartItem(
           category: mockCategory,
-          stickerPrice: 1000.0,
+          mrp: 1000.0,
           discountPercent: 0.0,
           quantity: 1,
         );
@@ -28,7 +28,7 @@ void main() {
       test('should calculate correctly with 10% discount', () {
         final item = CartItem(
           category: mockCategory,
-          stickerPrice: 1000.0,
+          mrp: 1000.0,
           discountPercent: 10.0,
           quantity: 1,
         );
@@ -42,7 +42,7 @@ void main() {
         () {
           final item = CartItem(
             category: mockCategory,
-            stickerPrice: 500.0,
+            mrp: 500.0,
             discountPercent: 20.0,
             quantity: 2,
           );
@@ -55,7 +55,7 @@ void main() {
       test('should handle 100% discount correctly', () {
         final item = CartItem(
           category: mockCategory,
-          stickerPrice: 1500.0,
+          mrp: 1500.0,
           discountPercent: 100.0,
         );
 
@@ -68,7 +68,7 @@ void main() {
       test('toJson should return a valid Map with correct values', () {
         final item = CartItem(
           category: mockCategory,
-          stickerPrice: 2000.0,
+          mrp: 2000.0,
           discountPercent: 5.0,
           quantity: 1,
         );
@@ -98,7 +98,7 @@ void main() {
         final item = CartItem.fromJson(json);
 
         expect(item.category.name, 'Bangles');
-        expect(item.stickerPrice, 3000.0);
+        expect(item.mrp, 3000.0);
         expect(item.finalPrice, 5400.0); // (3000 * 2) - 10%
       });
     });
