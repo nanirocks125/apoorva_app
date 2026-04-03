@@ -62,7 +62,7 @@ void main() {
         stickerPrice: 2000.0,
         discountPercent: 5.0,
       );
-      posProvider.updateItem(0, updatedItem);
+      posProvider.updateItem(updatedItem, 0);
       expect(posProvider.cart.items.first.stickerPrice, 2000.0);
     });
   });

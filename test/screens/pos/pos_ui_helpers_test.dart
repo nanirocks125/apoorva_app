@@ -1,3 +1,4 @@
+import 'package:apoorva_app/screens/pos/item_price_calculator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -5,6 +6,7 @@ import 'package:apoorva_app/screens/pos/pos_ui_helpers.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/model/cart/cart_item.dart';
+import 'package:provider/provider.dart';
 
 // Mocks
 class MockPosProvider extends Mock implements PosProvider {}
@@ -67,38 +69,55 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestScreen((context) {
-          PosUIHelpers.openCalculator(
-            context,
-            mockProvider,
-            category: category,
-          );
-        }),
+        // 🚀 Fix 1: Wrap in Provider so the Calculator doesn't crash finding context
+        ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: createTestScreen((context) {
+            // 🚀 Fix 2: Just CALL the method, don't return a widget
+            PosUIHelpers.openCalculator(
+              context,
+              mockProvider,
+              category: category,
+            );
+          }),
+        ),
       );
 
-      // 1. Bottom sheet ని ఓపెన్ చేయడం
+      // 2. 'Open' బటన్ ని ట్యాప్ చేసి బాటమ్ షీట్ ని ట్రిగర్ చేయడం
       await tester.tap(find.text('Open'));
-      await tester.pumpAndSettle();
+      await tester
+          .pumpAndSettle(); // 🚀 యానిమేషన్ కంప్లీట్ అయ్యే వరకు వెయిట్ చేస్తుంది
 
-      // 2. UI వెరిఫికేషన్
-      expect(find.text('Adding Gold Ring'), findsOneWidget);
+      // 3. UI వెరిఫికేషన్ (Add and Edit logic verification)
+      // 'Add' మరియు 'Gold Ring' ఉన్నాయో లేదో చెక్ చేయడం
+      // debugDumpApp(); // This will print the whole widget tree in your terminal
+      // expect(find.textContaining('Add'), findsOneWidget);
 
-      // 3. Price ఎంటర్ చేయడం
-      await tester.enterText(find.byType(TextField), '5000');
+      expect(find.textContaining('Gold Ring'), findsOneWidget);
 
-      // 4. Discount 10% సెలెక్ట్ చేయడం
+      // 4. ప్రైస్ ఎంటర్ చేయడం
+      final priceField = find
+          .byType(TextField)
+          .first; // మొదటి టెక్స్ట్ ఫీల్డ్ (Sticker Price)
+      await tester.enterText(priceField, '5000');
+      await tester.pump();
+
+      // 5. డిస్కౌంట్ సెలెక్ట్ చేయడం (10%)
       await tester.tap(find.text('10%'));
       await tester.pump();
 
-      // 5. Final Price వెరిఫై చేయడం: 5000 - 10% = 4500.00
-      expect(find.text('₹4500.00'), findsOneWidget);
+      // 6. ఫైనల్ ప్రైస్ వెరిఫై చేయడం (5000 - 10% = 4500)
+      // మన Modern UI లో .toInt() వాడాం కాబట్టి ₹4500 అని వెతకాలి
+      expect(find.textContaining('4500'), findsOneWidget);
 
-      // 6. Add button క్లిక్ చేయడం
-      await tester.tap(find.text('ADD TO CART'));
+      // 7. 'ADD TO BILL' బటన్ క్లిక్ చేయడం
+      await tester.tap(
+        find.text('ADD TO BILL'),
+      ); // 🚀 మన తాజా కోడ్ ప్రకారం 'ADD TO BILL'
       await tester.pumpAndSettle();
 
-      // 7. Verify addItem was called
-      verify(() => mockProvider.addItem(any())).called(1);
+      // 8. మోడల్ క్లోజ్ అయిందో లేదో వెరిఫై చేయడం
+      expect(find.byType(ItemPriceCalculator), findsNothing);
     });
   });
 
@@ -144,5 +163,171 @@ void main() {
       expect(find.text('Gold Ring'), findsNothing);
       expect(find.text('Silver Chain'), findsOneWidget);
     });
+  });
+
+  group('PosUIHelpers - openCalculator Tests', () {
+    // 1. ADD MODE (Already implemented, kept for completeness)
+    testWidgets('Should open calculator in ADD mode and call addItem', (
+      tester,
+    ) async {
+      final category = Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: true,
+        billMachineNumber: 1,
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: createTestScreen(
+            (context) => PosUIHelpers.openCalculator(
+              context,
+              mockProvider,
+              category: category,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Add Gold Ring'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, '5000');
+      await tester.pump();
+
+      await tester.tap(find.text('ADD TO BILL'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockProvider.addItem(any())).called(1);
+    });
+
+    // 2. MISSING SCENARIO: EDIT MODE
+    testWidgets('Should open calculator in EDIT mode and call updateItem', (
+      tester,
+    ) async {
+      final category = Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: true,
+        billMachineNumber: 1,
+      );
+      final existingItem = CartItem(
+        category: category,
+        stickerPrice: 2000,
+        discountPercent: 10,
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: createTestScreen(
+            (context) => PosUIHelpers.openCalculator(
+              context,
+              mockProvider,
+              existingItem: existingItem,
+              index: 0,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Check for Edit UI
+      expect(find.textContaining('Edit Gold Ring'), findsOneWidget);
+      expect(find.text('UPDATE ITEM'), findsOneWidget);
+
+      // Verify values are pre-filled
+      expect(find.text('2000.0'), findsOneWidget);
+
+      await tester.tap(find.text('UPDATE ITEM'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockProvider.updateItem(any(), any())).called(1);
+    });
+  });
+
+  group('PosUIHelpers - showCategoryPicker Tests', () {
+    final categories = [
+      Category(
+        id: '1',
+        name: 'Gold Ring',
+        currentStock: 10,
+        isHotkey: false,
+        billMachineNumber: 1,
+      ),
+      Category(
+        id: '2',
+        name: 'Silver Chain',
+        currentStock: 5,
+        isHotkey: false,
+        billMachineNumber: 1,
+      ),
+    ];
+
+    // 3. MISSING SCENARIO: EMPTY SEARCH STATE
+    testWidgets(
+      'Should show "No categories found" when search results are empty',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestScreen(
+            (context) => PosUIHelpers.showCategoryPicker(
+              context,
+              mockProvider,
+              categories,
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byType(TextField),
+          'Diamond',
+        ); // Non-existent
+        await tester.pump();
+
+        expect(find.text('No categories found'), findsOneWidget);
+      },
+    );
+
+    // 4. MISSING SCENARIO: SELECTION FLOW (PICKER -> CALCULATOR)
+    testWidgets(
+      'Should close picker and open calculator when a category is tapped',
+      (tester) async {
+        await tester.pumpWidget(
+          ChangeNotifierProvider<PosProvider>.value(
+            value: mockProvider,
+            child: createTestScreen(
+              (context) => PosUIHelpers.showCategoryPicker(
+                context,
+                mockProvider,
+                categories,
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        // Tap on Gold Ring card
+        await tester.tap(find.text('Gold Ring'));
+
+        // 🚀 Step 1: Picker should close
+        await tester.pumpAndSettle();
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+        // 🚀 Step 2: Calculator should automatically open
+        expect(find.byType(ItemPriceCalculator), findsOneWidget);
+        expect(find.textContaining('Add Gold Ring'), findsOneWidget);
+      },
+    );
   });
 }

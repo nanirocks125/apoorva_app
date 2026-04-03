@@ -1,3 +1,4 @@
+import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:apoorva_app/model/category/category.dart';
 
@@ -9,12 +10,14 @@ class CartItem {
   final double stickerPrice;
   final double discountPercent;
   final int quantity;
+  final DiscountType discountType;
 
   CartItem({
     required this.category,
     required this.stickerPrice,
     this.discountPercent = 0.0,
     this.quantity = 1,
+    this.discountType = DiscountType.percentage,
   });
 
   // --- JSON Logic ---

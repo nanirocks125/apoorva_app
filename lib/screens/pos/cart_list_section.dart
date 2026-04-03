@@ -1,5 +1,6 @@
 import 'package:apoorva_app/screens/pos/cart_item_tile.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
+import 'package:apoorva_app/screens/pos/pos_ui_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -98,7 +99,12 @@ class CartListSection extends StatelessWidget {
             final item = provider.cart.items[index];
             return CartItemTile(
               item: item,
-              onTap: () => {},
+              onTap: () => PosUIHelpers.openCalculator(
+                context,
+                provider,
+                existingItem: item,
+                index: index,
+              ),
               onRemove: () => provider.removeItem(index),
             );
           }, childCount: provider.cart.items.length),
