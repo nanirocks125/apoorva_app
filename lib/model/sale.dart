@@ -86,3 +86,13 @@ class Sale {
   double get totalSavings =>
       totalItemSavings + overallDiscountAmount + roundOff;
 }
+
+// model/sale.dart లో ఈ getters యాడ్ చేయండి
+extension SaleCalculations on Sale {
+  double get itemTotalDiscounts => items.fold(
+    0.0,
+    (sum, item) => sum + (item.stickerPrice - item.finalPrice),
+  );
+  double get totalSavings =>
+      itemTotalDiscounts + overallDiscountAmount + roundOff;
+}
