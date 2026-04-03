@@ -26,7 +26,7 @@ void main() {
   setUp(() {
     mockProvider = MockPosProvider();
     when(() => mockProvider.addItem(any())).thenReturn(null);
-    when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
+    when(() => mockProvider.updateItem(any())).thenReturn(null);
 
     // Register fallback values for mocktail any()
     registerFallbackValue(
