@@ -36,7 +36,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
     _discountType =
         widget.existingItem?.discountType ?? DiscountType.percentage;
     _priceController = TextEditingController(
-      text: widget.existingItem?.stickerPrice.toString() ?? '',
+      text: widget.existingItem?.mrp.toString() ?? '',
     );
     // _discountInputController = TextEditingController(
     //   text: (widget.existingItem?.discountPercent ?? 0.0).toString(),
@@ -50,7 +50,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
         // Convert stored percent back to currency: (percent / 100) * price
         initialValue =
             (widget.existingItem!.discountPercent / 100) *
-            widget.existingItem!.stickerPrice;
+            widget.existingItem!.mrp;
       }
     }
 
@@ -485,7 +485,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
     final newItem = CartItem(
       category: itemCategory,
-      stickerPrice: _stickerPrice,
+      mrp: _stickerPrice,
       discountPercent: finalDiscountPercent,
       quantity: widget.existingItem?.quantity ?? 1,
       discountType: _discountType,

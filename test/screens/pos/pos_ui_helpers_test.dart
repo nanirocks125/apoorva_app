@@ -38,7 +38,7 @@ void main() {
           isHotkey: false,
           billMachineNumber: 1,
         ),
-        stickerPrice: 0,
+        mrp: 0,
         discountPercent: 0,
       ),
     );
@@ -217,7 +217,7 @@ void main() {
       );
       final existingItem = CartItem(
         category: category,
-        stickerPrice: 2000,
+        mrp: 2000,
         discountPercent: 10,
       );
 
