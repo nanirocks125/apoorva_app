@@ -90,7 +90,7 @@ void main() {
 
       // 3. UI వెరిఫికేషన్ (Add and Edit logic verification)
       // 'Add' మరియు 'Gold Ring' ఉన్నాయో లేదో చెక్ చేయడం
-      debugDumpApp(); // This will print the whole widget tree in your terminal
+      // debugDumpApp(); // This will print the whole widget tree in your terminal
       // expect(find.textContaining('Add'), findsOneWidget);
 
       expect(find.textContaining('Gold Ring'), findsOneWidget);

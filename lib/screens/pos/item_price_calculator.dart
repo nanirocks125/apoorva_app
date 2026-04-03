@@ -79,40 +79,42 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
         24,
         MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeaderIndicator(),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeaderIndicator(),
 
-          _buildTitleRow(),
+            _buildTitleRow(),
 
-          // // 1. DYNAMIC TITLE
-          // Text(
-          //   titlePrefix,
-          //   style: TextStyle(
-          //     fontSize: 15,
-          //     fontWeight: FontWeight.w700,
-          //     color: Colors.grey.shade600,
-          //     letterSpacing: 0.5,
-          //   ),
-          // ),
-          const SizedBox(height: 24),
-          _buildCompactHeroPrice(), // 🚀 Modern Underline Style
+            // // 1. DYNAMIC TITLE
+            // Text(
+            //   titlePrefix,
+            //   style: TextStyle(
+            //     fontSize: 15,
+            //     fontWeight: FontWeight.w700,
+            //     color: Colors.grey.shade600,
+            //     letterSpacing: 0.5,
+            //   ),
+            // ),
+            const SizedBox(height: 24),
+            _buildCompactHeroPrice(), // 🚀 Modern Underline Style
 
-          const SizedBox(height: 24),
-          _buildModernToggle(),
+            const SizedBox(height: 24),
+            _buildModernToggle(),
 
-          const SizedBox(height: 20),
-          _buildContextualDiscountSection(),
+            const SizedBox(height: 20),
+            _buildContextualDiscountSection(),
 
-          const SizedBox(height: 24),
-          _buildClassySummary(),
+            const SizedBox(height: 24),
+            _buildClassySummary(),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // 2. DYNAMIC BUTTON
-          _buildPrimaryButton(buttonText),
-        ],
+            // 2. DYNAMIC BUTTON
+            _buildPrimaryButton(buttonText),
+          ],
+        ),
       ),
     );
   }
