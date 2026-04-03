@@ -65,6 +65,11 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 Dynamic Labels based on Mode
+    final bool isEditing = widget.existingItem != null;
+    final String titlePrefix = isEditing ? "Edit" : "Add";
+    final String buttonText = isEditing ? "UPDATE ITEM" : "ADD TO BILL";
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -80,24 +85,58 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildHeaderIndicator(),
-          _buildTitleRow(),
-          const SizedBox(height: 24),
 
-          _buildCompactHeroPrice(),
+          _buildTitleRow(),
+
+          // // 1. DYNAMIC TITLE
+          // Text(
+          //   titlePrefix,
+          //   style: TextStyle(
+          //     fontSize: 15,
+          //     fontWeight: FontWeight.w700,
+          //     color: Colors.grey.shade600,
+          //     letterSpacing: 0.5,
+          //   ),
+          // ),
+          const SizedBox(height: 24),
+          _buildCompactHeroPrice(), // 🚀 Modern Underline Style
 
           const SizedBox(height: 24),
           _buildModernToggle(),
 
           const SizedBox(height: 20),
-          // 🚀 CONTEXTUAL DISCOUNT SECTION (Percentage chips OR Amount Input)
           _buildContextualDiscountSection(),
 
           const SizedBox(height: 24),
           _buildClassySummary(),
 
           const SizedBox(height: 24),
-          _buildPrimaryButton(),
+
+          // 2. DYNAMIC BUTTON
+          _buildPrimaryButton(buttonText),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryButton(String label) {
+    bool isValid = _stickerPrice > 0;
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+      ),
+      onPressed: isValid ? _handleSubmit : null,
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
@@ -285,7 +324,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   Widget _buildTitleRow() => Text(
     widget.existingItem != null
         ? 'Edit ${widget.category?.name}'
-        : 'New ${widget.category?.name}',
+        : 'Add ${widget.category?.name}',
     style: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w700,
@@ -381,28 +420,6 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPrimaryButton() {
-    bool isValid = _stickerPrice > 0;
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 0,
-      ),
-      onPressed: isValid ? _handleSubmit : null,
-      child: Text(
-        widget.existingItem != null ? 'UPDATE INVOICE' : 'ADD TO BILL',
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.8,
-        ),
-      ),
     );
   }
 
