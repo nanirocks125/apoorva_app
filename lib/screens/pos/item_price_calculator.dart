@@ -10,14 +10,12 @@ class ItemPriceCalculator extends StatefulWidget {
   final PosProvider provider;
   final Category? category;
   final CartItem? existingItem;
-  final int? index;
 
   const ItemPriceCalculator({
     super.key,
     required this.provider,
     this.category,
     this.existingItem,
-    this.index,
   });
 
   @override
@@ -434,8 +432,8 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
       discountPercent: finalDiscountPercent,
     );
 
-    if (widget.index != null) {
-      widget.provider.updateItem(widget.index!, newItem);
+    if (widget.existingItem != null) {
+      widget.provider.updateItem(newItem);
     } else {
       widget.provider.addItem(newItem);
     }
