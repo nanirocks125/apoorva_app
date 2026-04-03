@@ -243,7 +243,7 @@ void main() {
       expect(find.text('UPDATE ITEM'), findsOneWidget);
 
       // Verify values are pre-filled
-      expect(find.text('2000'), findsOneWidget);
+      expect(find.text('2000.0'), findsOneWidget);
 
       await tester.tap(find.text('UPDATE ITEM'));
       await tester.pumpAndSettle();

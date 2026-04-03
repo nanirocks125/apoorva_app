@@ -79,7 +79,7 @@ void main() {
       expect(find.text('Edit Gold Ring'), findsOneWidget);
       expect(find.text('UPDATE ITEM'), findsOneWidget);
       // Verify initial price is loaded
-      expect(find.text('5000'), findsOneWidget);
+      expect(find.text('5000.0'), findsOneWidget);
     });
   });
 
@@ -180,5 +180,89 @@ void main() {
 
       verify(() => mockProvider.updateItem(any(), any())).called(1);
     });
+  });
+
+  group('Discount Type Logic', () {
+    testWidgets('restores Fixed Amount type from existing item', (
+      tester,
+    ) async {
+      final existing = CartItem(
+        category: testCategory,
+        stickerPrice: 1000,
+        discountPercent: 15, // 15% of 1000 = 150
+        // Assuming your model now supports storing the type
+        discountType: DiscountType.amount,
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest(existingItem: existing));
+
+      // Should show "ENTER FIXED DISCOUNT" instead of "SELECT PERCENTAGE"
+      expect(find.text('ENTER FIXED DISCOUNT'), findsOneWidget);
+      // Should show 150 (the calculated amount) instead of 15 (the percentage)
+      expect(find.text('150.00'), findsOneWidget);
+    });
+
+    testWidgets('switching toggle clears or resets input', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Enter price
+      await tester.enterText(find.byType(TextField).first, '1000');
+      await tester.pump();
+
+      // Switch to Fixed Amount
+      await tester.tap(find.text('Fixed Amount ₹'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ENTER FIXED DISCOUNT'), findsOneWidget);
+
+      // Switch back to Percentage
+      await tester.tap(find.text('Percentage %'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SELECT PERCENTAGE'), findsOneWidget);
+      expect(
+        find.text('0'),
+        findsOneWidget,
+      ); // Verify it reset to "0" per your code logic
+    });
+  });
+
+  group('Boundary Conditions', () {
+    testWidgets('clamps fixed discount to sticker price (no negative totals)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Price is 100
+      await tester.enterText(find.byType(TextField).first, '100');
+      await tester.tap(find.text('Fixed Amount ₹'));
+      await tester.pumpAndSettle();
+
+      // Enter 150 discount
+      await tester.enterText(find.byType(TextField).last, '150');
+      await tester.pump();
+
+      // Discount Applied should be capped at 100
+      expect(find.text('-₹100'), findsOneWidget);
+      // NET TOTAL should be 0, not -50
+      expect(find.text('₹0'), findsOneWidget);
+    });
+  });
+
+  testWidgets('tapping a choice chip updates the discount and total', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+
+    await tester.enterText(find.byType(TextField).first, '5000');
+    await tester.pump();
+
+    // Tap 20% chip
+    await tester.tap(find.text('20%'));
+    await tester.pump();
+
+    // 20% of 5000 is 1000
+    expect(find.text('-₹1000'), findsOneWidget);
+    expect(find.text('₹4000'), findsOneWidget);
   });
 }

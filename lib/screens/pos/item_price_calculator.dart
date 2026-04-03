@@ -34,11 +34,29 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   @override
   void initState() {
     super.initState();
+    _discountType =
+        widget.existingItem?.discountType ?? DiscountType.percentage;
     _priceController = TextEditingController(
-      text: widget.existingItem?.stickerPrice.toStringAsFixed(0) ?? '',
+      text: widget.existingItem?.stickerPrice.toString() ?? '',
     );
+    // _discountInputController = TextEditingController(
+    //   text: (widget.existingItem?.discountPercent ?? 0.0).toString(),
+    // );
+
+    double initialValue = 0;
+    if (widget.existingItem != null) {
+      if (_discountType == DiscountType.percentage) {
+        initialValue = widget.existingItem!.discountPercent;
+      } else {
+        // Convert stored percent back to currency: (percent / 100) * price
+        initialValue =
+            (widget.existingItem!.discountPercent / 100) *
+            widget.existingItem!.stickerPrice;
+      }
+    }
+
     _discountInputController = TextEditingController(
-      text: (widget.existingItem?.discountPercent ?? 0.0).toString(),
+      text: initialValue > 0 ? initialValue.toStringAsFixed(2) : '0',
     );
   }
 
@@ -455,6 +473,12 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   }
 
   void _handleSubmit() {
+    final itemCategory = widget.category ?? widget.existingItem?.category;
+    if (itemCategory == null) {
+      debugPrint('Cannot submit: no category available');
+      return;
+    }
+
     final effectiveDiscountValue = _discountValue;
     final double finalDiscountPercent = _stickerPrice > 0
         ? (effectiveDiscountValue / _stickerPrice) * 100
