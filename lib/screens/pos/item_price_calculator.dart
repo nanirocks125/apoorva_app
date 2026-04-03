@@ -1,10 +1,9 @@
+import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
-
-enum DiscountType { percentage, amount }
 
 class ItemPriceCalculator extends StatefulWidget {
   final PosProvider provider;

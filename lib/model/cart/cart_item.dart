@@ -1,4 +1,4 @@
-import 'package:apoorva_app/screens/pos/item_price_calculator.dart';
+import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:apoorva_app/model/category/category.dart';
 
