@@ -75,7 +75,9 @@ void main() {
         stickerPrice: 5000,
         discountPercent: 10,
       );
-      await tester.pumpWidget(createWidgetUnderTest(existingItem: existing));
+      await tester.pumpWidget(
+        createWidgetUnderTest(existingItem: existing, index: 0),
+      );
 
       expect(find.text('Edit Gold Ring'), findsOneWidget);
       expect(find.text('UPDATE ITEM'), findsOneWidget);

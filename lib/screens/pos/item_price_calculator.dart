@@ -80,12 +80,12 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   double get _finalNetPrice =>
       (_stickerPrice - _discountValue).clamp(0, double.infinity);
 
+  bool get _isEditing => widget.existingItem != null && widget.index != null;
+
   @override
   Widget build(BuildContext context) {
     // 🚀 Dynamic Labels based on Mode
-    final bool isEditing = widget.existingItem != null;
-    final String titlePrefix = isEditing ? "Edit" : "Add";
-    final String buttonText = isEditing ? "UPDATE ITEM" : "ADD TO BILL";
+    final String buttonText = _isEditing ? "UPDATE ITEM" : "ADD TO BILL";
 
     return Container(
       decoration: const BoxDecoration(
@@ -370,7 +370,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   );
 
   Widget _buildTitleRow() => Text(
-    widget.existingItem != null
+    _isEditing
         ? 'Edit ${widget.category?.name}'
         : 'Add ${widget.category?.name}',
     style: TextStyle(
@@ -490,7 +490,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
       quantity: widget.existingItem?.quantity ?? 1,
     );
 
-    if (widget.index != null) {
+    if (_isEditing) {
       widget.provider.updateItem(newItem, widget.index!);
     } else {
       widget.provider.addItem(newItem);
