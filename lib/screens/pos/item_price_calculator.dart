@@ -484,10 +484,11 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
         : 0.0;
 
     final newItem = CartItem(
-      category: widget.category!,
+      category: itemCategory,
       stickerPrice: _stickerPrice,
       discountPercent: finalDiscountPercent,
       quantity: widget.existingItem?.quantity ?? 1,
+      discountType: _discountType,
     );
 
     if (_isEditing) {
