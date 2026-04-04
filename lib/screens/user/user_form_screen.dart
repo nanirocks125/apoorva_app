@@ -1,7 +1,6 @@
 import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/enum/form_mode.dart';
 import 'package:apoorva_app/enum/organization_user_role.dart';
-import 'package:apoorva_app/enum/system_role.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/services/user_service.dart';
@@ -48,13 +47,20 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   Future<void> _checkPermission() async {
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return;
+    if (currentUser == null) {
+      if (context.mounted) {
+        setState(() {
+          _isAuthorized = false;
+          _checkingAccess = false;
+        });
+      }
+      return;
+    }
 
     // 1. Allow if the user is a Global Super Admin
     final globalUser = await _service.getUserById(currentUser.uid);
-    print('global user role: ${globalUser?.role}');
     if (globalUser?.role == AppUserRole.superAdmin) {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isAuthorized = true;
           _checkingAccess = false;
@@ -88,7 +94,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         if (role == OrganizationUserRole.admin ||
             role == OrganizationUserRole.manager ||
             role == OrganizationUserRole.owner) {
-          if (mounted) {
+          if (context.mounted) {
             setState(() {
               _isAuthorized = true;
               _checkingAccess = false;
@@ -99,7 +105,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       }
     }
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _isAuthorized = false;
         _checkingAccess = false;
@@ -141,7 +147,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         );
       }
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -154,13 +160,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (context.mounted) setState(() => _isLoading = false);
     }
   }
 

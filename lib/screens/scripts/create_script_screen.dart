@@ -35,23 +35,24 @@ class _CreateScriptScreenState extends State<CreateScriptScreen> {
         ),
       );
 
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (context.mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Script added to library! ✨'),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (context.mounted) setState(() => _isSaving = false);
     }
   }
 

@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 class CategoryForm extends StatefulWidget {
   final String orgId;
   final Category? category; // Fixed spelling from 'catogory'
-  final InventoryService? inventoryService; // Add this
+  final InventoryService _inventoryService; // Add this
 
-  const CategoryForm({
+  CategoryForm({
     super.key,
     required this.orgId,
     this.category,
-    this.inventoryService,
-  });
+    InventoryService? inventoryService,
+  }) : _inventoryService = inventoryService ?? InventoryService();
 
   @override
   State<CategoryForm> createState() => _CategoryFormState();
@@ -118,16 +118,18 @@ class _CategoryFormState extends State<CategoryForm> {
               );
 
               try {
-                await widget.inventoryService!.saveCategory(
+                await widget._inventoryService.saveCategory(
                   widget.orgId,
                   updatedCategory,
                 );
-                if (mounted) Navigator.pop(context); // Close form on success
+                if (context.mounted) {
+                  Navigator.pop(context); // Close form on success
+                }
               } catch (e) {
                 // Extract the message from Exception('...')
                 final errorMessage = e.toString().replaceAll('Exception: ', '');
 
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(errorMessage),

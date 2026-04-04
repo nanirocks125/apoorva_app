@@ -119,7 +119,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Add'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // 1. Dropdown ఓపెన్ చేసి ఐటమ్ సెలెక్ట్ చెయ్
       await tester.tap(

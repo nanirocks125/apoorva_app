@@ -2,7 +2,6 @@ import 'package:apoorva_app/model/whatsapp_script.dart';
 import 'package:apoorva_app/services/whatsapp_service.dart';
 import 'package:apoorva_app/screens/scripts/create_script_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class ScriptsScreen extends StatelessWidget {
   final String orgId;
@@ -92,7 +91,7 @@ class ScriptsScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey.shade800, height: 1.4),
             ),
             const Divider(height: 32),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 // TextButton.icon(
