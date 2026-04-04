@@ -1,3 +1,5 @@
+import 'package:apoorva_app/components/global_drawer.dart';
+import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/pos/cart_list_section.dart';
 import 'package:apoorva_app/screens/pos/cart_summary_footer.dart';
@@ -31,8 +33,13 @@ class PosScreen extends StatelessWidget {
                     : provider.holdCurrentBill,
               ),
               const DraftsBadgeAction(), // Separate widget for stream
+              IconButton(
+                icon: const Icon(Icons.history_outlined, color: Colors.teal),
+                onPressed: () => _viewPurchaseHistory(context),
+              ),
             ],
           ),
+          drawer: GlobalDrawer(),
           body: const Column(
             children: [
               CustomerDataHeader(), // Separate Stateless Widget
@@ -47,5 +54,9 @@ class PosScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _viewPurchaseHistory(BuildContext context) {
+    Navigator.pushNamed(context, '/sales-history', arguments: organization);
   }
 }

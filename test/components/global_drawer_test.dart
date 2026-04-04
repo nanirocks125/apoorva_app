@@ -52,10 +52,7 @@ void main() {
       },
       // Keep 'home' as the entry point for the test
       home: Scaffold(
-        drawer: GlobalDrawer(
-          currentUser: user,
-          onLogout: () => logoutCalled = true,
-        ),
+        drawer: GlobalDrawer(),
         body: Builder(
           builder: (context) {
             return IconButton(

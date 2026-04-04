@@ -7,6 +7,7 @@ import 'package:apoorva_app/providers/cart_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_screen.dart';
+import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/home/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
 import 'package:apoorva_app/screens/profile/profile_screen.dart';
