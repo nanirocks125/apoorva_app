@@ -8,6 +8,7 @@ import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/platform_stats_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -99,7 +100,8 @@ class HomeScreen extends StatelessWidget {
 
           // 2. Version Check Logic
           // Blocking if app version is lower than minVersion
-          if (_isUpdateRequired(currentAppVersion, org.minVersion)) {
+          if (_isUpdateRequired(currentAppVersion, org.minVersion) &&
+              (!kIsWeb)) {
             return VersionBlockScreen(
               minVersion: org.minVersion,
               currentAppVersion: currentAppVersion,

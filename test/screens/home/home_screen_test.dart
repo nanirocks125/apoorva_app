@@ -51,6 +51,14 @@ void main() {
   setUp(() {
     mockOrgService = MockOrgService();
 
+    PackageInfo.setMockInitialValues(
+      appName: "Apoorva Polaris",
+      packageName: "com.apoorva.app",
+      version: "1.0.0",
+      buildNumber: "1",
+      buildSignature: "sig",
+    );
+
     superAdmin = AppUser(
       name: 'Admin',
       role: AppUserRole.superAdmin,
@@ -144,6 +152,7 @@ void main() {
 
     testWidgets('shows Unassigned View when user has 0 shops', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(unassignedUser));
+      await tester.pump();
       expect(
         find.text(
           'Your account is active, but you haven’t been assigned to a shop yet.',
@@ -157,6 +166,7 @@ void main() {
       'shows OrganizationSelectionScreen when user has multiple shops',
       (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(multiOrgUser));
+        await tester.pump();
         expect(find.byType(OrganizationSelectionScreen), findsOneWidget);
       },
     );
@@ -185,6 +195,8 @@ void main() {
           ),
         ),
       );
+
+      await tester.pump();
 
       // This check happens on the very first frame where the Future is still pending
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -231,7 +243,7 @@ void main() {
   group('Logout Logic', () {
     testWidgets('cancelling logout dialog stays on screen', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(unassignedUser));
-
+      await tester.pump();
       await tester.tap(find.text('Sign Out'));
       await tester.pumpAndSettle(); // Show dialog
 
@@ -270,6 +282,7 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
 
       // Trigger the dialog
       await tester.tap(find.text('Sign Out'));
@@ -317,16 +330,17 @@ void main() {
         when(
           () => mockOrgService.getOrganizationById('1'),
         ).thenAnswer((_) async => blockedOrg);
+        await tester.pump(); // Resolve OrgService future
 
         // 2. Act
         await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
         await tester.pump(); // Resolve PackageInfo future
-        await tester.pump(); // Resolve OrgService future
+        await tester.pumpAndSettle(); // Resolve OrgService future
 
-        // 3. Assert
+        // // 3. Assert
         expect(find.text('Update Required'), findsOneWidget);
-        expect(find.textContaining('Minimum required: v1.1.0'), findsOneWidget);
-        expect(find.textContaining('Your version: v1.0.0'), findsOneWidget);
+        expect(find.textContaining('Minimum Required: v1.1.0'), findsOneWidget);
+        expect(find.textContaining('Your Version: v1.0.0'), findsOneWidget);
         expect(find.byIcon(Icons.update_disabled_rounded), findsOneWidget);
 
         // Verify Dashboard is NOT shown
