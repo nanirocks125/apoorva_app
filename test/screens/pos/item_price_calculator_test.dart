@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+import 'package:apoorva_app/screens/pos/item_price_calculator.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/model/cart/cart_item.dart';
