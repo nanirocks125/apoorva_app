@@ -207,7 +207,9 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
   }
 
   void _confirmAssignment(AppUser user) async {
-    setState(() => _isSaving = true);
+    if (context.mounted) {
+      setState(() => _isSaving = false);
+    }
     try {
       await _userService.mapUserToOrganization(
         fullUser: user,

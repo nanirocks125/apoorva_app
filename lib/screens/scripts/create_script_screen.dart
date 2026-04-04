@@ -36,13 +36,14 @@ class _CreateScriptScreenState extends State<CreateScriptScreen> {
       );
 
       if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Script added to library! ✨'),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       if (context.mounted) {
