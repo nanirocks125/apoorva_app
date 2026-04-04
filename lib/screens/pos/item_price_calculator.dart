@@ -273,10 +273,15 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                                       1.0) *
                                   100);
 
+                        final category =
+                            widget.existingItem?.category ?? widget.category;
+                        if (category == null) return;
+
                         final newItem = CartItem(
-                          category: widget.category!,
+                          category: category,
                           mrp: double.tryParse(_priceController.text) ?? 0.0,
                           discountPercent: finalDiscountPercent,
+                          discountType: _discountType,
                         );
 
                         if (widget.index != null) {
