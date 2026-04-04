@@ -44,6 +44,7 @@ class PaymentMethodTile extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
                 onChanged: (_) => onChanged(),
                 decoration: const InputDecoration(
                   prefixText: '₹ ',

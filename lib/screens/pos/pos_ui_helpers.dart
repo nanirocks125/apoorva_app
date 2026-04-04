@@ -20,13 +20,6 @@ class PosUIHelpers {
       return;
     }
 
-    // final TextEditingController priceController = TextEditingController(
-    //   text: existingItem != null
-    //       ? existingItem.stickerPrice.toStringAsFixed(0)
-    //       : '',
-    // );
-    // double selectedDiscount = existingItem?.discountPercent ?? 0.0;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

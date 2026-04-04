@@ -119,6 +119,24 @@ void main() {
       // 8. మోడల్ క్లోజ్ అయిందో లేదో వెరిఫై చేయడం
       expect(find.byType(ItemPriceCalculator), findsNothing);
     });
+
+    testWidgets(
+      'Should not open calculator if category and existingItem are null',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestScreen((context) {
+            // రెండూ null పంపిస్తున్నాం
+            PosUIHelpers.openCalculator(context, mockProvider);
+          }),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pump();
+
+        // Bottom Sheet ఓపెన్ అవ్వకూడదు
+        expect(find.byType(ItemPriceCalculator), findsNothing);
+      },
+    );
   });
 
   group('PosUIHelpers - showCategoryPicker Tests', () {
@@ -166,8 +184,8 @@ void main() {
   });
 
   group('PosUIHelpers - openCalculator Tests', () {
-    // 1. ADD MODE (Already implemented, kept for completeness)
-    testWidgets('Should open calculator in ADD mode and call addItem', (
+    // 1. ADD MODE
+    testWidgets('Should open calculator in NEW mode and call addItem', (
       tester,
     ) async {
       final category = Category(
@@ -194,17 +212,24 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Add Gold Ring'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).first, '5000');
+      // 1. Header shows "New Gold Ring" instead of "Add"
+      expect(find.text('New Gold Ring'), findsOneWidget);
+
+      // 2. Enter price via Sticker Price label
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Sticker Price'),
+        '5000',
+      );
       await tester.pump();
 
       await tester.tap(find.text('ADD TO BILL'));
       await tester.pumpAndSettle();
 
+      // 3. Verify addItem interaction
       verify(() => mockProvider.addItem(any())).called(1);
     });
 
-    // 2. MISSING SCENARIO: EDIT MODE
+    // 2. EDIT MODE
     testWidgets('Should open calculator in EDIT mode and call updateItem', (
       tester,
     ) async {
@@ -238,17 +263,26 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      // Check for Edit UI
-      expect(find.textContaining('Edit Gold Ring'), findsOneWidget);
+      // 1. Check for Edit UI
+      expect(find.text('Edit Gold Ring'), findsOneWidget);
       expect(find.text('UPDATE ITEM'), findsOneWidget);
 
-      // Verify values are pre-filled
-      expect(find.text('2000.0'), findsOneWidget);
+      // 2. Verify values are pre-filled (Your code uses toStringAsFixed(0))
+      // So looking for "2000", not "2000.0"
+      final priceField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Sticker Price'),
+      );
+      expect(priceField.controller?.text, '2000');
+
+      // 3. Verify calculations in the summary are pre-filled
+      // Gross: 2000.00, Discount: 200.00, Net: 1800.00
+      expect(find.text('₹1800.00'), findsOneWidget);
 
       await tester.tap(find.text('UPDATE ITEM'));
       await tester.pumpAndSettle();
 
-      verify(() => mockProvider.updateItem(any(), any())).called(1);
+      // 4. Verify updateItem was called with the correct index
+      verify(() => mockProvider.updateItem(any(), 0)).called(1);
     });
   });
 
@@ -270,10 +304,11 @@ void main() {
       ),
     ];
 
-    // 3. MISSING SCENARIO: EMPTY SEARCH STATE
+    // 3. EMPTY SEARCH STATE
     testWidgets(
       'Should show "No categories found" when search results are empty',
       (tester) async {
+        // 1. Setup the picker
         await tester.pumpWidget(
           createTestScreen(
             (context) => PosUIHelpers.showCategoryPicker(
@@ -287,17 +322,27 @@ void main() {
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
 
-        await tester.enterText(
-          find.byType(TextField),
-          'Diamond',
-        ); // Non-existent
+        // 2. Verify initial state (categories should be visible)
+        expect(find.text('Gold Ring'), findsOneWidget);
+
+        // 3. Enter a non-existent category name
+        // Using find.byType(TextField) is often safer in a small picker
+        // if "Search Categories..." is a hintText rather than a label.
+        final searchField = find.byType(TextField);
+        await tester.enterText(searchField, 'Diamond');
+
+        // 4. Pump to trigger the filtering logic
         await tester.pump();
 
+        // 5. Verify "Gold Ring" is now gone
+        expect(find.text('Gold Ring'), findsNothing);
+
+        // 6. Verify the empty state message
         expect(find.text('No categories found'), findsOneWidget);
       },
     );
 
-    // 4. MISSING SCENARIO: SELECTION FLOW (PICKER -> CALCULATOR)
+    // 4. SELECTION FLOW (PICKER -> CALCULATOR)
     testWidgets(
       'Should close picker and open calculator when a category is tapped',
       (tester) async {
@@ -321,12 +366,18 @@ void main() {
         await tester.tap(find.text('Gold Ring'));
 
         // 🚀 Step 1: Picker should close
+        // (Using pumpAndSettle to wait for the BottomSheet animation)
         await tester.pumpAndSettle();
-        expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+        // Ensure the picker is gone
+        expect(find.text('Search Categories...'), findsNothing);
 
         // 🚀 Step 2: Calculator should automatically open
+        // Check for the renamed widget type
         expect(find.byType(ItemPriceCalculator), findsOneWidget);
-        expect(find.textContaining('Add Gold Ring'), findsOneWidget);
+
+        // Check for the specific "New" label used in your ternary logic
+        expect(find.text('New Gold Ring'), findsOneWidget);
       },
     );
   });
