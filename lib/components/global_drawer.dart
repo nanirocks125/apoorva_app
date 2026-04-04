@@ -1,6 +1,8 @@
+import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/enum/app_user_role.dart';
+import 'package:provider/provider.dart';
 
 class GlobalDrawer extends StatelessWidget {
   final AppUser currentUser;
@@ -136,7 +138,9 @@ class GlobalDrawer extends StatelessWidget {
   }
 
   void _navigateTo(BuildContext context, String routeName) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    print('user is ${user?.name}');
     Navigator.pop(context); // Close drawer first
-    Navigator.pushNamed(context, routeName);
+    Navigator.pushNamed(context, routeName, arguments: user);
   }
 }

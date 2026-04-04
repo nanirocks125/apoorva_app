@@ -9,6 +9,7 @@ import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_screen.dart';
 import 'package:apoorva_app/screens/home/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
+import 'package:apoorva_app/screens/profile/profile_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_details_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_form_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_screen.dart';
@@ -176,6 +177,13 @@ class ApoorvaApp extends StatelessWidget {
           final user = settings.arguments as AppUser;
           return MaterialPageRoute(
             builder: (context) => OrganizationSelectionScreen(user: user),
+          );
+        }
+
+        if (settings.name == '/profile') {
+          final user = settings.arguments as AppUser;
+          return MaterialPageRoute(
+            builder: (context) => ProfileScreen(user: user),
           );
         }
 
