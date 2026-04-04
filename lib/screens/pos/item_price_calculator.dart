@@ -161,39 +161,32 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
+              if (_discountType == .amount) const SizedBox(height: 10),
               // 3. DYNAMIC DISCOUNT INPUT
-              TextField(
-                controller: _discountInputController,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  labelText: _discountType == DiscountType.percentage
-                      ? 'Discount %'
-                      : 'Discount Amount (₹)',
-                  prefixText: _discountType == DiscountType.percentage
-                      ? ''
-                      : '₹ ',
-                  suffixText: _discountType == DiscountType.percentage
-                      ? '%'
-                      : '',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              if (_discountType == .amount)
+                TextField(
+                  controller: _discountInputController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    labelText: 'Discount Amount (₹)',
+                    prefixText: '₹ ',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                 ),
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // 4. QUICK PERCENT CHIPS (Show only in percentage mode)
               if (_discountType == DiscountType.percentage)
                 Wrap(
                   spacing: 8,
-                  children: [0.0, 5.0, 10.0, 20.0, 30.0]
+                  children: [0.0, 5.0, 10.0, 20.0]
                       .map(
                         (pct) => ChoiceChip(
                           label: Text('${pct.toInt()}%'),
@@ -213,7 +206,7 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
                       .toList(),
                 ),
 
-              const Divider(height: 40),
+              const SizedBox(height: 10),
 
               Container(
                 padding: const EdgeInsets.all(16),
@@ -265,7 +258,7 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
                   ),
                   elevation: 0,
                 ),
-                onPressed: _finalPrice >= 0
+                onPressed: _isValid
                     ? () {
                         // ... addItem logic ...
                         // Note: final discount needs to be converted back to percentage if your model only stores %
@@ -339,5 +332,28 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
         ),
       ],
     );
+  }
+
+  bool get _isValid {
+    final double sticker = double.tryParse(_priceController.text) ?? 0.0;
+    final double discountVal =
+        double.tryParse(_discountInputController.text) ?? 0.0;
+
+    // 1. Price must be greater than 0
+    if (sticker <= 0) return false;
+
+    // 2. Category must not be null
+    if (widget.category == null && widget.existingItem == null) return false;
+
+    // 3. Discount logic
+    if (_discountType == DiscountType.percentage) {
+      // Percentage shouldn't exceed 100% (unless your business logic allows it)
+      if (discountVal < 0 || discountVal > 100) return false;
+    } else {
+      // Amount discount shouldn't exceed the sticker price
+      if (discountVal < 0 || discountVal > sticker) return false;
+    }
+
+    return true;
   }
 }

@@ -69,7 +69,7 @@ void main() {
 
       expect(find.text('Edit Bangles'), findsOneWidget);
       expect(find.text('1000'), findsOneWidget);
-      expect(find.text('10'), findsOneWidget);
+      expect(find.text('10%'), findsOneWidget);
       expect(find.text('UPDATE ITEM'), findsOneWidget);
     });
 
@@ -82,10 +82,8 @@ void main() {
         find.widgetWithText(TextField, 'Sticker Price'),
         '2000',
       );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount %'),
-        '20',
-      );
+
+      await tester.tap(find.widgetWithText(ChoiceChip, '20%'));
       await tester.pump();
 
       // Calculation: 2000 - (20% of 2000) = 1600
@@ -102,10 +100,7 @@ void main() {
         find.widgetWithText(TextField, 'Sticker Price'),
         '1000',
       );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount %'),
-        '10',
-      );
+      await tester.tap(find.widgetWithText(ChoiceChip, '10%'));
 
       // Switch to Amount mode
       await tester.tap(find.byIcon(Icons.currency_rupee));
@@ -124,66 +119,110 @@ void main() {
       expect(find.text('₹850.00'), findsOneWidget);
       expect(find.text('- ₹150.00'), findsOneWidget);
     });
-
-    testWidgets('Quick percent chips update the discount value', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
-      await tester.tap(find.text('30%'));
-      await tester.pump();
-
-      final discountField = tester.widget<TextField>(
-        find.byType(TextField).last,
-      );
-      expect(discountField.controller?.text, '30');
-    });
   });
-
   group('CalculatorSheet - Keyboard & Focus', () {
     testWidgets('Dismisses keyboard on outer tap', (tester) async {
       await tester.pumpWidget(createWidget());
 
+      // Use "Sticker Price" because it is ALWAYS visible
       final priceField = find.widgetWithText(TextField, 'Sticker Price');
-
-      // 1. Focus the TextField
       await tester.tap(priceField);
-      await tester.pump(); // Allow focus to update
+      await tester.pump();
 
-      // 2. Verify TextField HAS focus
-      final FocusNode priceFocusNode =
-          tester.widget<TextField>(priceField).focusNode ??
-          FocusScope.of(tester.element(priceField)).focusedChild!;
+      // Check focus
+      final FocusNode priceFocusNode = FocusScope.of(
+        tester.element(priceField),
+      ).focusedChild!;
       expect(priceFocusNode.hasFocus, isTrue);
 
-      // 3. Tap outside (the title text) to trigger GestureDetector unfocus
+      // Tap title to unfocus
       await tester.tap(find.text('New Bangles'));
       await tester.pump();
 
-      // 4. Verify TextField LOST focus
       expect(priceFocusNode.hasFocus, isFalse);
     });
 
-    testWidgets('Closes keyboard on "Done" action', (tester) async {
+    testWidgets('Closes keyboard on "Done" action (Amount Mode)', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidget());
 
-      final discountField = find.widgetWithText(TextField, 'Discount %');
+      // 1. Switch to Amount mode so the Discount TextField appears
+      await tester.tap(find.byIcon(Icons.currency_rupee));
+      await tester.pumpAndSettle();
 
-      // 1. Focus the field
+      final discountField = find.widgetWithText(
+        TextField,
+        'Discount Amount (₹)',
+      );
       await tester.tap(discountField);
       await tester.pump();
 
-      // Get the focus node
+      // 2. Verify focus
       final FocusNode discountFocusNode = FocusScope.of(
         tester.element(discountField),
       ).focusedChild!;
       expect(discountFocusNode.hasFocus, isTrue);
 
-      // 2. Send "Done" action
+      // 3. Send "Done" action
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      // 3. Verify focus is released
+      // 4. Verify focus is released
       expect(discountFocusNode.hasFocus, isFalse);
+    });
+  });
+
+  group('CalculatorSheet - Amount Mode Logic', () {
+    testWidgets('Calculates final price correctly in Amount mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidget());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Sticker Price'),
+        '5000',
+      );
+
+      // Switch to Amount Mode
+      await tester.tap(find.byIcon(Icons.currency_rupee));
+      await tester.pumpAndSettle();
+
+      // Enter Discount Amount
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        '750',
+      );
+      await tester.pump();
+
+      // 5000 - 750 = 4250
+      expect(find.text('₹4250.00'), findsOneWidget);
+      expect(find.text('- ₹750.00'), findsOneWidget);
+    });
+
+    testWidgets('Disables ADD TO BILL if discount amount > sticker price', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidget());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Sticker Price'),
+        '100',
+      );
+      await tester.tap(find.byIcon(Icons.currency_rupee));
+      await tester.pumpAndSettle();
+
+      // Invalid discount
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        '150',
+      );
+      await tester.pump();
+
+      final addButton = tester.widget<ElevatedButton>(
+        find.byType(ElevatedButton),
+      );
+      expect(addButton.onPressed, isNull);
     });
   });
 
@@ -239,5 +278,97 @@ void main() {
 
       verify(() => mockProvider.updateItem(2, any())).called(1);
     });
+  });
+
+  group('CalculatorSheet - Amount Mode Logic', () {
+    testWidgets('Calculates final price correctly in Amount mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidget());
+
+      // 1. Enter Sticker Price
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Sticker Price'),
+        '5000',
+      );
+
+      // 2. Switch to Amount Mode (Rupee Icon)
+      await tester.tap(find.byIcon(Icons.currency_rupee));
+      await tester.pumpAndSettle();
+
+      // 3. Enter Discount Amount
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        '750',
+      );
+      await tester.pump();
+
+      // Calculation: 5000 - 750 = 4250
+      expect(find.text('₹4250.00'), findsOneWidget);
+      expect(find.text('- ₹750.00'), findsOneWidget);
+    });
+
+    testWidgets('Disables ADD TO BILL if discount amount > sticker price', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidget());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Sticker Price'),
+        '100',
+      );
+
+      // Switch to Amount mode
+      await tester.tap(find.byIcon(Icons.currency_rupee));
+      await tester.pumpAndSettle();
+
+      // Enter discount higher than price
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        '150',
+      );
+      await tester.pump();
+
+      // The final price should clamp to 0 or logic should disable the button
+      expect(find.text('₹0.00'), findsOneWidget);
+
+      final addButton = tester.widget<ElevatedButton>(
+        find.byType(ElevatedButton),
+      );
+      expect(addButton.onPressed, isNull);
+    });
+
+    testWidgets(
+      'Persistent data correctly maps Amount discount to Percentage',
+      (tester) async {
+        when(() => mockProvider.addItem(any())).thenReturn(null);
+        await tester.pumpWidget(createWidget());
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Sticker Price'),
+          '2000',
+        );
+
+        // Switch to Amount mode
+        await tester.tap(find.byIcon(Icons.currency_rupee));
+        await tester.pumpAndSettle();
+
+        // Enter 500 (which is 25% of 2000)
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Discount Amount (₹)'),
+          '500',
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('ADD TO BILL'));
+        await tester.pumpAndSettle();
+
+        // Verify the model received 25%
+        final captured =
+            verify(() => mockProvider.addItem(captureAny())).captured.first
+                as CartItem;
+        expect(captured.discountPercent, 25.0);
+      },
+    );
   });
 }
