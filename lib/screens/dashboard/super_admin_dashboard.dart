@@ -27,10 +27,7 @@ class SuperAdminDashboard extends StatelessWidget {
           IconButton(icon: const Icon(Icons.hub_outlined), onPressed: () {}),
         ],
       ),
-      drawer: GlobalDrawer(
-        currentUser: user,
-        onLogout: () => _handleLogout(context),
-      ),
+      drawer: GlobalDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -294,13 +291,5 @@ class SuperAdminDashboard extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<void> _handleLogout(BuildContext context) async {
-    final AuthService authService = AuthService();
-    await authService.signOut();
-    if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-    }
   }
 }

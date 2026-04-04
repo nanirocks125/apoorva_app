@@ -72,9 +72,6 @@ class OrganizationService {
   }
 
   Future<Organization?> getOrganizationById(String orgId) async {
-    print(
-      'getting organization for ID: $orgId',
-    ); // Debug log to check the input
     final doc = await _db
         .collection('organizations')
         .doc(orgId.trim())

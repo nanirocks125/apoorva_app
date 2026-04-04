@@ -31,10 +31,7 @@ class OrganizationDashboard extends StatelessWidget {
             ),
         ],
       ),
-      drawer: GlobalDrawer(
-        currentUser: currentUser,
-        onLogout: () => _handleLogout(context),
-      ),
+      drawer: GlobalDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

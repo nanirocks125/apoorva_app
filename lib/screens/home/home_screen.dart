@@ -5,6 +5,7 @@ import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart
 import 'package:apoorva_app/screens/home/version_block_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
+import 'package:apoorva_app/screens/pos_screen.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/platform_stats_service.dart';
@@ -42,7 +43,6 @@ class HomeScreen extends StatelessWidget {
             packageSnapshot.data?.version ?? "0.0.0";
         final bool isSuperAdmin = loggedInUser.role == .superAdmin;
         final int shopCount = loggedInUser.assignedOrgs.length;
-        print('organization count for user ${loggedInUser.name}: $shopCount');
         if (isSuperAdmin) {
           return SuperAdminDashboard(
             user: loggedInUser,
@@ -77,9 +77,6 @@ class HomeScreen extends StatelessWidget {
     AppUser user,
     String currentAppVersion,
   ) {
-    print(
-      'buildng org dashboard for user ${user.name} with orgs: ${user.assignedOrgs.map((o) => o.name).join(', ')}',
-    );
     final String orgId = loggedInUser.assignedOrgs.first.orgId;
 
     return FutureBuilder<Organization?>(
@@ -92,8 +89,6 @@ class HomeScreen extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        print('Organization fetch result for ID $orgId: ${snapshot.data}');
 
         if (snapshot.hasData && snapshot.data != null) {
           final Organization org = snapshot.data!;
@@ -109,10 +104,7 @@ class HomeScreen extends StatelessWidget {
             );
           }
 
-          return OrganizationDashboard(
-            organization: org,
-            currentUser: loggedInUser,
-          );
+          return PosScreen(organization: org);
         }
 
         // Fallback if the shop was deleted but the user still has the ID

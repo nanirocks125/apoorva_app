@@ -54,7 +54,6 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         stream: SaleService().getSalesByDate(widget.orgId, _selectedDate),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('error fetching sales: ${snapshot.error}');
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {

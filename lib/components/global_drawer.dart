@@ -1,34 +1,29 @@
+import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/enum/app_user_role.dart';
+import 'package:provider/provider.dart';
 
 class GlobalDrawer extends StatelessWidget {
-  final AppUser currentUser;
-  final VoidCallback onLogout;
-
-  const GlobalDrawer({
-    super.key,
-    required this.currentUser,
-    required this.onLogout,
-  });
+  const GlobalDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Check if the user is a Super Admin
-    final bool isSuperAdmin = currentUser.role == AppUserRole.superAdmin;
+    final currentUser = Provider.of<AuthProvider>(context, listen: false).user;
+    final bool isSuperAdmin = currentUser?.role == AppUserRole.superAdmin;
 
     return Drawer(
       child: Column(
         children: [
-          _buildHeader(),
+          if (currentUser != null) _buildHeader(currentUser),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
                 _buildDrawerItem(
                   icon: Icons.dashboard_outlined,
-                  title: 'Home Dashboard',
-                  onTap: () => Navigator.pop(context),
+                  title: 'Dashboard',
+                  onTap: () => _navigateTo(context, '/dashboard'),
                 ),
 
                 // --- ADMIN ONLY SECTION ---
@@ -62,23 +57,12 @@ class GlobalDrawer extends StatelessWidget {
               ],
             ),
           ),
-
-          // --- LOGOUT AT THE BOTTOM ---
-          const Divider(),
-          _buildDrawerItem(
-            icon: Icons.logout,
-            title: 'Sign Out',
-            textColor: Colors.red,
-            iconColor: Colors.red,
-            onTap: onLogout,
-          ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppUser currentUser) {
     return UserAccountsDrawerHeader(
       decoration: const BoxDecoration(color: Color(0xFFFF5733)),
       currentAccountPicture: CircleAvatar(
@@ -136,7 +120,8 @@ class GlobalDrawer extends StatelessWidget {
   }
 
   void _navigateTo(BuildContext context, String routeName) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
     Navigator.pop(context); // Close drawer first
-    Navigator.pushNamed(context, routeName);
+    Navigator.pushNamed(context, routeName, arguments: user);
   }
 }

@@ -19,8 +19,8 @@ class ReceiptCommunicationService {
           bool hasDiscount = item.stickerPrice > item.finalPrice;
 
           return "${entry.key + 1}. *${item.categoryName.toUpperCase()}*\n"
-              "   MRP: ${hasDiscount ? "~Rs ${item.stickerPrice.toStringAsFixed(0)}~ " : "Rs ${item.stickerPrice.toStringAsFixed(0)}"} →  *Rs ${item.finalPrice.toStringAsFixed(2)}* \n"
-              "   ${hasDiscount ? "DISCOUNT *Rs ${item.stickerPrice - item.finalPrice}*" : ""}";
+              "   MRP: ${hasDiscount ? "~Rs ${item.stickerPrice.toStringAsFixed(2)}~ " : "Rs ${item.stickerPrice.toStringAsFixed(2)}"} →  *Rs ${item.finalPrice.toStringAsFixed(2)}* \n"
+              "   ${hasDiscount ? "DISCOUNT *Rs ${(item.stickerPrice - item.finalPrice).toStringAsFixed(2)}*" : ""}";
         })
         .join("\n\n");
 
