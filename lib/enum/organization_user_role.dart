@@ -9,4 +9,6 @@ enum OrganizationUserRole {
   staff,
   @JsonValue('manager')
   manager,
+  @JsonValue('viewer')
+  viewer,
 }

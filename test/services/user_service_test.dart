@@ -242,15 +242,16 @@ void main() {
     });
 
     test(
-      'getUserShops streams OrganizationSnapshots from user sub-collection',
+      'getUserShops streams OrganizationSnapshots from user document',
       () async {
         const userId = 'user_123';
-        await fakeDb
-            .collection('users')
-            .doc(userId)
-            .collection('organizations')
-            .doc('org1')
-            .set({'orgId': 'org1', 'name': 'My Shop'});
+
+        // FIX: Wrap the shop data in the 'assignedOrgs' list
+        await fakeDb.collection('users').doc(userId).set({
+          'assignedOrgs': [
+            {'orgId': 'org1', 'name': 'My Shop'},
+          ],
+        });
 
         final stream = userService.getUserShops(userId);
         final shops = await stream.first;
