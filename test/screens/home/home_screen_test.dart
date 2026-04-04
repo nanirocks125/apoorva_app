@@ -4,6 +4,7 @@ import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
+import 'package:apoorva_app/services/platform_stats_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ class MockOrgService extends Mock implements OrganizationService {}
 class MockAuthService extends Mock implements AuthService {}
 
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
+
+class MockPlatformStatsService extends Mock implements PlatformStatsService {}
 
 void setupFirebaseMocks() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -93,8 +96,13 @@ void main() {
   });
 
   Widget createWidgetUnderTest(AppUser user) {
+    final mockStatsService = MockPlatformStatsService();
     return MaterialApp(
-      home: HomeScreen(loggedInUser: user, orgService: mockOrgService),
+      home: HomeScreen(
+        loggedInUser: user,
+        orgService: mockOrgService,
+        statsService: mockStatsService,
+      ),
     );
   }
 
@@ -131,15 +139,21 @@ void main() {
       tester,
     ) async {
       // Setup the mock to hang/delay
-      when(
-        () => mockOrgService.getOrganizationById(any()),
-      ).thenAnswer((_) async => Future.delayed(const Duration(seconds: 1)));
+      when(() => mockOrgService.getOrganizationById(any())).thenAnswer((
+        _,
+      ) async {
+        await Future.delayed(const Duration(seconds: 1));
+        return null;
+      });
+
+      final mockStatsService = MockPlatformStatsService();
 
       await tester.pumpWidget(
         MaterialApp(
           home: HomeScreen(
             loggedInUser: singleOrgUser,
             orgService: mockOrgService, // Pass the mock here!
+            statsService: mockStatsService,
           ),
         ),
       );
@@ -212,9 +226,10 @@ void main() {
     ) async {
       // 1. Create the mock
       final mockAuthService = MockAuthService();
+      final mockStatsService = MockPlatformStatsService();
 
       // 2. Stub the signOut method to do nothing (just return normally)
-      when(() => mockAuthService.signOut()).thenAnswer((_) async => {});
+      when(() => mockAuthService.signOut()).thenAnswer((_) async {});
 
       // 3. Pass the mock into the widget
       await tester.pumpWidget(
@@ -223,6 +238,7 @@ void main() {
             loggedInUser: unassignedUser,
             orgService: mockOrgService,
             authService: mockAuthService, // Pass it here!
+            statsService: mockStatsService,
           ),
         ),
       );

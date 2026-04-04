@@ -6,20 +6,23 @@ import 'package:apoorva_app/screens/organization/organization_selection_screen.d
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
+import 'package:apoorva_app/services/platform_stats_service.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser loggedInUser;
   final OrganizationService _orgService; // Changed from final initialization
   final AuthService _authService;
-
+  final PlatformStatsService? _statsService;
   HomeScreen({
     super.key,
     required this.loggedInUser,
     OrganizationService? orgService, // Optional injection
     AuthService? authService,
+    PlatformStatsService? statsService, // 2. Add to constructor
   }) : _orgService = orgService ?? OrganizationService(),
-       _authService = authService ?? AuthService();
+       _authService = authService ?? AuthService(),
+       _statsService = statsService; // 3. Store it
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,10 @@ class HomeScreen extends StatelessWidget {
     final int shopCount = loggedInUser.assignedOrgs.length;
     print('organization count for user ${loggedInUser.name}: $shopCount');
     if (isSuperAdmin) {
-      return SuperAdminDashboard(user: loggedInUser);
+      return SuperAdminDashboard(
+        user: loggedInUser,
+        statsService: _statsService,
+      );
     }
 
     // 1. If not an admin and no shops assigned, show the waiting room
