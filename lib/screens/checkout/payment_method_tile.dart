@@ -45,10 +45,10 @@ class PaymentMethodTile extends StatelessWidget {
                 controller: controller,
                 keyboardType: TextInputType.number,
                 onChanged: (_) => onChanged(),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   prefixText: '₹ ',
                   isDense: true,
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(),
                 ),
               ),
             ),

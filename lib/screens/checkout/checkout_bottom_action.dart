@@ -22,7 +22,7 @@ class CheckoutBottomAction extends StatelessWidget {
         : (balance < 0 ? Colors.blue : Colors.green);
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
