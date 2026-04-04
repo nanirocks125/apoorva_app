@@ -16,14 +16,17 @@ class ReceiptCommunicationService {
         .entries
         .map((entry) {
           var item = entry.value;
+          bool hasDiscount = item.stickerPrice > item.finalPrice;
+
           return "${entry.key + 1}. *${item.categoryName.toUpperCase()}*\n"
-              "   MRP: ~Rs ${item.stickerPrice.toStringAsFixed(0)}~ → *Rs ${item.finalPrice.toStringAsFixed(2)}*";
+              "   MRP: ${hasDiscount ? "~Rs ${item.stickerPrice.toStringAsFixed(0)}~ " : "Rs ${item.stickerPrice.toStringAsFixed(0)}"} →  *Rs ${item.finalPrice.toStringAsFixed(2)}* \n"
+              "   ${hasDiscount ? "DISCOUNT *Rs ${item.stickerPrice - item.finalPrice}*" : ""}";
         })
         .join("\n\n");
 
     final String message =
         "✨ *APOORVA JEWELLERY* ✨\n"
-        "Hello ${sale.customerName},\n"
+        "Hello ${sale.customerName == 'Walk-in' ? '' : sale.customerName}\n"
         "Your digital bill is ready. 🙏\n\n"
         "📦 *ITEMS:* \n$itemsList\n\n"
         "💰 *NET PAYABLE: Rs ${sale.netPayable.toStringAsFixed(2)}*\n"
@@ -34,10 +37,22 @@ class ReceiptCommunicationService {
     String phone = sale.customerPhone.replaceAll(RegExp(r'[^0-9]'), '');
     if (phone.length == 10) phone = "91$phone";
 
+    // Remove the 'whatsapp://' logic and use 'https://wa.me/'
     final Uri url = Uri.parse(
-      "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
+      "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
     );
-    if (await canLaunchUrl(url)) await launchUrl(url);
+
+    // Use LaunchMode.externalApplication to ensure it leaves your app
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      // Fallback if the URL can't be launched
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch WhatsApp')),
+        );
+      }
+    }
   }
 
   void sendTextMessage(BuildContext context, Sale sale) async {
@@ -52,7 +67,7 @@ class ReceiptCommunicationService {
 
           return "$idx. ${item.categoryName.toUpperCase()}\n"
               "   MRP: Rs ${item.stickerPrice.toStringAsFixed(0)}\n"
-              "   Discount: Rs ${itemDiscount.toStringAsFixed(0)}\n"
+              "${itemDiscount > 0 ? "   Discount: Rs ${itemDiscount.toStringAsFixed(0)}\n" : ""}"
               "   Final Price: Rs ${item.finalPrice.toStringAsFixed(2)}";
         })
         .join("\n\n");
