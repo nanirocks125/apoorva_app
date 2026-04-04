@@ -57,88 +57,94 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(title: const Text('Finalize Payment')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'CUSTOMER',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(title: const Text('Finalize Payment')),
+            body: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'CUSTOMER',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                CustomerInfoCard(customer: widget.customer),
+                  const SizedBox(height: 8),
+                  CustomerInfoCard(customer: widget.customer),
 
-                const SizedBox(height: 24),
-                const Text(
-                  'DISCOUNT',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                  const SizedBox(height: 24),
+                  const Text(
+                    'DISCOUNT',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-                DiscountSelector(
-                  selectedPercent: _controller.overallDiscountPercent,
-                  onSelect: _controller.setDiscount,
-                ),
+                  DiscountSelector(
+                    selectedPercent: _controller.overallDiscountPercent,
+                    onSelect: _controller.setDiscount,
+                  ),
 
-                const SizedBox(height: 24),
-                BillSummaryCard(
-                  totalMrp: widget.cart.totalMRP,
-                  totalDiscountOnMRP: widget.cart.totalDiscountOnMRP,
-                  additionalDiscount: _controller
-                      .overallDiscountAmount, // Placeholder - replace with actual additional discount if applicable
-                  netTotal: _controller.finalTotal,
-                  roundOffController: _controller.roundOffController,
-                ),
+                  const SizedBox(height: 24),
+                  BillSummaryCard(
+                    totalMrp: widget.cart.totalMRP,
+                    totalDiscountOnMRP: widget.cart.totalDiscountOnMRP,
+                    additionalDiscount: _controller
+                        .overallDiscountAmount, // Placeholder - replace with actual additional discount if applicable
+                    netTotal: _controller.finalTotal,
+                    roundOffController: _controller.roundOffController,
+                  ),
 
-                const SizedBox(height: 24),
-                const Text(
-                  'PAYMENT METHODS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                  const SizedBox(height: 24),
+                  const Text(
+                    'PAYMENT METHODS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                ...PaymentMode.values.map(
-                  (mode) => PaymentMethodTile(
-                    mode: mode,
-                    isSelected: _controller.selectedModes[mode] ?? false,
-                    controller: _controller.paymentControllers[mode]!,
-                    onToggle: (val) => _controller.togglePaymentMode(mode, val),
-                    onChanged: () => setState(() {}), // Refresh balance display
+                  const SizedBox(height: 8),
+                  ...PaymentMode.values.map(
+                    (mode) => PaymentMethodTile(
+                      mode: mode,
+                      isSelected: _controller.selectedModes[mode] ?? false,
+                      controller: _controller.paymentControllers[mode]!,
+                      onToggle: (val) =>
+                          _controller.togglePaymentMode(mode, val),
+                      onChanged: () =>
+                          setState(() {}), // Refresh balance display
+                    ),
                   ),
-                ),
-                const SizedBox(height: 100), // Space for bottom bar
-              ],
+                  const SizedBox(height: 100), // Space for bottom bar
+                ],
+              ),
             ),
-          ),
-          bottomNavigationBar: CheckoutBottomAction(
-            balance: _controller.balance,
-            isProcessing: _controller.isProcessing,
-            canConfirm: _controller.isSettled,
-            onConfirm: () async {
-              final sale = await _controller.finalizeSale();
-              if (sale != null && mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        SaleSuccessScreen(sale: sale, orgId: widget.orgId),
-                  ),
-                );
-              }
-            },
+            bottomNavigationBar: CheckoutBottomAction(
+              balance: _controller.balance,
+              isProcessing: _controller.isProcessing,
+              canConfirm: _controller.isSettled,
+              onConfirm: () async {
+                final sale = await _controller.finalizeSale();
+                if (sale != null && mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          SaleSuccessScreen(sale: sale, orgId: widget.orgId),
+                    ),
+                  );
+                }
+              },
+            ),
           ),
         );
       },

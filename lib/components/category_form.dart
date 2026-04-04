@@ -77,6 +77,7 @@ class _CategoryFormState extends State<CategoryForm> {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 8),
           // --- Bill Machine Number (New Field) ---
@@ -88,6 +89,8 @@ class _CategoryFormState extends State<CategoryForm> {
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.confirmation_number_outlined),
             ),
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 12),
           SwitchListTile(

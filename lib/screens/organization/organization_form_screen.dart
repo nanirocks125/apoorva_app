@@ -182,6 +182,7 @@ class _OrganizationFormScreenState extends State<OrganizationFormScreen> {
         controller: controller,
         decoration: InputDecoration(labelText: label, prefixText: '₹'),
         keyboardType: TextInputType.number,
+        textInputAction: .done,
       ),
     );
   }

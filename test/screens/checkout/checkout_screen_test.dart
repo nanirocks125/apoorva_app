@@ -1,3 +1,4 @@
+import 'package:apoorva_app/screens/checkout/bill_summary_card.dart';
 import 'package:apoorva_app/screens/checkout/checkout_bottom_action.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,9 @@ import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/screens/sale_success/sale_success_screen.dart';
 
 // Mocks
-class MockCheckoutController extends Mock implements CheckoutController {}
+class MockCheckoutController extends Mock
+    with ChangeNotifier
+    implements CheckoutController {}
 
 class FakeSale extends Fake implements Sale {}
 
@@ -183,5 +186,30 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('CONFIRM SALE'), findsNothing);
     });
+  });
+
+  testWidgets('should dismiss keyboard when dragging the scroll view', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+
+    // 1. Focus a field
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    final FocusNode focusNode = FocusScope.of(
+      tester.element(find.byType(TextField).first),
+    ).focusedChild!;
+    expect(focusNode.hasFocus, isTrue);
+
+    // 2. Perform a drag/scroll gesture
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -300),
+    );
+    await tester.pump();
+
+    // 3. Verify keyboard dismissed (due to ScrollViewKeyboardDismissBehavior.onDrag)
+    expect(focusNode.hasFocus, isFalse);
   });
 }
