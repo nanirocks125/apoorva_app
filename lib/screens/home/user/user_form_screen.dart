@@ -12,8 +12,14 @@ class UserFormScreen extends StatefulWidget {
   final AppUser? user;
   final FormMode mode;
   final Organization? org;
-
-  const UserFormScreen({super.key, this.user, required this.mode, this.org});
+  final UserService _userService; // Add this field
+  UserFormScreen({
+    super.key,
+    this.user,
+    required this.mode,
+    this.org,
+    UserService? userService, // Accept it in constructor
+  }) : _userService = userService ?? UserService();
 
   @override
   State<UserFormScreen> createState() => _UserFormScreenState();
@@ -21,7 +27,6 @@ class UserFormScreen extends StatefulWidget {
 
 class _UserFormScreenState extends State<UserFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final UserService _service = UserService();
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -58,7 +63,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     }
 
     // 1. Allow if the user is a Global Super Admin
-    final globalUser = await _service.getUserById(currentUser.uid);
+    final globalUser = await widget._userService.getUserById(currentUser.uid);
     if (globalUser?.role == AppUserRole.superAdmin) {
       if (context.mounted) {
         setState(() {
@@ -131,7 +136,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     try {
       // Action 1: Create Identity and root User Record (Always required)
-      final createdUser = await _service.createIdentityAndProfile(
+      final createdUser = await widget._userService.createIdentityAndProfile(
         user: newUserTemplate,
         password: 'Apoorva@123',
       );
@@ -139,7 +144,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       // Actions 2 & 3: Atomic Mapping (ONLY if organization is provided)
       // This fulfills the "Multi-Tenancy" requirement while allowing global admin flexibility.
       if (widget.org != null) {
-        await _service.mapUserToOrganization(
+        await widget._userService.mapUserToOrganization(
           fullUser: createdUser,
           fullOrg: widget.org!,
           orgRole: _selectedUserRole

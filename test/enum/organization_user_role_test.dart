@@ -3,8 +3,8 @@ import 'package:apoorva_app/enum/organization_user_role.dart';
 
 void main() {
   group('OrganizationUserRole Enum Tests', () {
-    test('should have exactly 4 defined roles for shop management', () {
-      expect(OrganizationUserRole.values.length, 4);
+    test('should have exactly 5 defined roles for shop management', () {
+      expect(OrganizationUserRole.values.length, 5);
     });
 
     test('enum names should match internal dart identifiers', () {
@@ -12,6 +12,7 @@ void main() {
       expect(OrganizationUserRole.admin.name, 'admin');
       expect(OrganizationUserRole.staff.name, 'staff');
       expect(OrganizationUserRole.manager.name, 'manager');
+      expect(OrganizationUserRole.viewer.name, 'viewer');
     });
 
     group('Firestore Mapping (JsonValue)', () {
@@ -19,7 +20,7 @@ void main() {
         // This confirms that your @JsonValue annotations match
         // the expected lowercase strings in your database.
 
-        const expectedValues = ['owner', 'admin', 'staff', 'manager'];
+        const expectedValues = ['owner', 'admin', 'staff', 'manager', 'viewer'];
 
         for (var i = 0; i < OrganizationUserRole.values.length; i++) {
           final role = OrganizationUserRole.values[i];

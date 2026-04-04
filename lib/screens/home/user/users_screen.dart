@@ -6,10 +6,14 @@ import 'package:apoorva_app/screens/home/user/user_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/services/user_service.dart';
-import 'package:collection/collection.dart';
 
 class UserScreen extends StatelessWidget {
-  const UserScreen({super.key, this.org});
+  final UserService _userService; // Add this
+  UserScreen({
+    super.key,
+    this.org,
+    UserService? userService, // Optional injection
+  }) : _userService = userService ?? UserService();
   final Organization? org; // Optional: Provide for branch staff list
 
   // Helper to handle role-based colors for the UI
@@ -30,19 +34,23 @@ class UserScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final UserService userService = UserService();
-
     // Determine the authoritative stream based on context
     return Scaffold(
       appBar: AppBar(
         title: Text(org != null ? '${org!.name} Staff' : 'Global Users'),
         backgroundColor: const Color(0xFFFF5733),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openUserForm(context),
+        backgroundColor: const Color(0xFFFF5733),
+        tooltip: 'Add User',
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: StreamBuilder(
         // Use Snapshot stream for Org, Global stream for Platform Admin
         stream: org != null
-            ? userService.getOrganizationUsers(org!.id)
-            : userService.getAllUsersGlobal(),
+            ? _userService.getOrganizationUsers(org!.id)
+            : _userService.getAllUsersGlobal(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -161,6 +169,7 @@ class UserScreen extends StatelessWidget {
           user: user,
           mode: user == null ? FormMode.create : FormMode.edit,
           org: org, // Pass the organization context if available
+          userService: _userService,
         ),
       ),
     );
@@ -170,8 +179,6 @@ class UserScreen extends StatelessWidget {
     BuildContext context,
     String userId,
   ) async {
-    final UserService userService = UserService();
-
     // 1. Show a non-cancelable loading dialog to provide immediate feedback
     showDialog(
       context: context,
@@ -183,7 +190,7 @@ class UserScreen extends StatelessWidget {
 
     try {
       // 2. Fetch the authoritative root profile from /users/{userId}
-      final AppUser? fullUser = await userService.getUserById(userId);
+      final AppUser? fullUser = await _userService.getUserById(userId);
 
       // 3. Pop the loading dialog
       if (context.mounted) Navigator.of(context).pop();

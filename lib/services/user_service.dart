@@ -180,13 +180,19 @@ class UserService {
     return _db
         .collection('users')
         .doc(userId)
-        .collection('organizations')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => OrganizationSnapshot.fromJson(doc.data()))
-              .toList(),
-        );
+        .snapshots() // Listen to the user document itself
+        .map((snapshot) {
+          // Access the 'assignedOrgs' field from the document data
+          final List<dynamic> assignedOrgs =
+              snapshot.data()?['assignedOrgs'] ?? [];
+
+          return assignedOrgs
+              .map(
+                (data) =>
+                    OrganizationSnapshot.fromJson(data as Map<String, dynamic>),
+              )
+              .toList();
+        });
   }
 
   // Inside user_service.dart

@@ -68,7 +68,7 @@ class ApoorvaApp extends StatelessWidget {
       // 2. Named Routes Table
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/users': (context) => const UserScreen(),
+        '/users': (context) => UserScreen(),
         '/organizations': (context) => OrganizationScreen(),
       },
 
