@@ -152,8 +152,8 @@ class OrganizationDashboard extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
             Navigator.pushNamed(context, '/pos', arguments: organization),
-        label: const Text('New Sale'),
-        icon: const Icon(Icons.add_shopping_cart),
+        label: const Text('New Sale', style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
         backgroundColor: const Color(0xFFFF5733),
       ),
     );

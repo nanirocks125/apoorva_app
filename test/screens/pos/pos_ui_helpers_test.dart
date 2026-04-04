@@ -1,3 +1,4 @@
+import 'package:apoorva_app/screens/pos/item_price_calculator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -76,15 +77,17 @@ void main() {
         }),
       );
 
-      // 1. Bottom sheet ని ఓపెన్ చేయడం
+      // // 1. Bottom sheet ని ఓపెన్ చేయడం
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
       // 2. UI వెరిఫికేషన్
-      expect(find.text('Adding Gold Ring'), findsOneWidget);
+      expect(find.text('New Gold Ring'), findsOneWidget);
 
       // 3. Price ఎంటర్ చేయడం
-      await tester.enterText(find.byType(TextField), '5000');
+      final priceField = find.widgetWithText(TextField, 'Sticker Price');
+      await tester.enterText(priceField, '5000');
+      await tester.pump();
 
       // 4. Discount 10% సెలెక్ట్ చేయడం
       await tester.tap(find.text('10%'));
@@ -94,12 +97,30 @@ void main() {
       expect(find.text('₹4500.00'), findsOneWidget);
 
       // 6. Add button క్లిక్ చేయడం
-      await tester.tap(find.text('ADD TO CART'));
+      await tester.tap(find.text('ADD TO BILL'));
       await tester.pumpAndSettle();
 
       // 7. Verify addItem was called
       verify(() => mockProvider.addItem(any())).called(1);
     });
+
+    testWidgets(
+      'Should not open calculator if category and existingItem are null',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestScreen((context) {
+            // రెండూ null పంపిస్తున్నాం
+            PosUIHelpers.openCalculator(context, mockProvider);
+          }),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pump();
+
+        // Bottom Sheet ఓపెన్ అవ్వకూడదు
+        expect(find.byType(CalculatorSheet), findsNothing);
+      },
+    );
   });
 
   group('PosUIHelpers - showCategoryPicker Tests', () {

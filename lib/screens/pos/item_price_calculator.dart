@@ -69,225 +69,243 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
   Widget build(BuildContext context) {
     final themeColor = const Color(0xFFFF5733);
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            Text(
-              widget.existingItem != null
-                  ? 'Edit ${widget.category?.name}'
-                  : 'New ${widget.category?.name}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 1. STICKER PRICE FIELD
-            TextField(
-              controller: _priceController,
-              autofocus: true,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Sticker Price',
-                prefixText: '₹ ',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              onChanged: (_) => setState(() {}),
-            ),
 
-            const SizedBox(height: 20),
-
-            // 2. DISCOUNT TYPE SEGMENTED BUTTON (iOS Style Feel)
-            SegmentedButton<DiscountType>(
-              segments: const [
-                ButtonSegment(
-                  value: DiscountType.percentage,
-                  label: Text('Percentage (%)'),
-                  icon: Icon(Icons.percent),
-                ),
-                ButtonSegment(
-                  value: DiscountType.amount,
-                  label: Text('Amount (₹)'),
-                  icon: Icon(Icons.currency_rupee),
-                ),
-              ],
-              selected: {_discountType},
-              onSelectionChanged: (Set<DiscountType> newSelection) {
-                setState(() {
-                  _discountType = newSelection.first;
-                  _discountInputController
-                      .clear(); // Switch అయినప్పుడు క్లియర్ చేయడం ఉత్తమం
-                });
-              },
-              style: SegmentedButton.styleFrom(
-                selectedBackgroundColor: themeColor.withOpacity(0.1),
-                selectedForegroundColor: themeColor,
-                side: BorderSide(color: themeColor.withOpacity(0.5)),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 3. DYNAMIC DISCOUNT INPUT
-            TextField(
-              controller: _discountInputController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                labelText: _discountType == DiscountType.percentage
-                    ? 'Discount %'
-                    : 'Discount Amount (₹)',
-                prefixText: _discountType == DiscountType.percentage
-                    ? ''
-                    : '₹ ',
-                suffixText: _discountType == DiscountType.percentage ? '%' : '',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 4. QUICK PERCENT CHIPS (Show only in percentage mode)
-            if (_discountType == DiscountType.percentage)
-              Wrap(
-                spacing: 8,
-                children: [0.0, 5.0, 10.0, 20.0, 30.0]
-                    .map(
-                      (pct) => ChoiceChip(
-                        label: Text('${pct.toInt()}%'),
-                        selected:
-                            (double.tryParse(_discountInputController.text) ??
-                                -1) ==
-                            pct,
-                        onSelected: (selected) {
-                          setState(
-                            () => _discountInputController.text = pct
-                                .toInt()
-                                .toString(),
-                          );
-                        },
-                      ),
-                    )
-                    .toList(),
-              ),
-
-            const Divider(height: 40),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: [
-                  // 1. ACTUAL PRICE (STRIKE THROUGH)
-                  _buildPriceRow(
-                    "Gross Amount:",
-                    "₹${(double.tryParse(_priceController.text) ?? 0).toStringAsFixed(2)}",
-                    isBold: false,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // 2. DISCOUNT AMOUNT
-                  _buildPriceRow(
-                    "Discount (${_discountType == DiscountType.percentage ? '${_discountInputController.text}%' : 'Fixed'}):",
-                    "- ₹${_discountValue.toStringAsFixed(2)}",
-                    color: Colors.redAccent,
-                    isBold: false,
-                  ),
-
-                  const Divider(height: 24),
-
-                  // 3. FINAL NET PRICE
-                  _buildPriceRow(
-                    "Net Amount:",
-                    "₹${_finalPrice.toStringAsFixed(2)}",
-                    color: themeColor,
-                    isBold: true,
-                    fontSize: 22,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(60),
-                backgroundColor: themeColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              onPressed: _finalPrice >= 0
-                  ? () {
-                      // ... addItem logic ...
-                      // Note: final discount needs to be converted back to percentage if your model only stores %
-                      double finalDiscountPercent =
-                          _discountType == DiscountType.percentage
-                          ? (double.tryParse(_discountInputController.text) ??
-                                0.0)
-                          : ((double.tryParse(_discountInputController.text) ??
-                                    0.0) /
-                                (double.tryParse(_priceController.text) ??
-                                    1.0) *
-                                100);
-
-                      final newItem = CartItem(
-                        category: widget.category!,
-                        stickerPrice:
-                            double.tryParse(_priceController.text) ?? 0.0,
-                        discountPercent: finalDiscountPercent,
-                      );
-
-                      if (widget.index != null) {
-                        widget.provider.updateItem(widget.index!, newItem);
-                      } else {
-                        widget.provider.addItem(newItem);
-                      }
-                      Navigator.pop(context);
-                    }
-                  : null,
-              child: Text(
-                widget.existingItem != null ? 'UPDATE ITEM' : 'ADD TO BILL',
+              Text(
+                widget.existingItem != null
+                    ? 'Edit ${widget.category?.name}'
+                    : 'New ${widget.category?.name}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 1. STICKER PRICE FIELD
+              TextField(
+                controller: _priceController,
+                autofocus: true,
+                style: const TextStyle(
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: 'Sticker Price',
+                  prefixText: '₹ ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+
+              // 2. DISCOUNT TYPE SEGMENTED BUTTON (iOS Style Feel)
+              SegmentedButton<DiscountType>(
+                segments: const [
+                  ButtonSegment(
+                    value: DiscountType.percentage,
+                    label: Text('Percentage (%)'),
+                    icon: Icon(Icons.percent),
+                  ),
+                  ButtonSegment(
+                    value: DiscountType.amount,
+                    label: Text('Amount (₹)'),
+                    icon: Icon(Icons.currency_rupee),
+                  ),
+                ],
+                selected: {_discountType},
+                onSelectionChanged: (Set<DiscountType> newSelection) {
+                  setState(() {
+                    _discountType = newSelection.first;
+                    _discountInputController
+                        .clear(); // Switch అయినప్పుడు క్లియర్ చేయడం ఉత్తమం
+                  });
+                },
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: themeColor.withOpacity(0.1),
+                  selectedForegroundColor: themeColor,
+                  side: BorderSide(color: themeColor.withOpacity(0.5)),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 3. DYNAMIC DISCOUNT INPUT
+              TextField(
+                controller: _discountInputController,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: _discountType == DiscountType.percentage
+                      ? 'Discount %'
+                      : 'Discount Amount (₹)',
+                  prefixText: _discountType == DiscountType.percentage
+                      ? ''
+                      : '₹ ',
+                  suffixText: _discountType == DiscountType.percentage
+                      ? '%'
+                      : '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 4. QUICK PERCENT CHIPS (Show only in percentage mode)
+              if (_discountType == DiscountType.percentage)
+                Wrap(
+                  spacing: 8,
+                  children: [0.0, 5.0, 10.0, 20.0, 30.0]
+                      .map(
+                        (pct) => ChoiceChip(
+                          label: Text('${pct.toInt()}%'),
+                          selected:
+                              (double.tryParse(_discountInputController.text) ??
+                                  -1) ==
+                              pct,
+                          onSelected: (selected) {
+                            setState(
+                              () => _discountInputController.text = pct
+                                  .toInt()
+                                  .toString(),
+                            );
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+
+              const Divider(height: 40),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    // 1. ACTUAL PRICE (STRIKE THROUGH)
+                    _buildPriceRow(
+                      "Gross Amount:",
+                      "₹${(double.tryParse(_priceController.text) ?? 0).toStringAsFixed(2)}",
+                      isBold: false,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 2. DISCOUNT AMOUNT
+                    _buildPriceRow(
+                      "Discount (${_discountType == DiscountType.percentage ? '${_discountInputController.text}%' : 'Fixed'}):",
+                      "- ₹${_discountValue.toStringAsFixed(2)}",
+                      color: Colors.redAccent,
+                      isBold: false,
+                    ),
+
+                    const Divider(height: 24),
+
+                    // 3. FINAL NET PRICE
+                    _buildPriceRow(
+                      "Net Amount:",
+                      "₹${_finalPrice.toStringAsFixed(2)}",
+                      color: themeColor,
+                      isBold: true,
+                      fontSize: 22,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(60),
+                  backgroundColor: themeColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: _finalPrice >= 0
+                    ? () {
+                        // ... addItem logic ...
+                        // Note: final discount needs to be converted back to percentage if your model only stores %
+                        double finalDiscountPercent =
+                            _discountType == DiscountType.percentage
+                            ? (double.tryParse(_discountInputController.text) ??
+                                  0.0)
+                            : ((double.tryParse(
+                                        _discountInputController.text,
+                                      ) ??
+                                      0.0) /
+                                  (double.tryParse(_priceController.text) ??
+                                      1.0) *
+                                  100);
+
+                        final newItem = CartItem(
+                          category: widget.category!,
+                          stickerPrice:
+                              double.tryParse(_priceController.text) ?? 0.0,
+                          discountPercent: finalDiscountPercent,
+                        );
+
+                        if (widget.index != null) {
+                          widget.provider.updateItem(widget.index!, newItem);
+                        } else {
+                          widget.provider.addItem(newItem);
+                        }
+                        Navigator.pop(context);
+                      }
+                    : null,
+                child: Text(
+                  widget.existingItem != null ? 'UPDATE ITEM' : 'ADD TO BILL',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
