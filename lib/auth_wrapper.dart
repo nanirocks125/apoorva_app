@@ -23,6 +23,7 @@ class AuthWrapper extends StatelessWidget {
 
       case AuthStatus.authenticated:
         final user = authProvider.user;
+        print('Auth provider user ${user?.id}');
 
         // Handle cases where auth is true but profile fetch failed
         if (user == null) return const LoginScreen();
