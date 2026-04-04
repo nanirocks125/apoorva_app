@@ -130,7 +130,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: () => _viewBill(sale),
-                            icon: const Icon(Icons.print),
+                            icon: const Icon(Icons.layers_outlined),
                             label: const Text('View Bill'),
                           ),
                         ],
