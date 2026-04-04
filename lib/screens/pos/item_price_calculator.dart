@@ -44,7 +44,7 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
   void initState() {
     super.initState();
     _priceController = TextEditingController(
-      text: widget.existingItem?.stickerPrice.toStringAsFixed(0) ?? '',
+      text: widget.existingItem?.mrp.toStringAsFixed(0) ?? '',
     );
 
     // ఒకవేళ ఎగ్జిస్టింగ్ ఐటమ్ ఉంటే, దాని డిస్కౌంట్ ని పర్సంటేజ్ లోనే ఉంచుదాం ప్రస్తుతానికి
@@ -276,13 +276,12 @@ class _CalculatorSheetState extends State<CalculatorSheet> {
 
                         final newItem = CartItem(
                           category: widget.category!,
-                          stickerPrice:
-                              double.tryParse(_priceController.text) ?? 0.0,
+                          mrp: double.tryParse(_priceController.text) ?? 0.0,
                           discountPercent: finalDiscountPercent,
                         );
 
                         if (widget.index != null) {
-                          widget.provider.updateItem(widget.index!, newItem);
+                          widget.provider.updateItem(newItem, widget.index!);
                         } else {
                           widget.provider.addItem(newItem);
                         }

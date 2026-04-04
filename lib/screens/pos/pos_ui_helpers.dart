@@ -1,8 +1,8 @@
+import 'package:apoorva_app/model/cart/cart_item.dart';
+import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/category_card.dart';
 import 'package:apoorva_app/screens/pos/item_price_calculator.dart';
 import 'package:flutter/material.dart';
-import '../../model/category/category.dart';
-import '../../model/cart/cart_item.dart';
 import 'pos_provider.dart';
 
 class PosUIHelpers {

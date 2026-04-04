@@ -24,7 +24,7 @@ void main() {
 
   final testItem = CartItem(
     category: testCategory,
-    stickerPrice: 1000.0,
+    mrp: 1000.0,
     discountPercent: 10.0,
   );
 
@@ -59,11 +59,11 @@ void main() {
       posProvider.addItem(testItem);
       final updatedItem = CartItem(
         category: testCategory,
-        stickerPrice: 2000.0,
+        mrp: 2000.0,
         discountPercent: 5.0,
       );
-      posProvider.updateItem(0, updatedItem);
-      expect(posProvider.cart.items.first.stickerPrice, 2000.0);
+      posProvider.updateItem(updatedItem, 0);
+      expect(posProvider.cart.items.first.mrp, 2000.0);
     });
   });
 

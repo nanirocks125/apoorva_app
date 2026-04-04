@@ -444,7 +444,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               categoryId: i.category.id,
               categoryName: i.category.name,
               qty: 1, // Change if you support multiple quantities
-              stickerPrice: i.stickerPrice,
+              stickerPrice: i.mrp,
               finalPrice: i.finalPrice,
             ),
           )
@@ -547,7 +547,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                           Text(
-                            '₹${item.stickerPrice.toStringAsFixed(0)} - ${item.discountPercent.toInt()}%',
+                            '₹${item.mrp.toStringAsFixed(0)} - ${item.discountPercent.toInt()}%',
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 11,

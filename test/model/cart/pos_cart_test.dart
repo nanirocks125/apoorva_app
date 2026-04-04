@@ -1,3 +1,4 @@
+import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/model/cart/cart_item.dart';
@@ -18,7 +19,7 @@ void main() {
       final cart = PosCart();
       expect(cart.items, isEmpty);
       expect(cart.totalPayable, 0.0);
-      expect(cart.paymentMode, 'Cash');
+      expect(cart.paymentMode, PaymentMode.cash);
     });
 
     test('totalPayable should sum multiple items correctly', () {
@@ -28,7 +29,7 @@ void main() {
       cart.items.add(
         CartItem(
           category: mockCategory,
-          stickerPrice: 1000.0,
+          mrp: 1000.0,
           discountPercent: 10.0,
           quantity: 1,
         ),
@@ -38,7 +39,7 @@ void main() {
       cart.items.add(
         CartItem(
           category: mockCategory,
-          stickerPrice: 500.0,
+          mrp: 500.0,
           discountPercent: 0.0,
           quantity: 2,
         ),
@@ -51,7 +52,7 @@ void main() {
     test('flatDiscount should subtract from subtotal correctly', () {
       final cart = PosCart();
       cart.items.add(
-        CartItem(category: mockCategory, stickerPrice: 2000.0, quantity: 1),
+        CartItem(category: mockCategory, mrp: 2000.0, quantity: 1),
       );
 
       cart.flatDiscount = 200.0; // ₹200 off the whole cart
@@ -62,9 +63,7 @@ void main() {
 
     test('totalPayable should never be negative (clamping test)', () {
       final cart = PosCart();
-      cart.items.add(
-        CartItem(category: mockCategory, stickerPrice: 100.0, quantity: 1),
-      );
+      cart.items.add(CartItem(category: mockCategory, mrp: 100.0, quantity: 1));
 
       cart.flatDiscount = 500.0; // Discount is higher than price
 

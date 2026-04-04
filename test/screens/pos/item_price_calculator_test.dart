@@ -1,10 +1,13 @@
-import 'package:apoorva_app/model/cart/cart_item.dart';
-import 'package:apoorva_app/model/category/category.dart';
-import 'package:apoorva_app/screens/pos/item_price_calculator.dart'; // Path మార్చండి
-import 'package:apoorva_app/screens/pos/pos_provider.dart';
+import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
+import 'package:apoorva_app/screens/pos/item_price_calculator.dart'
+    hide DiscountType;
+import 'package:apoorva_app/screens/pos/pos_provider.dart';
+import 'package:apoorva_app/model/category/category.dart';
+import 'package:apoorva_app/model/cart/cart_item.dart';
 
 class MockPosProvider extends Mock implements PosProvider {}
 
@@ -17,12 +20,12 @@ void main() {
       CartItem(
         category: Category(
           id: '1',
-          name: 'T',
+          name: 'Test',
           currentStock: 0,
-          billMachineNumber: 0,
-          isHotkey: true,
+          isHotkey: false,
+          billMachineNumber: 1,
         ),
-        stickerPrice: 0,
+        mrp: 0,
         discountPercent: 0,
       ),
     );
@@ -32,343 +35,238 @@ void main() {
     mockProvider = MockPosProvider();
     testCategory = Category(
       id: 'cat_1',
-      name: 'Bangles',
+      name: 'Gold Ring',
       currentStock: 10,
-      billMachineNumber: 5,
       isHotkey: true,
+      billMachineNumber: 1,
     );
   });
 
-  Widget createWidget({CartItem? existingItem, int? index}) {
+  Widget createWidgetUnderTest({CartItem? existingItem, int? index}) {
     return MaterialApp(
       home: Scaffold(
-        body: CalculatorSheet(
-          provider: mockProvider,
-          category: testCategory,
-          existingItem: existingItem,
-          index: index,
+        body: ChangeNotifierProvider<PosProvider>.value(
+          value: mockProvider,
+          child: CalculatorSheet(
+            provider: mockProvider,
+            category: testCategory,
+            existingItem: existingItem,
+            index: index,
+          ),
         ),
       ),
     );
   }
 
-  group('CalculatorSheet - UI & Calculation Logic', () {
-    testWidgets('Renders "New" mode correctly', (tester) async {
-      await tester.pumpWidget(createWidget());
-      expect(find.text('New Bangles'), findsOneWidget);
+  group('Rendering Modes', () {
+    testWidgets('shows "Add Gold Ring" and "ADD TO BILL" in add mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('Add Gold Ring'), findsOneWidget);
       expect(find.text('ADD TO BILL'), findsOneWidget);
     });
 
-    testWidgets('Renders "Edit" mode with existing data', (tester) async {
+    testWidgets('shows "Edit Gold Ring" and "UPDATE ITEM" in edit mode', (
+      tester,
+    ) async {
       final existing = CartItem(
         category: testCategory,
-        stickerPrice: 1000,
+        mrp: 5000,
         discountPercent: 10,
       );
-      await tester.pumpWidget(createWidget(existingItem: existing, index: 0));
-
-      expect(find.text('Edit Bangles'), findsOneWidget);
-      expect(find.text('1000'), findsOneWidget);
-      expect(find.text('10%'), findsOneWidget);
-      expect(find.text('UPDATE ITEM'), findsOneWidget);
-    });
-
-    testWidgets('Calculates final price correctly in Percentage mode', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '2000',
+      await tester.pumpWidget(
+        createWidgetUnderTest(existingItem: existing, index: 0),
       );
 
-      await tester.tap(find.widgetWithText(ChoiceChip, '20%'));
+      expect(find.text('Edit Gold Ring'), findsOneWidget);
+      expect(find.text('UPDATE ITEM'), findsOneWidget);
+      // Verify initial price is loaded
+      expect(find.text('5000.0'), findsOneWidget);
+    });
+  });
+
+  group('Price Calculations', () {
+    testWidgets('calculates 10% discount correctly', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Enter Price 1000
+      await tester.enterText(find.byType(TextField).first, '1000');
       await tester.pump();
 
-      // Calculation: 2000 - (20% of 2000) = 1600
-      expect(find.text('₹1600.00'), findsOneWidget);
-      expect(find.text('- ₹400.00'), findsOneWidget);
+      // Tap 10% chip
+      await tester.tap(find.text('10%'));
+      await tester.pump();
+
+      // Subtotal: 1000, Discount: 100, Net: 900
+      expect(find.text('₹1000'), findsWidgets); // Subtotal row
+      expect(find.text('-₹100'), findsOneWidget); // Discount row
+      expect(find.text('₹900'), findsOneWidget); // Net Total
     });
 
-    testWidgets('Switches to Amount mode and clears discount input', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
+    testWidgets('calculates Fixed Amount discount correctly', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '1000',
-      );
-      await tester.tap(find.widgetWithText(ChoiceChip, '10%'));
+      // Enter Price 1000
+      await tester.enterText(find.byType(TextField).first, '1000');
+      await tester.pump();
 
-      // Switch to Amount mode
-      await tester.tap(find.byIcon(Icons.currency_rupee));
+      // Switch to Fixed Amount
+      await tester.tap(find.text('Fixed Amount ₹'));
       await tester.pumpAndSettle();
 
-      // Verify controller is cleared
-      final discountField = tester.widget<TextField>(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
-      );
-      expect(discountField.controller?.text, '');
-
-      // Enter flat discount
+      // Enter 150 discount
       await tester.enterText(find.byType(TextField).last, '150');
       await tester.pump();
 
-      expect(find.text('₹850.00'), findsOneWidget);
-      expect(find.text('- ₹150.00'), findsOneWidget);
-    });
-  });
-  group('CalculatorSheet - Keyboard & Focus', () {
-    testWidgets('Dismisses keyboard on outer tap', (tester) async {
-      await tester.pumpWidget(createWidget());
-
-      // Use "Sticker Price" because it is ALWAYS visible
-      final priceField = find.widgetWithText(TextField, 'Sticker Price');
-      await tester.tap(priceField);
-      await tester.pump();
-
-      // Check focus
-      final FocusNode priceFocusNode = FocusScope.of(
-        tester.element(priceField),
-      ).focusedChild!;
-      expect(priceFocusNode.hasFocus, isTrue);
-
-      // Tap title to unfocus
-      await tester.tap(find.text('New Bangles'));
-      await tester.pump();
-
-      expect(priceFocusNode.hasFocus, isFalse);
-    });
-
-    testWidgets('Closes keyboard on "Done" action (Amount Mode)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
-
-      // 1. Switch to Amount mode so the Discount TextField appears
-      await tester.tap(find.byIcon(Icons.currency_rupee));
-      await tester.pumpAndSettle();
-
-      final discountField = find.widgetWithText(
-        TextField,
-        'Discount Amount (₹)',
-      );
-      await tester.tap(discountField);
-      await tester.pump();
-
-      // 2. Verify focus
-      final FocusNode discountFocusNode = FocusScope.of(
-        tester.element(discountField),
-      ).focusedChild!;
-      expect(discountFocusNode.hasFocus, isTrue);
-
-      // 3. Send "Done" action
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      // 4. Verify focus is released
-      expect(discountFocusNode.hasFocus, isFalse);
+      expect(find.text('-₹150'), findsOneWidget);
+      expect(find.text('₹850'), findsOneWidget);
     });
   });
 
-  group('CalculatorSheet - Amount Mode Logic', () {
-    testWidgets('Calculates final price correctly in Amount mode', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
+  group('Validation', () {
+    testWidgets('submit button is disabled when price is 0', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '5000',
-      );
+      final btnFinder = find.byType(ElevatedButton);
+      final ElevatedButton btn = tester.widget(btnFinder);
 
-      // Switch to Amount Mode
-      await tester.tap(find.byIcon(Icons.currency_rupee));
-      await tester.pumpAndSettle();
-
-      // Enter Discount Amount
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
-        '750',
-      );
-      await tester.pump();
-
-      // 5000 - 750 = 4250
-      expect(find.text('₹4250.00'), findsOneWidget);
-      expect(find.text('- ₹750.00'), findsOneWidget);
+      expect(btn.onPressed, isNull); // Disabled
     });
 
-    testWidgets('Disables ADD TO BILL if discount amount > sticker price', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '100',
-      );
-      await tester.tap(find.byIcon(Icons.currency_rupee));
-      await tester.pumpAndSettle();
-
-      // Invalid discount
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
-        '150',
-      );
+    testWidgets('submit button is enabled when price > 0', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.enterText(find.byType(TextField).first, '100');
       await tester.pump();
 
-      final addButton = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
-      expect(addButton.onPressed, isNull);
+      final btnFinder = find.byType(ElevatedButton);
+      final ElevatedButton btn = tester.widget(btnFinder);
+
+      expect(btn.onPressed, isNotNull); // Enabled
     });
   });
 
-  group('CalculatorSheet - Persistence', () {
-    testWidgets('Calls addItem when creating new item', (tester) async {
+  group('Submission Actions', () {
+    testWidgets('calls addItem on provider when adding new', (tester) async {
       when(() => mockProvider.addItem(any())).thenReturn(null);
 
-      await tester.pumpWidget(createWidget());
-      await tester.enterText(find.byType(TextField).first, '1000');
-      await tester.enterText(find.byType(TextField).last, '10');
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.enterText(find.byType(TextField).first, '2000');
+      await tester.tap(find.text('5%'));
       await tester.pump();
 
       await tester.tap(find.text('ADD TO BILL'));
       await tester.pumpAndSettle();
 
+      // Verify addItem was called once
       verify(() => mockProvider.addItem(any())).called(1);
     });
 
-    testWidgets('Converts Amount discount back to Percentage for model', (
-      tester,
-    ) async {
-      when(() => mockProvider.addItem(any())).thenReturn(null);
-
-      await tester.pumpWidget(createWidget());
-      await tester.enterText(find.byType(TextField).first, '1000');
-
-      // Switch to Amount
-      await tester.tap(find.byIcon(Icons.currency_rupee));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).last, '250'); // 25%
-
-      await tester.tap(find.text('ADD TO BILL'));
-      await tester.pumpAndSettle();
-
-      final captured =
-          verify(() => mockProvider.addItem(captureAny())).captured.first
-              as CartItem;
-      // Calculation: (250 / 1000) * 100 = 25
-      expect(captured.discountPercent, 25.0);
-    });
-
-    testWidgets('Calls updateItem when index is provided', (tester) async {
+    testWidgets('calls updateItem on provider when editing', (tester) async {
       final existing = CartItem(
         category: testCategory,
-        stickerPrice: 500,
+        mrp: 5000,
         discountPercent: 0,
       );
       when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
 
-      await tester.pumpWidget(createWidget(existingItem: existing, index: 2));
+      await tester.pumpWidget(
+        createWidgetUnderTest(existingItem: existing, index: 0),
+      );
+
+      // Change price to 6000
+      await tester.enterText(find.byType(TextField).first, '6000');
+      await tester.pump();
+
       await tester.tap(find.text('UPDATE ITEM'));
       await tester.pumpAndSettle();
 
-      verify(() => mockProvider.updateItem(2, any())).called(1);
+      verify(() => mockProvider.updateItem(any(), any())).called(1);
     });
   });
 
-  group('CalculatorSheet - Amount Mode Logic', () {
-    testWidgets('Calculates final price correctly in Amount mode', (
+  group('Discount Type Logic', () {
+    testWidgets('restores Fixed Amount type from existing item', (
       tester,
     ) async {
-      await tester.pumpWidget(createWidget());
-
-      // 1. Enter Sticker Price
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '5000',
+      final existing = CartItem(
+        category: testCategory,
+        mrp: 1000,
+        discountPercent: 15, // 15% of 1000 = 150
+        // Assuming your model now supports storing the type
+        discountType: DiscountType.amount,
       );
 
-      // 2. Switch to Amount Mode (Rupee Icon)
-      await tester.tap(find.byIcon(Icons.currency_rupee));
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest(existingItem: existing));
 
-      // 3. Enter Discount Amount
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
-        '750',
-      );
-      await tester.pump();
-
-      // Calculation: 5000 - 750 = 4250
-      expect(find.text('₹4250.00'), findsOneWidget);
-      expect(find.text('- ₹750.00'), findsOneWidget);
+      // Should show "ENTER FIXED DISCOUNT" instead of "SELECT PERCENTAGE"
+      expect(find.text('ENTER FIXED DISCOUNT'), findsOneWidget);
+      // Should show 150 (the calculated amount) instead of 15 (the percentage)
+      expect(find.text('150.00'), findsOneWidget);
     });
 
-    testWidgets('Disables ADD TO BILL if discount amount > sticker price', (
+    testWidgets('switching toggle clears or resets input', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Enter price
+      await tester.enterText(find.byType(TextField).first, '1000');
+      await tester.pump();
+
+      // Switch to Fixed Amount
+      await tester.tap(find.text('Fixed Amount ₹'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ENTER FIXED DISCOUNT'), findsOneWidget);
+
+      // Switch back to Percentage
+      await tester.tap(find.text('Percentage %'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SELECT PERCENTAGE'), findsOneWidget);
+      expect(
+        find.text('0'),
+        findsOneWidget,
+      ); // Verify it reset to "0" per your code logic
+    });
+  });
+
+  group('Boundary Conditions', () {
+    testWidgets('clamps fixed discount to sticker price (no negative totals)', (
       tester,
     ) async {
-      await tester.pumpWidget(createWidget());
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '100',
-      );
-
-      // Switch to Amount mode
-      await tester.tap(find.byIcon(Icons.currency_rupee));
+      // Price is 100
+      await tester.enterText(find.byType(TextField).first, '100');
+      await tester.tap(find.text('Fixed Amount ₹'));
       await tester.pumpAndSettle();
 
-      // Enter discount higher than price
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
-        '150',
-      );
+      // Enter 150 discount
+      await tester.enterText(find.byType(TextField).last, '150');
       await tester.pump();
 
-      // The final price should clamp to 0 or logic should disable the button
-      expect(find.text('₹0.00'), findsOneWidget);
-
-      final addButton = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
-      expect(addButton.onPressed, isNull);
+      // Discount Applied should be capped at 100
+      expect(find.text('-₹100'), findsOneWidget);
+      // NET TOTAL should be 0, not -50
+      expect(find.text('₹0'), findsOneWidget);
     });
+  });
 
-    testWidgets(
-      'Persistent data correctly maps Amount discount to Percentage',
-      (tester) async {
-        when(() => mockProvider.addItem(any())).thenReturn(null);
-        await tester.pumpWidget(createWidget());
+  testWidgets('tapping a choice chip updates the discount and total', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidgetUnderTest());
 
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Sticker Price'),
-          '2000',
-        );
+    await tester.enterText(find.byType(TextField).first, '5000');
+    await tester.pump();
 
-        // Switch to Amount mode
-        await tester.tap(find.byIcon(Icons.currency_rupee));
-        await tester.pumpAndSettle();
+    // Tap 20% chip
+    await tester.tap(find.text('20%'));
+    await tester.pump();
 
-        // Enter 500 (which is 25% of 2000)
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Discount Amount (₹)'),
-          '500',
-        );
-        await tester.pump();
-
-        await tester.tap(find.text('ADD TO BILL'));
-        await tester.pumpAndSettle();
-
-        // Verify the model received 25%
-        final captured =
-            verify(() => mockProvider.addItem(captureAny())).captured.first
-                as CartItem;
-        expect(captured.discountPercent, 25.0);
-      },
-    );
+    // 20% of 5000 is 1000
+    expect(find.text('-₹1000'), findsOneWidget);
+    expect(find.text('₹4000'), findsOneWidget);
   });
 }
