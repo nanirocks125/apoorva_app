@@ -163,17 +163,25 @@ class HomeScreen extends StatelessWidget {
     );
 
     if (confirm == true) {
-      // 2. Perform the sign out
-      await _authService.signOut();
+      try {
+        await _authService.signOut();
 
-      // 3. Wipe the navigation stack and go to Login
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false, // This removes ALL previous routes
-        );
+        // 3. Wipe the navigation stack and go to Login
+        if (context.mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false, // This removes ALL previous routes
+          );
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sign out failed. Please try again.')),
+          );
+        }
       }
+      // 2. Perform the sign out
     }
   }
 }
