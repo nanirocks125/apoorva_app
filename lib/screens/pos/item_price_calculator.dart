@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 
 enum DiscountType { percentage, amount }
 
-class CalculatorSheet extends StatefulWidget {
+class ItemPriceCalculator extends StatefulWidget {
   final PosProvider provider;
   final Category? category;
   final CartItem? existingItem;
   final int? index;
 
-  const CalculatorSheet({
+  const ItemPriceCalculator({
     super.key,
     required this.provider,
     this.category,
@@ -21,10 +21,10 @@ class CalculatorSheet extends StatefulWidget {
   });
 
   @override
-  State<CalculatorSheet> createState() => _CalculatorSheetState();
+  State<ItemPriceCalculator> createState() => _ItemPriceCalculatorState();
 }
 
-class _CalculatorSheetState extends State<CalculatorSheet> {
+class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   late TextEditingController _priceController;
   late TextEditingController _discountInputController;
   DiscountType _discountType = DiscountType.percentage;

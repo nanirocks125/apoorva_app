@@ -117,7 +117,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 8. మోడల్ క్లోజ్ అయిందో లేదో వెరిఫై చేయడం
-      expect(find.byType(CalculatorSheet), findsNothing);
+      expect(find.byType(ItemPriceCalculator), findsNothing);
     });
 
     testWidgets(
@@ -134,7 +134,7 @@ void main() {
         await tester.pump();
 
         // Bottom Sheet ఓపెన్ అవ్వకూడదు
-        expect(find.byType(CalculatorSheet), findsNothing);
+        expect(find.byType(ItemPriceCalculator), findsNothing);
       },
     );
   });
@@ -343,7 +343,7 @@ void main() {
         expect(find.byType(DraggableScrollableSheet), findsNothing);
 
         // 🚀 Step 2: Calculator should automatically open
-        expect(find.byType(CalculatorSheet), findsOneWidget);
+        expect(find.byType(ItemPriceCalculator), findsOneWidget);
         expect(find.textContaining('Add Gold Ring'), findsOneWidget);
       },
     );

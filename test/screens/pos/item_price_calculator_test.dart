@@ -47,7 +47,7 @@ void main() {
       home: Scaffold(
         body: ChangeNotifierProvider<PosProvider>.value(
           value: mockProvider,
-          child: CalculatorSheet(
+          child: ItemPriceCalculator(
             provider: mockProvider,
             category: testCategory,
             existingItem: existingItem,
