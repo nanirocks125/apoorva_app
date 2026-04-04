@@ -8,10 +8,12 @@ import '../../enum/account_type.dart';
 
 class OrganizationDetailsScreen extends StatelessWidget {
   final Organization org;
-
-  OrganizationDetailsScreen({super.key, required this.org});
-
-  final UserService _userService = UserService();
+  final UserService _userService; // Changed to final
+  OrganizationDetailsScreen({
+    super.key,
+    required this.org,
+    UserService? userService, // Added optional injection
+  }) : _userService = userService ?? UserService();
 
   @override
   Widget build(BuildContext context) {
@@ -292,7 +294,8 @@ class OrganizationDetailsScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) => UserAssignmentPicker(organization: org),
+      builder: (context) =>
+          UserAssignmentPicker(organization: org, userService: _userService),
     );
   }
 }

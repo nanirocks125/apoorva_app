@@ -8,8 +8,13 @@ import 'package:apoorva_app/services/organization_service.dart';
 class OrganizationFormScreen extends StatefulWidget {
   final Organization? org; // Changed from Map to Model
   final FormMode mode;
-
-  const OrganizationFormScreen({super.key, this.org, required this.mode});
+  final OrganizationService? orgService; // Add this
+  const OrganizationFormScreen({
+    super.key,
+    this.org,
+    required this.mode,
+    this.orgService, // Add this
+  });
 
   @override
   State<OrganizationFormScreen> createState() => _OrganizationFormScreenState();
@@ -17,7 +22,8 @@ class OrganizationFormScreen extends StatefulWidget {
 
 class _OrganizationFormScreenState extends State<OrganizationFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final OrganizationService _orgService = OrganizationService();
+  late final OrganizationService _orgService =
+      widget.orgService ?? OrganizationService();
 
   late TextEditingController _nameController;
   late TextEditingController _minVersionController;
