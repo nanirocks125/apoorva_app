@@ -10,8 +10,16 @@ import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser loggedInUser;
-  HomeScreen({super.key, required this.loggedInUser});
-  final OrganizationService _orgService = OrganizationService();
+  final OrganizationService _orgService; // Changed from final initialization
+  final AuthService _authService;
+
+  HomeScreen({
+    super.key,
+    required this.loggedInUser,
+    OrganizationService? orgService, // Optional injection
+    AuthService? authService,
+  }) : _orgService = orgService ?? OrganizationService(),
+       _authService = authService ?? AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -150,8 +158,7 @@ class HomeScreen extends StatelessWidget {
 
     if (confirm == true) {
       // 2. Perform the sign out
-      final AuthService authService = AuthService();
-      await authService.signOut();
+      await _authService.signOut();
 
       // 3. Wipe the navigation stack and go to Login
       if (context.mounted) {

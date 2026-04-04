@@ -11,9 +11,13 @@ import 'package:flutter/material.dart';
 
 class SuperAdminDashboard extends StatelessWidget {
   final AppUser user;
-  SuperAdminDashboard({super.key, required this.user});
-  final PlatformStatsService _statsService =
-      PlatformStatsService(); // Initialize service
+  final PlatformStatsService _statsService;
+
+  SuperAdminDashboard({
+    super.key,
+    required this.user,
+    PlatformStatsService? statsService, // Add this
+  }) : _statsService = statsService ?? PlatformStatsService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
