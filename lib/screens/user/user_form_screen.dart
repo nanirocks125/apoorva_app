@@ -54,7 +54,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     final globalUser = await _service.getUserById(currentUser.uid);
     print('global user role: ${globalUser?.role}');
     if (globalUser?.role == AppUserRole.superAdmin) {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isAuthorized = true;
           _checkingAccess = false;
@@ -88,7 +88,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         if (role == OrganizationUserRole.admin ||
             role == OrganizationUserRole.manager ||
             role == OrganizationUserRole.owner) {
-          if (mounted) {
+          if (context.mounted) {
             setState(() {
               _isAuthorized = true;
               _checkingAccess = false;
@@ -99,7 +99,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       }
     }
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _isAuthorized = false;
         _checkingAccess = false;
@@ -141,7 +141,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         );
       }
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -154,13 +154,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (context.mounted) setState(() => _isLoading = false);
     }
   }
 

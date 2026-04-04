@@ -80,7 +80,7 @@ class _OrganizationFormScreenState extends State<OrganizationFormScreen> {
         await _orgService.updateOrganization(updatedOrg);
       }
 
-      if (mounted) Navigator.pop(context);
+      if (context.mounted) Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(
         context,

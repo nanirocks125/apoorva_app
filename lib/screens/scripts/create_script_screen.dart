@@ -35,7 +35,7 @@ class _CreateScriptScreenState extends State<CreateScriptScreen> {
         ),
       );
 
-      if (mounted) {
+      if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -45,13 +45,13 @@ class _CreateScriptScreenState extends State<CreateScriptScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (context.mounted) setState(() => _isSaving = false);
     }
   }
 

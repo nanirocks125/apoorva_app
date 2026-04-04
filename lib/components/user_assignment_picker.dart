@@ -214,7 +214,7 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
         fullOrg: widget.organization,
         orgRole: _selectedRole.name,
       );
-      if (mounted) Navigator.pop(context);
+      if (context.mounted) Navigator.pop(context);
     } catch (e) {
       setState(() => _isSaving = false);
       // Handle permission/network errors here
@@ -234,13 +234,13 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
         orgId: widget.organization.id,
       );
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Staff member removed successfully')),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error removing staff: $e'),
@@ -250,7 +250,7 @@ class _UserAssignmentPickerState extends State<UserAssignmentPicker> {
       }
     } finally {
       // 3. Reset loading state if we are still on this screen
-      if (mounted) {
+      if (context.mounted) {
         setState(() => _isSaving = false);
       }
     }

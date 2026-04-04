@@ -82,15 +82,15 @@ extension _LoginLogic on _LoginScreenState {
         _passwordController.text.trim(),
       );
 
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      if (context.mounted) Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (context.mounted) setState(() => _isLoading = false);
     }
   }
 

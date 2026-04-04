@@ -122,12 +122,13 @@ class _CategoryFormState extends State<CategoryForm> {
                   widget.orgId,
                   updatedCategory,
                 );
-                if (mounted) Navigator.pop(context); // Close form on success
+                if (context.mounted)
+                  Navigator.pop(context); // Close form on success
               } catch (e) {
                 // Extract the message from Exception('...')
                 final errorMessage = e.toString().replaceAll('Exception: ', '');
 
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(errorMessage),
