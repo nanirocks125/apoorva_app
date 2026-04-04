@@ -31,6 +31,29 @@ class Organization {
     this.accounts = const [],
   }); // Ensure ID is always initialized, even if empty
 
+  Organization copyWith({
+    String? id,
+    String? name,
+    String? status,
+    DateTime? createdAt,
+    bool setCreatedAtToNull = false, // Helper to explicitly set null
+    String? minVersion,
+    String? currentTheme,
+    String? accentColor,
+    List<Account>? accounts,
+  }) {
+    return Organization(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      minVersion: minVersion ?? this.minVersion,
+      currentTheme: currentTheme ?? this.currentTheme,
+      accentColor: accentColor ?? this.accentColor,
+      accounts: accounts ?? this.accounts,
+    );
+  }
+
   // --- Boilerplate required for build_runner ---
   factory Organization.fromJson(Map<String, dynamic> json) =>
       _$OrganizationFromJson(json);
