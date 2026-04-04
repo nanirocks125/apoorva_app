@@ -5,14 +5,19 @@ import 'package:flutter/material.dart';
 
 class InventoryScreen extends StatelessWidget {
   final String orgId;
-  const InventoryScreen({super.key, required this.orgId});
+  final InventoryService _inventoryService;
+  InventoryScreen({
+    super.key,
+    required this.orgId,
+    InventoryService? inventoryService,
+  }) : _inventoryService = inventoryService ?? InventoryService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Inventory Management')),
       body: StreamBuilder<List<Category>>(
-        stream: InventoryService().getCategories(orgId),
+        stream: _inventoryService.getCategories(orgId),
         builder: (context, snapshot) {
           // 1. Check for Errors (Critical for Permission Denied issues)
           if (snapshot.hasError) {
@@ -97,7 +102,8 @@ class InventoryScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CategoryForm(orgId: orgId, category: item),
+      builder: (context) =>
+          CategoryForm(orgId: orgId, category: item, inventoryService: null),
     );
   }
 
@@ -127,7 +133,7 @@ class InventoryScreen extends StatelessWidget {
       try {
         // Assuming 'id' is the unique identifier in your Category model
         print('deleting category with id: ${item.id}'); // Debug Log
-        await InventoryService().deleteCategory(orgId, item.id);
+        await _inventoryService.deleteCategory(orgId, item.id);
 
         if (context.mounted) {
           ScaffoldMessenger.of(

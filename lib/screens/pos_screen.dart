@@ -33,15 +33,15 @@ class PosScreen extends StatelessWidget {
               const DraftsBadgeAction(), // Separate widget for stream
             ],
           ),
-          body: Column(
+          body: const Column(
             children: [
-              const CustomerDataHeader(), // Separate Stateless Widget
-              const Expanded(
+              CustomerDataHeader(), // Separate Stateless Widget
+              Expanded(
                 child: CustomScrollView(
                   slivers: [HotkeyRowSection(), CartListSection()],
                 ),
               ),
-              const CartSummaryFooter(),
+              CartSummaryFooter(),
             ],
           ),
         ),

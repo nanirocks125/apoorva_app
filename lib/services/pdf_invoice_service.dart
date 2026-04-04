@@ -229,13 +229,13 @@ class PdfInvoiceService {
                             textAlign: pw.TextAlign.right,
                             text: pw.TextSpan(
                               children: [
-                                pw.TextSpan(
+                                const pw.TextSpan(
                                   text: "Rs.",
-                                  style: const pw.TextStyle(fontSize: 9),
+                                  style: pw.TextStyle(fontSize: 9),
                                 ),
                                 pw.TextSpan(
                                   text: item.stickerPrice.toStringAsFixed(0),
-                                  style: pw.TextStyle(
+                                  style: const pw.TextStyle(
                                     fontSize: 9,
                                     decoration: pw.TextDecoration.lineThrough,
                                     color: PdfColors.grey700,
@@ -528,9 +528,9 @@ class PdfInvoiceService {
                                 pw.RichText(
                                   text: pw.TextSpan(
                                     children: [
-                                      pw.TextSpan(
+                                      const pw.TextSpan(
                                         text: "MRP: Rs.",
-                                        style: const pw.TextStyle(
+                                        style: pw.TextStyle(
                                           fontSize: 7,
                                           color: PdfColors.grey700,
                                         ),
@@ -539,7 +539,7 @@ class PdfInvoiceService {
                                         text: item.stickerPrice.toStringAsFixed(
                                           0,
                                         ),
-                                        style: pw.TextStyle(
+                                        style: const pw.TextStyle(
                                           fontSize: 7,
                                           color: PdfColors.grey700,
                                           decoration:

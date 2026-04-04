@@ -29,7 +29,7 @@ class AppUser {
     this.status = 'Active',
     this.assignedOrgs = const [], // Initialize as empty list
     required this.createdAt,
-  }) : id = id ?? Uuid().v4();
+  }) : id = id ?? const Uuid().v4();
 
   factory AppUser.fromJson(Map<String, dynamic> json) =>
       _$AppUserFromJson(json);
