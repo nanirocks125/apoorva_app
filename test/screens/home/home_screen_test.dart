@@ -110,7 +110,34 @@ void main() {
     testWidgets('shows SuperAdminDashboard when user is superAdmin', (
       tester,
     ) async {
-      await tester.pumpWidget(createWidgetUnderTest(superAdmin));
+      final mockStatsService = MockPlatformStatsService();
+
+      // 1. Create a dummy PlatformStats object (adjust fields to match your model)
+      final dummyStats = PlatformStats(
+        activeOrgs: 5,
+        globalUsers: 10,
+        newRequests: 0,
+        // add other required fields your model has
+      );
+
+      // 2. STUB THE METHOD: Tell the mock to return the dummy stats
+      // Use any() if you don't care about specific arguments, or none if it takes none.
+      when(
+        () => mockStatsService.getLivePlatformStats(),
+      ).thenAnswer((_) async => dummyStats);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HomeScreen(
+            loggedInUser: superAdmin,
+            statsService: mockStatsService,
+          ),
+        ),
+      );
+
+      // 3. Use pump() to trigger the FutureBuilder inside the Dashboard
+      await tester.pump();
+
       expect(find.byType(SuperAdminDashboard), findsOneWidget);
     });
 
