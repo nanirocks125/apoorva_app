@@ -1,6 +1,4 @@
 import 'package:apoorva_app/services/bluetooth_thermal_printer_service.dart';
-import 'package:apoorva_app/services/invoice_document_sharing_service.dart';
-import 'package:apoorva_app/services/printer_service.dart';
 import 'package:apoorva_app/services/receipt_communication_service.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
@@ -10,8 +8,14 @@ import 'package:provider/provider.dart';
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId;
   final Sale sale;
+  final bool canPop;
 
-  const SaleSuccessScreen({super.key, required this.sale, required this.orgId});
+  const SaleSuccessScreen({
+    super.key,
+    required this.sale,
+    required this.orgId,
+    required this.canPop,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +40,7 @@ class SaleSuccessScreen extends StatelessWidget {
         itemDiscounts + sale.overallDiscountAmount + sale.roundOff;
 
     return PopScope(
-      canPop: false, // This disables the swipe back and back button
+      canPop: canPop, // This disables the swipe back and back button
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         // Optional: You could trigger the same logic as your "Done" button here
@@ -49,10 +53,14 @@ class SaleSuccessScreen extends StatelessWidget {
           title: const Text('Digital Receipt'),
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.close),
+            icon: Icon(canPop ? Icons.arrow_back : Icons.close),
             onPressed: () {
               // Use the same navigation logic as your 'Done' button
               // to ensure the stack is cleared properly.
+              if (canPop) {
+                Navigator.pop(context);
+                return;
+              }
               final loggedInUser = Provider.of<AuthProvider>(
                 context,
                 listen: false,
@@ -85,7 +93,7 @@ class SaleSuccessScreen extends StatelessWidget {
               const Divider(height: 32),
               _buildPaymentDetails(),
               const SizedBox(height: 40),
-              _buildActionButtons(context),
+              if (!canPop) _buildActionButtons(context),
               const SizedBox(height: 20),
             ],
           ),

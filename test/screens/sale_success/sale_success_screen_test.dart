@@ -77,7 +77,11 @@ void main() {
           }
           return null;
         },
-        home: SaleSuccessScreen(sale: mockSale, orgId: 'ORG_001'),
+        home: SaleSuccessScreen(
+          sale: mockSale,
+          orgId: 'ORG_001',
+          canPop: false,
+        ),
       ),
     );
   }
@@ -195,7 +199,11 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              home: SaleSuccessScreen(sale: complexSale, orgId: 'ORG_001'),
+              home: SaleSuccessScreen(
+                sale: complexSale,
+                orgId: 'ORG_001',
+                canPop: false,
+              ),
             ),
           ),
         );
@@ -250,7 +258,11 @@ void main() {
             ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
           ],
           child: MaterialApp(
-            home: SaleSuccessScreen(sale: multiPaySale, orgId: 'ORG_001'),
+            home: SaleSuccessScreen(
+              sale: multiPaySale,
+              orgId: 'ORG_001',
+              canPop: false,
+            ),
           ),
         ),
       );
@@ -293,7 +305,11 @@ void main() {
             ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
           ],
           child: MaterialApp(
-            home: SaleSuccessScreen(sale: noSavingsSale, orgId: 'ORG_001'),
+            home: SaleSuccessScreen(
+              sale: noSavingsSale,
+              orgId: 'ORG_001',
+              canPop: false,
+            ),
           ),
         ),
       );
