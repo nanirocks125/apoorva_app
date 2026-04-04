@@ -6,6 +6,7 @@ import 'package:apoorva_app/screens/sale_success_screen.dart';
 import 'package:apoorva_app/services/sale_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 
@@ -29,6 +30,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _discountController = TextEditingController(text: '0');
+  final _discountFocusNode = FocusNode();
 
   // Payment State
   final Map<PaymentMode, bool> _selectedModes = {
@@ -40,6 +42,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     PaymentMode.cash: TextEditingController(),
     PaymentMode.upi: TextEditingController(),
     PaymentMode.card: TextEditingController(),
+  };
+
+  final Map<PaymentMode, FocusNode> _paymentFocusNodes = {
+    PaymentMode.cash: FocusNode(),
+    PaymentMode.upi: FocusNode(),
+    PaymentMode.card: FocusNode(),
   };
 
   bool _isProcessing = false;
@@ -74,6 +82,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _syncDefaultPayment();
   }
 
+  @override
+  void dispose() {
+    _discountController.dispose();
+    _discountFocusNode.dispose();
+    for (var node in _paymentFocusNodes.values) {
+      node.dispose();
+    }
+    for (var controller in _paymentControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   void _syncDefaultPayment() {
     if (_isProcessing) return;
 
@@ -105,98 +126,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Finalize Payment'),
-        backgroundColor: const Color(0xFFFF5733),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. CUSTOMER INFO
-            _buildSectionHeader('CUSTOMER DETAILS'),
-            _buildCustomerInfoCard(),
-
-            const SizedBox(height: 24),
-
-            // 2. DISCOUNTS: We calculate the price first
-            _buildSectionHeader('OVERALL DISCOUNT (%)'),
-            _buildDiscountChips(),
-
-            const SizedBox(height: 24),
-
-            _buildCartItemsList(),
-            const SizedBox(height: 24),
-
-            // 3. SETTLEMENT SUMMARY: Now correctly placed before payment
-            _buildSectionHeader('BILL SUMMARY'),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Column(
-                children: [
-                  _summaryRow(
-                    'Cart Subtotal',
-                    '₹${widget.cart.totalPayable.toStringAsFixed(2)}',
-                  ),
-                  if (_overallDiscountPercent > 0)
-                    _summaryRow(
-                      'Flat ${_overallDiscountPercent.toInt()}% Discount',
-                      '- ₹${_overallDiscountAmount.toStringAsFixed(2)}',
-                      color: Colors.green.shade700,
-                    ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Final Round-off',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      SizedBox(
-                        width: 120,
-                        child: TextField(
-                          controller: _discountController,
-                          textAlign: TextAlign.right,
-                          keyboardType: TextInputType.number,
-                          onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            prefixText: '₹ ',
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 32, thickness: 1),
-                  _summaryRow(
-                    'NET PAYABLE',
-                    '₹${_finalTotal.toStringAsFixed(2)}',
-                    isBold: true,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // 4. PAYMENT MODES: Now the user knows exactly what amount to enter here
-            _buildSectionHeader('COLLECT PAYMENT'),
-            ..._selectedModes.keys.map((mode) => _buildPaymentRow(mode)),
-
-            // Extra padding for the bottom button
-            const SizedBox(height: 40),
-          ],
+    return GestureDetector(
+      // Only unfocus when tapping the background, not widgets
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Finalize Payment'),
+          backgroundColor: const Color(0xFFFF5733),
         ),
+        body: SingleChildScrollView(
+          // Prevent scroll from dismissing keyboard automatically
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader('CUSTOMER DETAILS'),
+              _buildCustomerInfoCard(),
+              const SizedBox(height: 24),
+
+              // if (kDebugMode) _buildSectionHeader('OVERALL DISCOUNT (%)'),
+              // if (kDebugMode) _buildDiscountChips(),
+              // if (kDebugMode) const SizedBox(height: 24),
+              _buildCartItemsList(),
+              const SizedBox(height: 24),
+
+              _buildSectionHeader('BILL SUMMARY'),
+              _buildBillSummaryCard(),
+
+              const SizedBox(height: 30),
+
+              _buildSectionHeader('COLLECT PAYMENT'),
+              // Use .values or .entries and provide a ValueKey
+              ..._selectedModes.keys.map((mode) => _buildPaymentRow(mode)),
+
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+        bottomNavigationBar: _buildBottomAction(),
       ),
-      bottomNavigationBar: _buildBottomAction(),
     );
   }
 
@@ -229,9 +198,70 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildBillSummaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          _summaryRow(
+            'Cart Subtotal',
+            '₹${widget.cart.totalPayable.toStringAsFixed(2)}',
+          ),
+          if (_overallDiscountPercent > 0)
+            _summaryRow(
+              'Flat ${_overallDiscountPercent.toInt()}% Discount',
+              '- ₹${_overallDiscountAmount.toStringAsFixed(2)}',
+              color: Colors.green.shade700,
+            ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Final Round-off',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  controller: _discountController,
+                  focusNode: _discountFocusNode,
+                  textAlign: TextAlign.right,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    setState(() {});
+                    _syncDefaultPayment(); // Manual trigger
+                  },
+                  decoration: const InputDecoration(
+                    prefixText: '₹ ',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 32, thickness: 1),
+          _summaryRow(
+            'NET PAYABLE',
+            '₹${_finalTotal.toStringAsFixed(2)}',
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPaymentRow(PaymentMode mode) {
     bool isSelected = _selectedModes[mode]!;
+
     return AnimatedContainer(
+      key: ValueKey(mode), // CRITICAL: Keeps the widget identity stable
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -252,7 +282,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             value: isSelected,
             activeColor: Colors.green,
-            onChanged: (val) => setState(() => _selectedModes[mode] = val!),
+            onChanged: (val) {
+              setState(() {
+                _selectedModes[mode] = val!;
+                if (!val) _paymentControllers[mode]!.clear();
+              });
+              _syncDefaultPayment();
+            },
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero,
           ),
@@ -261,11 +297,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               padding: const EdgeInsets.only(left: 48, bottom: 8),
               child: TextField(
                 controller: _paymentControllers[mode],
+                focusNode: _paymentFocusNodes[mode], // Explicitly assigned
                 keyboardType: TextInputType.number,
-                autofocus: mode == 'Cash',
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  labelText: 'Amount for $mode',
+                  labelText: 'Amount for ${mode.displayName}',
                   prefixText: '₹ ',
                   border: const OutlineInputBorder(),
                   isDense: true,

@@ -9,7 +9,6 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
-import 'package:whatsapp_share2/whatsapp_share2.dart';
 
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId; // Add this line
@@ -76,16 +75,17 @@ class SaleSuccessScreen extends StatelessWidget {
                       ],
                     ),
                     // Explicit Item Saving Row
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Saved: ₹${itemSaving.toStringAsFixed(2)} (${(item.discountPercent).toInt()}% Off)',
-                        style: TextStyle(
-                          color: Colors.green.shade700,
-                          fontSize: 12,
+                    if (itemSaving > 0)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Saved: ₹${itemSaving.toStringAsFixed(2)} (${(item.discountPercent).toInt()}% Off)',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               );
@@ -266,7 +266,7 @@ class SaleSuccessScreen extends StatelessWidget {
               ),
               onPressed: () async {
                 // ఫోన్ నంబర్ లేకపోతే అలర్ట్ చూపండి
-                if (sale.customerName.isEmpty) {
+                if (sale.customerPhone.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Phone number not provided!')),
                   );
