@@ -67,11 +67,11 @@ class OrganizationDashboard extends StatelessWidget {
               children: [
                 _buildActionCard(
                   context,
-                  'Point of Sale',
-                  Icons.point_of_sale,
-                  Colors.green,
-                  '/pos',
-                ),
+                  'Customers',
+                  Icons.people_outline,
+                  Colors.orange,
+                  '/customers',
+                ), // NEW
                 _buildActionCard(
                   context,
                   'Inventory',
@@ -102,49 +102,6 @@ class OrganizationDashboard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
-            // --- NEW: MARKETING & GROWTH SECTION  ---
-            const Text(
-              'Marketing',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            GridView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 250,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
-              ),
-              children: [
-                _buildActionCard(
-                  context,
-                  'Customers',
-                  Icons.people_outline,
-                  Colors.orange,
-                  '/customers',
-                ), // NEW
-                _buildActionCard(
-                  context,
-                  'WhatsApp Scripts',
-                  Icons.chat_bubble_outline,
-                  const Color(0xFF25D366), // Brand WhatsApp Green
-                  '/scripts',
-                ),
-                // Inside the Marketing GridView in OrganizationDashboard
-                _buildActionCard(
-                  context,
-                  'Unsent Bills',
-                  Icons.pending_actions, // స్పష్టంగా అర్థమయ్యే ఐకాన్
-                  Colors.redAccent, // దృష్టిని ఆకర్షించడానికి ఎరుపు రంగు
-                  '/whatsapp-queue',
-                ),
-                // Future expansion: Festival Planner [cite: 39]
-              ],
-            ),
-            const SizedBox(height: 80), // Space for FAB
           ],
         ),
       ),
@@ -188,7 +145,6 @@ class OrganizationDashboard extends StatelessWidget {
     );
   }
 
-  @override
   Widget _buildLiveStatusGrid() {
     // 1. Calculate the start of the current day (00:00:00)
     final now = DateTime.now();
@@ -217,10 +173,13 @@ class OrganizationDashboard extends StatelessWidget {
               .snapshots(),
           builder: (context, snapshot) {
             double totalRevenue = 0;
+            int totalSalesCount = 0;
 
             if (snapshot.hasData) {
               // Aggregate netPayable from all sales today
-              for (var doc in snapshot.data!.docs) {
+              final docs = snapshot.data!.docs;
+              totalSalesCount = docs.length;
+              for (var doc in docs) {
                 final data = doc.data() as Map<String, dynamic>;
                 totalRevenue += (data['netPayable'] ?? 0).toDouble();
               }
@@ -230,27 +189,66 @@ class OrganizationDashboard extends StatelessWidget {
               'Sales Today',
               '₹${totalRevenue.toStringAsFixed(0)}', // Live aggregated value
               Icons.trending_up,
-              snapshot.hasError ? Colors.grey : Colors.green,
+              snapshot.hasError ? Colors.grey : Colors.teal,
+              trailingText: '$totalSalesCount Sales',
             );
           },
         ),
 
-        // --- LIVE LOW STOCK STREAM ---
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('organizations')
               .doc(organization.id)
-              .collection('inventory')
-              .where('stock', isLessThan: 5) // Assuming 5 is your threshold
+              .collection('sales')
               .snapshots(),
           builder: (context, snapshot) {
-            final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+            double totalLifetimeAmount = 0;
+            int totalSalesCount = 0;
+
+            if (snapshot.hasData) {
+              final docs = snapshot.data!.docs;
+              totalSalesCount = docs.length;
+
+              for (var doc in docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                totalLifetimeAmount += (data['netPayable'] ?? 0).toDouble();
+              }
+            }
+
+            // Pass both values to the stat card
+            return _buildStatCard(
+              'Total Revenue',
+              '₹${totalLifetimeAmount.toStringAsFixed(0)}',
+              Icons.payments_outlined,
+              Colors.teal,
+              trailingText: '$totalSalesCount Sales', // New parameter
+            );
+          },
+        ),
+
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('organizations')
+              .doc(organization.id)
+              .collection('customers') // Path to your customers sub-collection
+              .snapshots(),
+          builder: (context, snapshot) {
+            int totalCustomers = 0;
+
+            if (snapshot.hasData) {
+              // Total count of documents in the customers collection
+              totalCustomers = snapshot.data!.docs.length;
+            }
 
             return _buildStatCard(
-              'Low Stock',
-              '${count.toString().padLeft(2, '0')} Items',
-              Icons.warning_amber_rounded,
-              count > 0 ? Colors.red : Colors.grey,
+              'Total Customers',
+              totalCustomers.toString().padLeft(
+                2,
+                '0',
+              ), // Neat padding for single digits
+              Icons.groups_outlined,
+              Colors.orange,
+              trailingText: 'Till Date',
             );
           },
         ),
@@ -262,8 +260,9 @@ class OrganizationDashboard extends StatelessWidget {
     String label,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? trailingText, // Added optional trailing text
+  }) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -271,60 +270,52 @@ class OrganizationDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(
+          12.0,
+        ), // Padding slightly reduced to avoid overflow
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Icon with soft background
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                if (trailingText != null)
+                  Text(
+                    trailingText,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color.withOpacity(0.8),
+                    ),
+                  ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniStatusCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
             ),
           ],
         ),
