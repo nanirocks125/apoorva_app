@@ -1,10 +1,9 @@
 // 🚀 REFACTORED CALCULATOR COMPONENT
+import 'package:apoorva_app/enum/discount_type.dart' show DiscountType;
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:flutter/material.dart';
-
-enum DiscountType { percentage, amount }
 
 class ItemPriceCalculator extends StatefulWidget {
   final PosProvider provider;
