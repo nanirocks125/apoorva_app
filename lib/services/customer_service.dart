@@ -1,5 +1,6 @@
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class CustomerService {
   final FirebaseFirestore _db;
@@ -35,9 +36,8 @@ class CustomerService {
       } else {
         await ref.doc(customer.id).update(customer.toJson());
       }
-      print("✅ Save successful!");
     } catch (e) {
-      print("❌ Save failed: $e");
+      debugPrint("❌ Save failed: $e");
     }
   }
 }

@@ -24,7 +24,6 @@ class CustomerHistoryScreen extends StatelessWidget {
         stream: SaleService().getCustomerSales(orgId, customer.phone),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('Error fetching sales: ${snapshot.error}');
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {

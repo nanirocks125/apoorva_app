@@ -16,7 +16,6 @@ class PosUIHelpers {
   }) {
     final currentCategory = existingItem?.category ?? category;
     if (currentCategory == null) {
-      debugPrint('openCalculator called without category or existingItem');
       return;
     }
 

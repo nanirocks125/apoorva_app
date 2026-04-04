@@ -82,8 +82,6 @@ extension _LoginLogic on _LoginScreenState {
         _passwordController.text.trim(),
       );
 
-      print('successful sign in');
-
       if (context.mounted) {
         Navigator.pushReplacementNamed(
           context,
@@ -91,9 +89,7 @@ extension _LoginLogic on _LoginScreenState {
           arguments: authProvider.user,
         );
       }
-      print('after navigation');
     } catch (e) {
-      print('error in login ${e.toString()}');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

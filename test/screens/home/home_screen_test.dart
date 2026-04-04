@@ -4,6 +4,7 @@ import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
+import 'package:apoorva_app/screens/pos_screen.dart';
 import 'package:apoorva_app/services/platform_stats_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/test.dart';
@@ -219,7 +220,7 @@ void main() {
         await tester.pump(); // Start future
         await tester.pump(); // Resolve future
 
-        expect(find.byType(OrganizationDashboard), findsOneWidget);
+        expect(find.byType(PosScreen), findsOneWidget);
       },
     );
 
@@ -363,35 +364,47 @@ void main() {
       ).thenAnswer((_) async => allowedOrg);
 
       await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
-      await tester.pumpAndSettle();
+      // 1. Pump to resolve the PackageInfo FutureBuilder
+      await tester.pump();
 
-      expect(find.byType(OrganizationDashboard), findsOneWidget);
+      // 2. Pump again to resolve the OrganizationService FutureBuilder
+      await tester.pump();
+
+      // 3. Optional: Give it a tiny bit of time to finish the transition animation
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(PosScreen), findsOneWidget);
       expect(find.text('Update Required'), findsNothing);
     });
 
-    testWidgets(
-      'allows access when app version > minVersion (Semantic Check)',
-      (tester) async {
-        // Test semantic versioning logic (e.g., 1.10.0 is newer than 1.9.0)
-        setAppVersion("1.10.0");
+    testWidgets('allows access when app version > minVersion (Semantic Check)', (
+      tester,
+    ) async {
+      // Test semantic versioning logic (e.g., 1.10.0 is newer than 1.9.0)
+      setAppVersion("1.10.0");
 
-        final allowedOrg = Organization(
-          id: '1',
-          name: 'Shop 1',
-          minVersion: '1.9.0',
-          createdAt: DateTime(2023, 1, 1),
-        );
+      final allowedOrg = Organization(
+        id: '1',
+        name: 'Shop 1',
+        minVersion: '1.9.0',
+        createdAt: DateTime(2023, 1, 1),
+      );
 
-        when(
-          () => mockOrgService.getOrganizationById('1'),
-        ).thenAnswer((_) async => allowedOrg);
+      when(
+        () => mockOrgService.getOrganizationById('1'),
+      ).thenAnswer((_) async => allowedOrg);
 
-        await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
+      await tester.pump();
 
-        expect(find.byType(OrganizationDashboard), findsOneWidget);
-      },
-    );
+      // 2. Pump again to resolve the OrganizationService FutureBuilder
+      await tester.pump();
+
+      // 3. Optional: Give it a tiny bit of time to finish the transition animation
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(PosScreen), findsOneWidget);
+    });
 
     testWidgets('allows access when minVersion is null or empty', (
       tester,
@@ -410,9 +423,15 @@ void main() {
       ).thenAnswer((_) async => legacyOrg);
 
       await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
-      expect(find.byType(OrganizationDashboard), findsOneWidget);
+      // 2. Pump again to resolve the OrganizationService FutureBuilder
+      await tester.pump();
+
+      // 3. Optional: Give it a tiny bit of time to finish the transition animation
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(PosScreen), findsOneWidget);
     });
   });
 }

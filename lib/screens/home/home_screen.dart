@@ -43,7 +43,6 @@ class HomeScreen extends StatelessWidget {
             packageSnapshot.data?.version ?? "0.0.0";
         final bool isSuperAdmin = loggedInUser.role == .superAdmin;
         final int shopCount = loggedInUser.assignedOrgs.length;
-        print('organization count for user ${loggedInUser.name}: $shopCount');
         if (isSuperAdmin) {
           return SuperAdminDashboard(
             user: loggedInUser,
@@ -78,9 +77,6 @@ class HomeScreen extends StatelessWidget {
     AppUser user,
     String currentAppVersion,
   ) {
-    print(
-      'buildng org dashboard for user ${user.name} with orgs: ${user.assignedOrgs.map((o) => o.name).join(', ')}',
-    );
     final String orgId = loggedInUser.assignedOrgs.first.orgId;
 
     return FutureBuilder<Organization?>(
@@ -93,8 +89,6 @@ class HomeScreen extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        print('Organization fetch result for ID $orgId: ${snapshot.data}');
 
         if (snapshot.hasData && snapshot.data != null) {
           final Organization org = snapshot.data!;

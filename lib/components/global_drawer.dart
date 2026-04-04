@@ -121,7 +121,6 @@ class GlobalDrawer extends StatelessWidget {
 
   void _navigateTo(BuildContext context, String routeName) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
-    print('user is ${user?.name}');
     Navigator.pop(context); // Close drawer first
     Navigator.pushNamed(context, routeName, arguments: user);
   }
