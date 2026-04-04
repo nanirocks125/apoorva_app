@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
-import 'package:apoorva_app/screens/home_screen.dart';
+import 'package:apoorva_app/screens/home/home_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});

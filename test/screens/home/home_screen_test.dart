@@ -10,7 +10,7 @@ import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:apoorva_app/screens/home_screen.dart'; // Adjust path
+import 'package:apoorva_app/screens/home/home_screen.dart'; // Adjust path
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/services/organization_service.dart';

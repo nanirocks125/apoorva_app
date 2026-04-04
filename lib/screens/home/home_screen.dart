@@ -2,6 +2,7 @@ import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
+import 'package:apoorva_app/screens/home/version_block_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/services/auth_service.dart';
@@ -99,10 +100,10 @@ class HomeScreen extends StatelessWidget {
           // 2. Version Check Logic
           // Blocking if app version is lower than minVersion
           if (_isUpdateRequired(currentAppVersion, org.minVersion)) {
-            return _buildVersionBlockView(
-              context,
-              org.minVersion,
-              currentAppVersion,
+            return VersionBlockScreen(
+              minVersion: org.minVersion,
+              currentAppVersion: currentAppVersion,
+              onLogout: () => _handleLogout,
             );
           }
 
@@ -240,67 +241,5 @@ class HomeScreen extends StatelessWidget {
       return current == minRequired; // Fallback to exact match
     }
     return false;
-  }
-
-  // 4. The Wall Screen (Blocking Flow)
-  Widget _buildVersionBlockView(
-    BuildContext context,
-    String minVersion,
-    String currentAppVersion,
-  ) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.update_disabled_rounded,
-                size: 100,
-                color: Colors.redAccent,
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Update Required',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'The current version of Apoorva Polaris is no longer supported for this organization.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Minimum required: v$minVersion\nYour version: v$currentAppVersion',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Please contact your administrator to get the latest update.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFFF5733),
-                ),
-              ),
-              const SizedBox(height: 48),
-              TextButton.icon(
-                onPressed: () => _handleLogout(context),
-                icon: const Icon(Icons.logout),
-                label: const Text('Sign Out'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
