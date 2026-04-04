@@ -1,6 +1,4 @@
 import 'package:apoorva_app/services/bluetooth_thermal_printer_service.dart';
-import 'package:apoorva_app/services/invoice_document_sharing_service.dart';
-import 'package:apoorva_app/services/printer_service.dart';
 import 'package:apoorva_app/services/receipt_communication_service.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
@@ -10,8 +8,14 @@ import 'package:provider/provider.dart';
 class SaleSuccessScreen extends StatelessWidget {
   final String orgId;
   final Sale sale;
+  final bool canPop;
 
-  const SaleSuccessScreen({super.key, required this.sale, required this.orgId});
+  const SaleSuccessScreen({
+    super.key,
+    required this.sale,
+    required this.orgId,
+    required this.canPop,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,36 +39,64 @@ class SaleSuccessScreen extends StatelessWidget {
     final double totalSavings =
         itemDiscounts + sale.overallDiscountAmount + sale.roundOff;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Digital Receipt'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            _buildSuccessHeader(),
-            const Divider(height: 40),
-            _buildItemsSection(),
-            const Divider(height: 32),
-            // Updated Financial Summary passing new values
-            _buildFinancialSummary(
-              totalMrp: totalMrp,
-              itemDiscounts: itemDiscounts,
-              subtotal: subtotal,
-              billAmount: billAmount,
-              totalSavings: totalSavings,
-            ),
-            const Divider(height: 32),
-            _buildPaymentDetails(),
-            const SizedBox(height: 40),
-            _buildActionButtons(context),
-            const SizedBox(height: 20),
-            _buildDoneButton(context),
-          ],
+    return PopScope(
+      canPop: canPop, // This disables the swipe back and back button
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Optional: You could trigger the same logic as your "Done" button here
+        // or simply do nothing to keep the user on this screen.
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Digital Receipt'),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(canPop ? Icons.arrow_back : Icons.close),
+            onPressed: () {
+              // Use the same navigation logic as your 'Done' button
+              // to ensure the stack is cleared properly.
+              if (canPop) {
+                Navigator.pop(context);
+                return;
+              }
+              final loggedInUser = Provider.of<AuthProvider>(
+                context,
+                listen: false,
+              ).user;
+
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/home',
+                (route) => false,
+                arguments: loggedInUser,
+              );
+            },
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              _buildSuccessHeader(),
+              const Divider(height: 40),
+              _buildItemsSection(),
+              const Divider(height: 32),
+              // Updated Financial Summary passing new values
+              _buildFinancialSummary(
+                totalMrp: totalMrp,
+                itemDiscounts: itemDiscounts,
+                subtotal: subtotal,
+                billAmount: billAmount,
+                totalSavings: totalSavings,
+              ),
+              const Divider(height: 32),
+              _buildPaymentDetails(),
+              const SizedBox(height: 40),
+              if (!canPop) _buildActionButtons(context),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -151,13 +183,13 @@ class SaleSuccessScreen extends StatelessWidget {
             color: Colors.green,
           ),
 
-        const Divider(),
-
-        _receiptRow(
-          'Subtotal',
-          '₹${subtotal.toStringAsFixed(2)}',
-          isBold: true,
-        ),
+        if (sale.overallDiscountAmount > 0) const Divider(),
+        if (sale.overallDiscountAmount > 0)
+          _receiptRow(
+            'Subtotal',
+            '₹${subtotal.toStringAsFixed(2)}',
+            isBold: true,
+          ),
 
         if (sale.overallDiscountAmount > 0)
           _receiptRow(
@@ -165,55 +197,55 @@ class SaleSuccessScreen extends StatelessWidget {
             '-₹${sale.overallDiscountAmount.toStringAsFixed(2)}',
             color: Colors.green,
           ),
-
-        const Divider(),
+        if (sale.overallDiscountAmount > 0) const Divider(),
 
         _receiptRow('Bill Amount', '₹${billAmount.toStringAsFixed(2)}'),
 
         if (sale.roundOff != 0)
           _receiptRow(
             'Round-off',
-            '₹${sale.roundOff.toStringAsFixed(2)}', // Matches your "23.08" screenshot logic
-            color: Colors.brown,
+            '-₹${sale.roundOff.toStringAsFixed(2)}', // Matches your "23.08" screenshot logic
+            color: Colors.green,
           ),
 
-        const Divider(),
-
-        _receiptRow(
-          'Net Payment Amount',
-          '₹${sale.netPayable.toStringAsFixed(2)}',
-          isBold: true,
-        ),
+        if (sale.roundOff != 0) const Divider(),
+        if (sale.roundOff != 0)
+          _receiptRow(
+            'Net Payment Amount',
+            '₹${sale.netPayable.toStringAsFixed(2)}',
+            isBold: true,
+          ),
 
         const SizedBox(height: 12),
 
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
+        if (sale.roundOff > 0 || sale.overallDiscountAmount > 0)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                _receiptRow(
+                  'Total MRP',
+                  '₹${totalMrp.toStringAsFixed(2)}',
+                  isBold: true,
+                ),
+                _receiptRow(
+                  'Total Bill Amount',
+                  '₹${sale.netPayable.toStringAsFixed(2)}',
+                  isBold: true,
+                ),
+                _receiptRow(
+                  'YOU SAVED',
+                  '₹${totalSavings.toStringAsFixed(2)}',
+                  color: Colors.blue,
+                  isBold: true,
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              _receiptRow(
-                'Total MRP',
-                '₹${totalMrp.toStringAsFixed(2)}',
-                isBold: true,
-              ),
-              _receiptRow(
-                'Total Bill Amount',
-                '₹${sale.netPayable.toStringAsFixed(2)}',
-                isBold: true,
-              ),
-              _receiptRow(
-                'YOU SAVED',
-                '₹${totalSavings.toStringAsFixed(2)}',
-                color: Colors.blue,
-                isBold: true,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -226,7 +258,10 @@ class SaleSuccessScreen extends StatelessWidget {
         ...sale.payments.entries
             .where((e) => e.value > 0)
             .map(
-              (e) => _receiptRow(e.key.name, '₹${e.value.toStringAsFixed(2)}'),
+              (e) => _receiptRow(
+                e.key.name.toUpperCase(),
+                '₹${e.value.toStringAsFixed(2)}',
+              ),
             ),
       ],
     );
@@ -249,12 +284,12 @@ class SaleSuccessScreen extends StatelessWidget {
           onPressed: () =>
               ReceiptCommunicationService().sendTextMessage(context, sale),
         ),
-        _actionButton(
-          icon: Icons.picture_as_pdf,
-          label: 'Generate & Share PDF',
-          color: Colors.blueGrey,
-          onPressed: () => PrinterService().printReceipt(context, sale),
-        ),
+        // _actionButton(
+        //   icon: Icons.picture_as_pdf,
+        //   label: 'Generate & Share PDF',
+        //   color: Colors.blueGrey,
+        //   onPressed: () => PrinterService().printReceipt(context, sale),
+        // ),
         _actionButton(
           icon: Icons.share,
           label: 'Share WhatsApp Message',
@@ -262,16 +297,16 @@ class SaleSuccessScreen extends StatelessWidget {
           onPressed: () =>
               ReceiptCommunicationService().sendWhatsAppTextOnly(context, sale),
         ),
-        _actionButton(
-          icon: Icons.attach_file,
-          label: 'Share PDF on WhatsApp',
-          color: const Color(0xFF25D366),
-          onPressed: () => InvoiceDocumentSharingService().sendInvoiceDocument(
-            context,
-            sale,
-            sale.id,
-          ),
-        ),
+        // _actionButton(
+        //   icon: Icons.attach_file,
+        //   label: 'Share PDF on WhatsApp',
+        //   color: const Color(0xFF25D366),
+        //   onPressed: () => InvoiceDocumentSharingService().sendInvoiceDocument(
+        //     context,
+        //     sale,
+        //     sale.id,
+        //   ),
+        // ),
       ],
     );
   }
@@ -349,30 +384,6 @@ class SaleSuccessScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDoneButton(BuildContext context) {
-    return TextButton(
-      onPressed: () {
-        final loggedInUser = Provider.of<AuthProvider>(
-          context,
-          listen: false,
-        ).user;
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
-          (route) => false,
-          arguments: loggedInUser,
-        );
-      },
-      child: const Text(
-        'DONE - NEW SALE',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFFF5733),
-        ),
       ),
     );
   }

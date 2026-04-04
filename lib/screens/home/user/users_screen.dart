@@ -1,8 +1,8 @@
 import 'package:apoorva_app/enum/form_mode.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user_snapshot.dart';
-import 'package:apoorva_app/screens/user/user_details_screen.dart';
-import 'package:apoorva_app/screens/user/user_form_screen.dart';
+import 'package:apoorva_app/screens/home/user/user_details_screen.dart';
+import 'package:apoorva_app/screens/home/user/user_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/services/user_service.dart';

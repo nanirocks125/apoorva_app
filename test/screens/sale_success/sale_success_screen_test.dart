@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -78,7 +77,11 @@ void main() {
           }
           return null;
         },
-        home: SaleSuccessScreen(sale: mockSale, orgId: 'ORG_001'),
+        home: SaleSuccessScreen(
+          sale: mockSale,
+          orgId: 'ORG_001',
+          canPop: false,
+        ),
       ),
     );
   }
@@ -105,28 +108,28 @@ void main() {
       expect(find.text('-₹222.20'), findsOneWidget);
 
       // 3. Check Subtotal & Bill Amount
-      expect(find.text('Subtotal'), findsOneWidget);
+      // expect(find.text('Subtotal'), findsOneWidget);
       expect(find.text('Bill Amount'), findsOneWidget);
 
       // 4. Check Net Payment Amount label (New label in your update)
-      expect(find.text('Net Payment Amount'), findsOneWidget);
+      expect(find.text('Net Payment Amount'), findsNothing);
 
       // Amount ₹2199.80 appears in: Subtotal, Bill Amount, Net Payment, Cash row, Chain price, and Savings box.
       // Total 6 times in this mock setup.
-      expect(find.text('₹2199.80'), findsNWidgets(5));
+      expect(find.text('₹2199.80'), findsNWidgets(2));
     });
 
     testWidgets('Should verify Blue Savings Box Content', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Savings Box labels
-      expect(find.text('Total Bill Amount'), findsOneWidget);
-      expect(find.text('YOU SAVED'), findsOneWidget);
+      expect(find.text('Total Bill Amount'), findsNothing);
+      expect(find.text('YOU SAVED'), findsNothing);
 
       // Savings Amount
       expect(
         find.text('₹222.20'),
-        findsWidgets,
+        findsNothing,
       ); // Appears in Items and Savings box
     });
 
@@ -135,9 +138,7 @@ void main() {
 
       expect(find.text('Print Receipt'), findsOneWidget);
       expect(find.text('Send Text Message'), findsOneWidget);
-      expect(find.text('Generate & Share PDF'), findsOneWidget);
       expect(find.text('Share WhatsApp Message'), findsOneWidget);
-      expect(find.text('Share PDF on WhatsApp'), findsOneWidget);
     });
 
     testWidgets('Should navigate to Home on DONE button tap', (tester) async {
@@ -146,12 +147,182 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      final doneButton = find.text('DONE - NEW SALE');
-      await tester.ensureVisible(doneButton);
-      await tester.tap(doneButton);
+      // 1. Find the Close button in the AppBar by its icon
+      final closeButton = find.byIcon(Icons.close);
+      expect(closeButton, findsOneWidget);
+      await tester.ensureVisible(closeButton);
+      await tester.tap(closeButton);
       await tester.pumpAndSettle();
 
       expect(find.text('Home Page'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Edge Case: Complex Savings (Item Disc + Overall Disc + RoundOff)',
+      (tester) async {
+        // Setup:
+        // Total MRP: 1000
+        // Item Disc: 100 (Final 900)
+        // Overall Disc: 50
+        // RoundOff: 5.40
+        // Net Payable: 844.60
+        final complexSale = Sale(
+          id: 'COMPLEX123',
+          customerName: 'Test',
+          customerPhone: '1234567890',
+          items: [
+            SaleItem(
+              categoryName: 'Ring',
+              stickerPrice: 1000,
+              finalPrice: 900,
+              qty: 1,
+              categoryId: '1',
+            ),
+          ],
+          subtotal: 900,
+          overallDiscountAmount: 50,
+          roundOff: 5.40, // Note: Positive value based on your UI logic
+          netPayable: 844.60,
+          payments: {PaymentMode.upi: 844.60},
+          staffId: 's1',
+          overallDiscountPercent: 0,
+          timestamp: DateTime.now(),
+          source: 'POS',
+          status: 'Completed',
+        );
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<AuthProvider>.value(
+                value: mockAuthProvider,
+              ),
+            ],
+            child: MaterialApp(
+              home: SaleSuccessScreen(
+                sale: complexSale,
+                orgId: 'ORG_001',
+                canPop: false,
+              ),
+            ),
+          ),
+        );
+
+        // 1. Verify Additional Discount row exists
+        expect(find.text('Additional Discount'), findsOneWidget);
+        expect(find.text('-₹50.00'), findsOneWidget);
+
+        // // 2. Verify Round-off exists
+        expect(find.text('Round-off'), findsOneWidget);
+        expect(find.text('-₹5.40'), findsOneWidget);
+
+        // // 3. Verify Net Payment Amount exists (triggered by roundOff > 0)
+        expect(find.text('Net Payment Amount'), findsOneWidget);
+        expect(find.text('₹844.60'), findsNWidgets(3)); // Net Payment + UPI row
+
+        // 4. Verify Blue Box is visible (triggered by overallDiscountAmount > 0)
+        expect(find.text('YOU SAVED'), findsOneWidget);
+        expect(find.text('₹155.40'), findsOneWidget); // 100 + 50 + 5.40
+      },
+    );
+
+    testWidgets('Edge Case: Multiple Payment Modes Display', (tester) async {
+      final multiPaySale = Sale(
+        id: 'PAY123',
+        customerName: 'Test',
+        customerPhone: '123',
+        items: [
+          SaleItem(
+            categoryName: 'A',
+            stickerPrice: 100,
+            finalPrice: 100,
+            qty: 1,
+            categoryId: '1',
+          ),
+        ],
+        subtotal: 100,
+        overallDiscountAmount: 0,
+        roundOff: 0,
+        netPayable: 100,
+        payments: {PaymentMode.cash: 40.0, PaymentMode.upi: 60.0},
+        staffId: 's1',
+        overallDiscountPercent: 0,
+        timestamp: DateTime.now(),
+        source: 'POS',
+        status: 'Completed',
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
+          ],
+          child: MaterialApp(
+            home: SaleSuccessScreen(
+              sale: multiPaySale,
+              orgId: 'ORG_001',
+              canPop: false,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('CASH'), findsOneWidget);
+      expect(find.text('₹40.00'), findsOneWidget);
+      expect(find.text('UPI'), findsOneWidget);
+      expect(find.text('₹60.00'), findsOneWidget);
+    });
+
+    testWidgets('Edge Case: Zero Savings Clean UI', (tester) async {
+      final noSavingsSale = Sale(
+        id: 'CLEAN123',
+        customerName: 'Walk-in',
+        customerPhone: '123',
+        items: [
+          SaleItem(
+            categoryName: 'Gold',
+            stickerPrice: 5000,
+            finalPrice: 5000,
+            qty: 1,
+            categoryId: '1',
+          ),
+        ],
+        subtotal: 5000,
+        overallDiscountAmount: 0,
+        roundOff: 0,
+        netPayable: 5000,
+        payments: {PaymentMode.cash: 5000},
+        staffId: 's1',
+        overallDiscountPercent: 0,
+        timestamp: DateTime.now(),
+        source: 'POS',
+        status: 'Completed',
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
+          ],
+          child: MaterialApp(
+            home: SaleSuccessScreen(
+              sale: noSavingsSale,
+              orgId: 'ORG_001',
+              canPop: false,
+            ),
+          ),
+        ),
+      );
+
+      // Should not show any discount/savings related widgets
+      expect(find.text('Item Discounts'), findsNothing);
+      expect(find.text('Additional Discount'), findsNothing);
+      expect(find.text('YOU SAVED'), findsNothing);
+      expect(find.text('Saved: ₹0.00'), findsNothing);
+      expect(
+        find.text('Net Payment Amount'),
+        findsNothing,
+      ); // Hidden when roundOff is 0
     });
   });
 }

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:apoorva_app/enum/app_user_role.dart';
+import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,9 +15,14 @@ class MockAuthProvider extends Mock implements AuthProvider {}
 // 2. Mock Navigator (to verify navigation)
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
+class FakeRoute extends Fake implements Route<dynamic> {}
+
 void main() {
   late MockAuthProvider mockAuth;
   late MockNavigatorObserver mockObserver;
+  setUpAll(() {
+    registerFallbackValue(FakeRoute());
+  });
 
   setUp(() {
     mockAuth = MockAuthProvider();
@@ -113,5 +120,53 @@ void main() {
       expect(find.text('Invalid Credentials'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);
     });
+  });
+
+  testWidgets('Verify AppUser is passed as argument to /home on success', (
+    tester,
+  ) async {
+    // 1. Arrange - Create a mock user
+    // Assuming AppUser has these fields based on your previous snippets
+    final testUser = AppUser(
+      name: 'Manikanta',
+      role: AppUserRole.standard,
+      assignedOrgs: [],
+      email: '',
+      createdAt: DateTime(2023, 1, 1),
+    );
+
+    // Mock signIn to succeed and authProvider.user to return our testUser
+    when(() => mockAuth.signIn(any(), any())).thenAnswer((_) async => {});
+    when(() => mockAuth.user).thenReturn(testUser);
+
+    await tester.pumpWidget(createLoginScreen());
+
+    // 2. Act
+    // Explicitly enter text if needed, or rely on debug defaults
+    await tester.tap(find.text('Login to Dashboard'));
+
+    // Wait for the async logic and navigation animation to finish
+    await tester.pumpAndSettle();
+
+    // 3. Assert - Capture the navigation event
+    // Since you used pushReplacementNamed, we verify didReplace
+    final captured = verify(
+      () => mockObserver.didReplace(
+        newRoute: captureAny(named: 'newRoute'),
+        oldRoute: any(named: 'oldRoute'),
+      ),
+    ).captured;
+
+    // Check if the captured route has the correct arguments
+    final Route<dynamic> route = captured.first as Route<dynamic>;
+    final dynamic args = route.settings.arguments;
+
+    expect(route.settings.name, equals('/home'));
+    expect(args, isNotNull);
+    expect(args, isA<AppUser>());
+
+    final AppUser passedUser = args as AppUser;
+    expect(passedUser.name, equals('Manikanta'));
+    print('Verified: User ${passedUser.name} passed to HomeScreen');
   });
 }

@@ -1,5 +1,6 @@
 import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/screens/sale_success/sale_success_screen.dart';
 import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -96,7 +97,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                   subtitle: Text(
                     '${sale.customerName} • ${DateFormat('hh:mm a').format(sale.timestamp)}',
                   ),
-                  trailing: _buildShareStatus(sale.whatsappStatus),
+                  // trailing: _buildShareStatus(sale.whatsappStatus),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -105,7 +106,13 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                         children: [
                           const Divider(),
                           _buildInfoRow('Full Bill ID', sale.id),
-                          _buildInfoRow('Phone', sale.customerPhone),
+                          _buildInfoRow('Customer', sale.customerName),
+                          _buildInfoRow(
+                            'Phone',
+                            sale.customerPhone.isEmpty
+                                ? 'No Phone Number'
+                                : sale.customerPhone,
+                          ),
                           _buildInfoRow('Source', sale.source),
                           const SizedBox(height: 12),
                           const Text(
@@ -121,20 +128,10 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: () => _reshareBill(sale),
-                                icon: const Icon(Icons.share),
-                                label: const Text('Reshare'),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () => _printBill(sale),
-                                icon: const Icon(Icons.print),
-                                label: const Text('Print PDF'),
-                              ),
-                            ],
+                          ElevatedButton.icon(
+                            onPressed: () => _viewBill(sale),
+                            icon: const Icon(Icons.layers_outlined),
+                            label: const Text('View Bill'),
                           ),
                         ],
                       ),
@@ -150,28 +147,6 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
   }
 
   // --- UI HELPERS ---
-
-  Widget _buildPaymentIcon(String mode) {
-    return CircleAvatar(
-      backgroundColor: mode == 'UPI'
-          ? Colors.purple.shade50
-          : Colors.green.shade50,
-      child: Icon(
-        mode == 'UPI' ? Icons.phonelink_ring : Icons.payments_outlined,
-        color: mode == 'UPI' ? Colors.purple : Colors.green,
-        size: 20,
-      ),
-    );
-  }
-
-  Widget _buildShareStatus(String status) {
-    bool isSent = status == 'sent';
-    return Icon(
-      isSent ? Icons.check_circle : Icons.error_outline,
-      color: isSent ? Colors.green : Colors.redAccent,
-      size: 18,
-    );
-  }
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
@@ -214,11 +189,13 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _reshareBill(Sale sale) {
-    // Navigates back to the Script Library to reshare
-  }
-
-  void _printBill(Sale sale) {
-    // Logic to regenerate the PDF Receipt
+  void _viewBill(Sale sale) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            SaleSuccessScreen(sale: sale, orgId: widget.orgId, canPop: true),
+      ),
+    );
   }
 }

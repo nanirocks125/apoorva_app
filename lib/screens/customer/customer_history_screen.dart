@@ -1,5 +1,6 @@
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/screens/sale_success/sale_success_screen.dart';
 import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -83,19 +84,17 @@ class CustomerHistoryScreen extends StatelessWidget {
                             (item) => Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                '• ${item.categoryId} (₹${item.finalPrice})',
+                                '• ${item.categoryName} (₹${item.finalPrice})',
                               ),
                             ),
                           ),
 
                           const SizedBox(height: 16),
                           Center(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                // Existing PDF logic with sale object
-                              },
-                              icon: const Icon(Icons.picture_as_pdf),
-                              label: const Text('View/Share Bill'),
+                            child: ElevatedButton.icon(
+                              onPressed: () => _viewBill(sale, context),
+                              icon: const Icon(Icons.layers_outlined),
+                              label: const Text('View Bill'),
                             ),
                           ),
                         ],
@@ -141,6 +140,16 @@ class CustomerHistoryScreen extends StatelessWidget {
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+  void _viewBill(Sale sale, BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            SaleSuccessScreen(sale: sale, orgId: orgId, canPop: true),
       ),
     );
   }

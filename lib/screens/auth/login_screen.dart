@@ -82,8 +82,18 @@ extension _LoginLogic on _LoginScreenState {
         _passwordController.text.trim(),
       );
 
-      if (context.mounted) Navigator.pushReplacementNamed(context, '/home');
+      print('successful sign in');
+
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+          arguments: authProvider.user,
+        );
+      }
+      print('after navigation');
     } catch (e) {
+      print('error in login ${e.toString()}');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

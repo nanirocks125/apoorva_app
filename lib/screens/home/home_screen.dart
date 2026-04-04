@@ -2,12 +2,15 @@ import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
+import 'package:apoorva_app/screens/home/version_block_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/platform_stats_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser loggedInUser;
@@ -26,33 +29,54 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSuperAdmin = loggedInUser.role == .superAdmin;
-    final int shopCount = loggedInUser.assignedOrgs.length;
-    print('organization count for user ${loggedInUser.name}: $shopCount');
-    if (isSuperAdmin) {
-      return SuperAdminDashboard(
-        user: loggedInUser,
-        statsService: _statsService,
-      );
-    }
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, packageSnapshot) {
+        if (packageSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    // 1. If not an admin and no shops assigned, show the waiting room
-    if (shopCount == 0) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Apoorva Polaris')),
-        body: _buildUnassignedView(context),
-      );
-    }
+        final String currentAppVersion =
+            packageSnapshot.data?.version ?? "0.0.0";
+        final bool isSuperAdmin = loggedInUser.role == .superAdmin;
+        final int shopCount = loggedInUser.assignedOrgs.length;
+        print('organization count for user ${loggedInUser.name}: $shopCount');
+        if (isSuperAdmin) {
+          return SuperAdminDashboard(
+            user: loggedInUser,
+            statsService: _statsService,
+          );
+        }
 
-    // 3. Shop Selector (If they manage multiple branches)
-    if (shopCount > 1) {
-      return OrganizationSelectionScreen(user: loggedInUser);
-    }
+        // 1. If not an admin and no shops assigned, show the waiting room
+        if (shopCount == 0) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Apoorva Polaris')),
+            body: _buildUnassignedView(context),
+          );
+        }
 
-    return _buildOrganizationDashboardView(context, loggedInUser);
+        // 3. Shop Selector (If they manage multiple branches)
+        if (shopCount > 1) {
+          return OrganizationSelectionScreen(user: loggedInUser);
+        }
+
+        return _buildOrganizationDashboardView(
+          context,
+          loggedInUser,
+          currentAppVersion,
+        );
+      },
+    );
   }
 
-  Widget _buildOrganizationDashboardView(BuildContext context, AppUser user) {
+  Widget _buildOrganizationDashboardView(
+    BuildContext context,
+    AppUser user,
+    String currentAppVersion,
+  ) {
     print(
       'buildng org dashboard for user ${user.name} with orgs: ${user.assignedOrgs.map((o) => o.name).join(', ')}',
     );
@@ -72,8 +96,21 @@ class HomeScreen extends StatelessWidget {
         print('Organization fetch result for ID $orgId: ${snapshot.data}');
 
         if (snapshot.hasData && snapshot.data != null) {
+          final Organization org = snapshot.data!;
+
+          // 2. Version Check Logic
+          // Blocking if app version is lower than minVersion
+          if (_isUpdateRequired(currentAppVersion, org.minVersion) &&
+              (!kIsWeb)) {
+            return VersionBlockScreen(
+              minVersion: org.minVersion,
+              currentAppVersion: currentAppVersion,
+              onLogout: () => _handleLogout,
+            );
+          }
+
           return OrganizationDashboard(
-            organization: snapshot.data!,
+            organization: org,
             currentUser: loggedInUser,
           );
         }
@@ -183,5 +220,28 @@ class HomeScreen extends StatelessWidget {
       }
       // 2. Perform the sign out
     }
+  }
+
+  bool _isUpdateRequired(String current, String? minRequired) {
+    if (minRequired == null || minRequired.isEmpty) return false;
+
+    // Simple equality check as per your requirement:
+    // return current == minRequired;
+
+    // Recommendation: Real version comparison logic
+    try {
+      List<int> currentParts = current.split('.').map(int.parse).toList();
+      List<int> minParts = minRequired.split('.').map(int.parse).toList();
+
+      for (int i = 0; i < 3; i++) {
+        int c = i < currentParts.length ? currentParts[i] : 0;
+        int m = i < minParts.length ? minParts[i] : 0;
+        if (c < m) return true; // Current is older than min
+        if (c > m) return false; // Current is newer
+      }
+    } catch (e) {
+      return current == minRequired; // Fallback to exact match
+    }
+    return false;
   }
 }

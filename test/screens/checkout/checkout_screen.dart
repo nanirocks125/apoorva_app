@@ -128,8 +128,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        SaleSuccessScreen(sale: sale, orgId: widget.orgId),
+                    builder: (_) => SaleSuccessScreen(
+                      sale: sale,
+                      orgId: widget.orgId,
+                      canPop: false,
+                    ),
                   ),
                 );
               }

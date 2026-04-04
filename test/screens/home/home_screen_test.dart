@@ -10,11 +10,12 @@ import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:apoorva_app/screens/home_screen.dart'; // Adjust path
+import 'package:apoorva_app/screens/home/home_screen.dart'; // Adjust path
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/auth_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 // Mocks
 class MockOrgService extends Mock implements OrganizationService {}
@@ -49,6 +50,14 @@ void main() {
 
   setUp(() {
     mockOrgService = MockOrgService();
+
+    PackageInfo.setMockInitialValues(
+      appName: "Apoorva Polaris",
+      packageName: "com.apoorva.app",
+      version: "1.0.0",
+      buildNumber: "1",
+      buildSignature: "sig",
+    );
 
     superAdmin = AppUser(
       name: 'Admin',
@@ -143,6 +152,7 @@ void main() {
 
     testWidgets('shows Unassigned View when user has 0 shops', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(unassignedUser));
+      await tester.pump();
       expect(
         find.text(
           'Your account is active, but you haven’t been assigned to a shop yet.',
@@ -156,6 +166,7 @@ void main() {
       'shows OrganizationSelectionScreen when user has multiple shops',
       (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(multiOrgUser));
+        await tester.pump();
         expect(find.byType(OrganizationSelectionScreen), findsOneWidget);
       },
     );
@@ -184,6 +195,8 @@ void main() {
           ),
         ),
       );
+
+      await tester.pump();
 
       // This check happens on the very first frame where the Future is still pending
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -230,7 +243,7 @@ void main() {
   group('Logout Logic', () {
     testWidgets('cancelling logout dialog stays on screen', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(unassignedUser));
-
+      await tester.pump();
       await tester.tap(find.text('Sign Out'));
       await tester.pumpAndSettle(); // Show dialog
 
@@ -269,6 +282,7 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
 
       // Trigger the dialog
       await tester.tap(find.text('Sign Out'));
@@ -285,6 +299,120 @@ void main() {
 
       // 6. Verify navigation happened
       expect(find.byType(LoginScreen), findsOneWidget);
+    });
+  });
+
+  group('Version Blocking Logic', () {
+    // Helper to set mock app version
+    void setAppVersion(String version) {
+      PackageInfo.setMockInitialValues(
+        appName: "Apoorva Polaris",
+        packageName: "com.apoorva.app",
+        version: version,
+        buildNumber: "1",
+        buildSignature: "buildSignature",
+      );
+    }
+
+    testWidgets(
+      'blocks access and shows Wall Screen when app version < minVersion',
+      (tester) async {
+        // 1. Setup: App is v1.0.0, but Org requires v1.1.0
+        setAppVersion("1.0.0");
+
+        final blockedOrg = Organization(
+          id: '1',
+          name: 'Shop 1',
+          minVersion: '1.1.0', // Higher than app version
+          createdAt: DateTime(2023, 1, 1),
+        );
+
+        when(
+          () => mockOrgService.getOrganizationById('1'),
+        ).thenAnswer((_) async => blockedOrg);
+        await tester.pump(); // Resolve OrgService future
+
+        // 2. Act
+        await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
+        await tester.pump(); // Resolve PackageInfo future
+        await tester.pumpAndSettle(); // Resolve OrgService future
+
+        // // 3. Assert
+        expect(find.text('Update Required'), findsOneWidget);
+        expect(find.textContaining('Minimum Required: v1.1.0'), findsOneWidget);
+        expect(find.textContaining('Your Version: v1.0.0'), findsOneWidget);
+        expect(find.byIcon(Icons.update_disabled_rounded), findsOneWidget);
+
+        // Verify Dashboard is NOT shown
+        expect(find.byType(OrganizationDashboard), findsNothing);
+      },
+    );
+
+    testWidgets('allows access when app version == minVersion', (tester) async {
+      setAppVersion("1.2.0");
+
+      final allowedOrg = Organization(
+        id: '1',
+        name: 'Shop 1',
+        minVersion: '1.2.0', // Exact match
+        createdAt: DateTime(2023, 1, 1),
+      );
+
+      when(
+        () => mockOrgService.getOrganizationById('1'),
+      ).thenAnswer((_) async => allowedOrg);
+
+      await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OrganizationDashboard), findsOneWidget);
+      expect(find.text('Update Required'), findsNothing);
+    });
+
+    testWidgets(
+      'allows access when app version > minVersion (Semantic Check)',
+      (tester) async {
+        // Test semantic versioning logic (e.g., 1.10.0 is newer than 1.9.0)
+        setAppVersion("1.10.0");
+
+        final allowedOrg = Organization(
+          id: '1',
+          name: 'Shop 1',
+          minVersion: '1.9.0',
+          createdAt: DateTime(2023, 1, 1),
+        );
+
+        when(
+          () => mockOrgService.getOrganizationById('1'),
+        ).thenAnswer((_) async => allowedOrg);
+
+        await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(OrganizationDashboard), findsOneWidget);
+      },
+    );
+
+    testWidgets('allows access when minVersion is null or empty', (
+      tester,
+    ) async {
+      setAppVersion("1.0.0");
+
+      final legacyOrg = Organization(
+        id: '1',
+        name: 'Old Shop',
+        minVersion: '', // Empty minVersion
+        createdAt: DateTime(2023, 1, 1),
+      );
+
+      when(
+        () => mockOrgService.getOrganizationById('1'),
+      ).thenAnswer((_) async => legacyOrg);
+
+      await tester.pumpWidget(createWidgetUnderTest(singleOrgUser));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OrganizationDashboard), findsOneWidget);
     });
   });
 }
