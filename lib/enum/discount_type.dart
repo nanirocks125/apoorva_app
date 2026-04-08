@@ -1,1 +1,1 @@
-enum DiscountType { percentage, amount }
+enum DiscountType { percentage, amount, finalPrice }

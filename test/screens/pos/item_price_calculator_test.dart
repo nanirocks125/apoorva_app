@@ -1,4 +1,3 @@
-import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -148,7 +147,7 @@ void main() {
 
       // 2. Switch to Amount mode
       // Your refactored code uses: label: Text('Amount (₹)')
-      await tester.tap(find.text('Amount (₹)'));
+      await tester.tap(find.text('Discount (₹)'));
       await tester
           .pumpAndSettle(); // Required to let the conditional TextField appear
 
@@ -252,7 +251,7 @@ void main() {
       // 1. By default, it should be in Percentage mode
       // Verify the 15% ChoiceChip is selected (if 15% exists in your list,
       // otherwise check the summary math)
-      expect(find.text('Percentage (%)'), findsOneWidget);
+      expect(find.text('Percent (%)'), findsOneWidget);
 
       // 2. Since 15% isn't in your [0, 5, 10, 20] list, we check the summary
       // Gross: 1000.00, Discount: 150.00, Net: 850.00
@@ -285,7 +284,7 @@ void main() {
 
       // 3. Switch to Amount mode
       // Label in your refactored code: 'Amount (₹)'
-      await tester.tap(find.text('Amount (₹)'));
+      await tester.tap(find.text('Discount (₹)'));
       await tester.pumpAndSettle();
 
       // 4. Verify TextField appears and is empty (because you call .clear() in onSelectionChanged)
@@ -299,7 +298,7 @@ void main() {
       expect(amountField.controller?.text, '');
 
       // 5. Switch back to Percentage mode
-      await tester.tap(find.text('Percentage (%)'));
+      await tester.tap(find.text('Percent (%)'));
       await tester.pumpAndSettle();
 
       // 6. Verify TextField is gone and calculation is reset (Discount: 0.00)
@@ -326,7 +325,7 @@ void main() {
 
       // 2. Switch to Amount mode via SegmentedButton
       // Label: Amount (₹)
-      await tester.tap(find.text('Amount (₹)'));
+      await tester.tap(find.text('Discount (₹)'));
       await tester.pumpAndSettle();
 
       // 3. Enter a discount of 150 (which is > 100)
