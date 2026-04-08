@@ -31,7 +31,8 @@ class ReceiptCommunicationService {
         "📦 *ITEMS:* \n$itemsList\n\n"
         "💰 *NET PAYABLE: Rs ${sale.netPayable.toStringAsFixed(2)}*\n"
         "✨ *YOU SAVED Rs ${sale.totalSavings.toStringAsFixed(2)}!* ✨\n\n"
-        "Bill ID: ${sale.id.substring(0, 8)}\n"
+        "🆔 Bill ID: ${sale.id.substring(0, 8)}"
+        "📸 Follow: instagram.com/apoorva.online\n"
         "Visit Again! 🙏";
 
     String phone = sale.customerPhone.replaceAll(RegExp(r'[^0-9]'), '');

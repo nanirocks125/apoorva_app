@@ -1,12 +1,13 @@
 import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/services/customer_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CustomersScreen extends StatefulWidget {
-  final String orgId;
-
-  const CustomersScreen({super.key, required this.orgId});
+  const CustomersScreen({super.key});
 
   @override
   State<CustomersScreen> createState() => _CustomersScreenState();
@@ -17,6 +18,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final organization = Provider.of<OrganizationProvider>(
+      context,
+    ).currentOrganization;
+
+    // if (organization == null) {
+    //   return Text('No organization selected');
+    // }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Customer Directory'),
@@ -40,92 +48,100 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ),
         ),
       ),
-      body: StreamBuilder<List<Customer>>(
-        stream: CustomerService().getCustomers(widget.orgId),
-        builder: (context, snapshot) {
-          print('no of customers in stream: ${snapshot.data?.length ?? 0}');
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: (organization == null)
+          ? Text('No organization selected')
+          : StreamBuilder<List<Customer>>(
+              stream: CustomerService().getCustomers(organization.id),
+              builder: (context, snapshot) {
+                print(
+                  'no of customers in stream: ${snapshot.data?.length ?? 0}',
+                );
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          // 1. Client-side filtering using typed Model properties
-          final filteredCustomers = snapshot.data!.where((customer) {
-            final query = _searchQuery.toLowerCase();
-            return customer.name.toLowerCase().contains(query) ||
-                customer.phone.contains(query);
-          }).toList();
+                // 1. Client-side filtering using typed Model properties
+                final filteredCustomers = snapshot.data!.where((customer) {
+                  final query = _searchQuery.toLowerCase();
+                  return customer.name.toLowerCase().contains(query) ||
+                      customer.phone.contains(query);
+                }).toList();
 
-          if (filteredCustomers.isEmpty) {
-            return const Center(child: Text('No customers found.'));
-          }
+                if (filteredCustomers.isEmpty) {
+                  return const Center(child: Text('No customers found.'));
+                }
 
-          return ListView.builder(
-            itemCount: filteredCustomers.length,
-            padding: const EdgeInsets.all(12),
-            itemBuilder: (context, index) {
-              final customer = filteredCustomers[index];
+                return ListView.builder(
+                  itemCount: filteredCustomers.length,
+                  padding: const EdgeInsets.all(12),
+                  itemBuilder: (context, index) {
+                    final customer = filteredCustomers[index];
 
-              return Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.orange.shade100,
-                    child: Text(
-                      // Safety check: if name is empty, show '?' instead of crashing
-                      (customer.name.isNotEmpty)
-                          ? customer.name[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.bold,
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade200),
                       ),
-                    ),
-                  ),
-                  title: Text(
-                    customer.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(customer.phone),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.phone_outlined,
-                          color: Colors.blue,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.orange.shade100,
+                          child: Text(
+                            // Safety check: if name is empty, show '?' instead of crashing
+                            (customer.name.isNotEmpty)
+                                ? customer.name[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        onPressed: () =>
-                            launchUrl(Uri.parse("tel:${customer.phone}")),
+                        title: Text(
+                          customer.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(customer.phone),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.phone_outlined,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () =>
+                                  launchUrl(Uri.parse("tel:${customer.phone}")),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.history,
+                                color: Colors.teal,
+                              ),
+                              onPressed: () =>
+                                  _viewPurchaseHistory(customer, organization),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showCustomerDetails(customer),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.history, color: Colors.teal),
-                        onPressed: () => _viewPurchaseHistory(customer),
-                      ),
-                    ],
-                  ),
-                  onTap: () => _showCustomerDetails(customer),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 
-  void _viewPurchaseHistory(Customer customer) {
+  void _viewPurchaseHistory(Customer customer, Organization org) {
     Navigator.pushNamed(
       context,
       '/customer-sales-history',
-      arguments: {'orgId': widget.orgId, 'customer': customer},
+      arguments: {'orgId': org.id, 'customer': customer},
     );
   }
 

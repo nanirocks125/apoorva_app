@@ -1,5 +1,4 @@
 import 'package:apoorva_app/providers/auth_provider.dart';
-import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/enum/app_user_role.dart';
@@ -11,7 +10,6 @@ class GlobalDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = Provider.of<AuthProvider>(context, listen: false).user;
-    final orgProvider = Provider.of<OrganizationProvider>(context);
     final bool isSuperAdmin = currentUser?.role == AppUserRole.superAdmin;
 
     return Drawer(
@@ -26,6 +24,16 @@ class GlobalDrawer extends StatelessWidget {
                   icon: Icons.dashboard_outlined,
                   title: 'Dashboard',
                   onTap: () => _navigateTo(context, '/dashboard'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Customer',
+                  onTap: () => _navigateTo(context, '/customers'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Inventory',
+                  onTap: () => _navigateTo(context, '/inventory'),
                 ),
 
                 // --- ADMIN ONLY SECTION ---

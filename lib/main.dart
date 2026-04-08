@@ -111,10 +111,8 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/customers') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => CustomersScreen(orgId: org.id),
-          );
+          // final org = settings.arguments as Organization;
+          return MaterialPageRoute(builder: (context) => CustomersScreen());
         }
 
         if (settings.name == '/customer-sales-history') {
@@ -157,10 +155,7 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/inventory') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => InventoryScreen(orgId: org.id),
-          );
+          return MaterialPageRoute(builder: (context) => InventoryScreen());
         }
 
         // --- Handle /super-admin route ---
