@@ -383,4 +383,96 @@ void main() {
     // Net Amount row: formatted as "₹4000.00"
     expect(find.text('₹4000.00'), findsOneWidget);
   });
+
+  group('ItemPriceCalculator - Final Price Mode', () {
+    testWidgets('switching to Final Price mode shows correct input label', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // 1. Switch to Final Price mode
+      // The label inside the SegmentedButton is 'Final (₹)'
+      await tester.tap(find.text('Final (₹)'));
+      await tester.pumpAndSettle();
+
+      // 2. Verify the dynamic TextField label changed accordingly
+      expect(
+        find.widgetWithText(TextField, 'Final Net Price (₹)'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'calculates reverse discount correctly based on final price input',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // 1. Enter Sticker Price
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Sticker Price'),
+          '1000',
+        );
+        await tester.pump();
+
+        // 2. Switch to Final Price mode
+        await tester.tap(find.text('Final (₹)'));
+        await tester.pumpAndSettle();
+
+        // 3. Enter Final Price of 750
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Final Net Price (₹)'),
+          '750',
+        );
+        await tester.pump();
+
+        // 4. Verify Calculations
+        // Gross Amount
+        expect(find.text('₹1000.00'), findsWidgets);
+
+        // Reverse Calculated Discount (1000 - 750 = 250)
+        expect(find.text('- ₹250.00'), findsOneWidget);
+
+        // Net Total (Matches the Final Price input)
+        expect(find.text('₹750.00'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'disables submit button and clamps values if final price exceeds sticker price',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // 1. Enter Sticker Price of 500
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Sticker Price'),
+          '500',
+        );
+        await tester.pump();
+
+        // 2. Switch to Final Price mode
+        await tester.tap(find.text('Final (₹)'));
+        await tester.pumpAndSettle();
+
+        // 3. Enter Final Price of 600 (Which exceeds the sticker price)
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Final Net Price (₹)'),
+          '600',
+        );
+        await tester.pump();
+
+        // 4. Verify Calculations (Clamped to prevent negative discounts)
+        // Reverse Calculated Discount (500 - 600) clamped to 0
+        expect(find.text('- ₹0.00'), findsOneWidget);
+
+        // 🚀 THE FIX: Both Gross Amount and Net Total will be '₹500.00', so we expect 2 widgets.
+        expect(find.text('₹500.00'), findsNWidgets(2));
+
+        // 5. Verify ADD TO BILL button is disabled
+        // _isValid should return false because inputVal (600) > sticker (500)
+        final btnFinder = find.byType(ElevatedButton);
+        final ElevatedButton btn = tester.widget(btnFinder);
+        expect(btn.onPressed, isNull);
+      },
+    );
+  });
 }
