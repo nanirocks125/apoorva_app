@@ -189,7 +189,11 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/profile') {
-          final user = settings.arguments as AppUser;
+          final user = settings.arguments as AppUser?;
+          if (user == null) {
+            // Redirect to login or show error
+            return MaterialPageRoute(builder: (context) => const LoginScreen());
+          }
           return MaterialPageRoute(
             builder: (context) => ProfileScreen(user: user),
           );
