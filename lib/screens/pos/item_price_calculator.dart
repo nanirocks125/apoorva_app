@@ -25,18 +25,26 @@ class ItemPriceCalculator extends StatefulWidget {
 
 class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   late TextEditingController _priceController;
-  late TextEditingController _discountInputController;
+  late TextEditingController _dynamicInputController;
   DiscountType _discountType = DiscountType.percentage;
 
+  // Calculate the Discount Amount in ₹
   double get _discountValue {
     final double sticker = double.tryParse(_priceController.text) ?? 0.0;
-    final double discountVal =
-        double.tryParse(_discountInputController.text) ?? 0.0;
+    final double inputVal =
+        double.tryParse(_dynamicInputController.text) ?? 0.0;
 
-    if (_discountType == DiscountType.percentage) {
-      return sticker * (discountVal / 100);
+    switch (_discountType) {
+      case DiscountType.percentage:
+        return sticker * (inputVal / 100);
+      case DiscountType.amount:
+        return inputVal;
+      case DiscountType.finalPrice:
+        return (sticker - inputVal).clamp(
+          0,
+          sticker,
+        ); // Reverse calculate discount
     }
-    return discountVal; // Amount mode లో అదే డిస్కౌంట్ వాల్యూ
   }
 
   @override
@@ -46,22 +54,65 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
       text: widget.existingItem?.mrp.toStringAsFixed(0) ?? '',
     );
 
-    // ఒకవేళ ఎగ్జిస్టింగ్ ఐటమ్ ఉంటే, దాని డిస్కౌంట్ ని పర్సంటేజ్ లోనే ఉంచుదాం ప్రస్తుతానికి
-    _discountInputController = TextEditingController(
-      text: widget.existingItem?.discountPercent.toStringAsFixed(0) ?? '0',
-    );
+    // If there's an existing item, determine the initial type and value
+    _discountType =
+        widget.existingItem?.discountType ?? DiscountType.percentage;
+
+    String initialValue = '0';
+    if (widget.existingItem != null) {
+      if (_discountType == DiscountType.percentage) {
+        initialValue = widget.existingItem!.discountPercent.toStringAsFixed(0);
+      } else {
+        // Calculate the raw discount amount or final price based on saved percentage
+        final mrp = widget.existingItem!.mrp;
+        final discountAmt = mrp * (widget.existingItem!.discountPercent / 100);
+        if (_discountType == DiscountType.amount) {
+          initialValue = discountAmt.toStringAsFixed(0);
+        } else if (_discountType == DiscountType.finalPrice) {
+          initialValue = (mrp - discountAmt).toStringAsFixed(0);
+        }
+      }
+    }
+
+    _dynamicInputController = TextEditingController(text: initialValue);
   }
 
+  // Calculate the Final Net Price in ₹
   double get _finalPrice {
     final double sticker = double.tryParse(_priceController.text) ?? 0.0;
-    final double discountVal =
-        double.tryParse(_discountInputController.text) ?? 0.0;
+    final double inputVal =
+        double.tryParse(_dynamicInputController.text) ?? 0.0;
 
-    if (_discountType == DiscountType.percentage) {
-      return sticker * (1 - (discountVal / 100));
-    } else {
-      return (sticker - discountVal).clamp(0, sticker); // మైనస్ లోకి వెళ్లకుండా
+    switch (_discountType) {
+      case DiscountType.percentage:
+        return sticker * (1 - (inputVal / 100));
+      case DiscountType.amount:
+        return (sticker - inputVal).clamp(0, sticker);
+      case DiscountType.finalPrice:
+        return inputVal.clamp(0, sticker); // Input IS the final price
     }
+  }
+
+  // Validation Logic
+  bool get _isValid {
+    final double sticker = double.tryParse(_priceController.text) ?? 0.0;
+    final double inputVal =
+        double.tryParse(_dynamicInputController.text) ?? 0.0;
+
+    if (sticker <= 0) return false;
+    if (widget.category == null && widget.existingItem == null) return false;
+
+    switch (_discountType) {
+      case DiscountType.percentage:
+        if (inputVal < 0 || inputVal > 100) return false;
+        break;
+      case DiscountType.amount:
+      case DiscountType.finalPrice:
+        if (inputVal < 0 || inputVal > sticker)
+          return false; // Cannot exceed sticker price
+        break;
+    }
+    return true;
   }
 
   @override
@@ -131,57 +182,70 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
               const SizedBox(height: 20),
 
-              // 2. DISCOUNT TYPE SEGMENTED BUTTON (iOS Style Feel)
-              SegmentedButton<DiscountType>(
-                segments: const [
-                  ButtonSegment(
-                    value: DiscountType.percentage,
-                    label: Text('Percentage (%)'),
-                    icon: Icon(Icons.percent),
+              // 2. DISCOUNT TYPE SEGMENTED BUTTON
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<DiscountType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: DiscountType.percentage,
+                      label: Text('Percent (%)'),
+                      icon: Icon(Icons.percent),
+                    ),
+                    ButtonSegment(
+                      value: DiscountType.amount,
+                      label: Text('Discount (₹)'),
+                      icon: Icon(Icons.currency_rupee),
+                    ),
+                    ButtonSegment(
+                      value: DiscountType.finalPrice,
+                      label: Text('Final (₹)'),
+                      icon: Icon(Icons.check_circle_outline),
+                    ),
+                  ],
+                  selected: {_discountType},
+                  onSelectionChanged: (Set<DiscountType> newSelection) {
+                    setState(() {
+                      _discountType = newSelection.first;
+                      _dynamicInputController.clear();
+                    });
+                  },
+                  style: SegmentedButton.styleFrom(
+                    selectedBackgroundColor: themeColor.withOpacity(0.1),
+                    selectedForegroundColor: themeColor,
+                    side: BorderSide(color: themeColor.withOpacity(0.5)),
                   ),
-                  ButtonSegment(
-                    value: DiscountType.amount,
-                    label: Text('Amount (₹)'),
-                    icon: Icon(Icons.currency_rupee),
-                  ),
-                ],
-                selected: {_discountType},
-                onSelectionChanged: (Set<DiscountType> newSelection) {
-                  setState(() {
-                    _discountType = newSelection.first;
-                    _discountInputController
-                        .clear(); // Switch అయినప్పుడు క్లియర్ చేయడం ఉత్తమం
-                  });
-                },
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: themeColor.withOpacity(0.1),
-                  selectedForegroundColor: themeColor,
-                  side: BorderSide(color: themeColor.withOpacity(0.5)),
                 ),
               ),
 
-              if (_discountType == .amount) const SizedBox(height: 10),
-              // 3. DYNAMIC DISCOUNT INPUT
-              if (_discountType == .amount)
-                TextField(
-                  controller: _discountInputController,
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.done,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  decoration: InputDecoration(
-                    labelText: 'Discount Amount (₹)',
-                    prefixText: '₹ ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              const SizedBox(height: 16),
+
+              // 3. DYNAMIC INPUT FIELD
+              TextField(
+                controller: _dynamicInputController,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: _discountType == DiscountType.percentage
+                      ? 'Discount Percentage (%)'
+                      : _discountType == DiscountType.amount
+                      ? 'Discount Amount (₹)'
+                      : 'Final Net Price (₹)',
+                  prefixText: _discountType == DiscountType.percentage
+                      ? ''
+                      : '₹ ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onChanged: (_) => setState(() {}),
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                 ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              ),
 
               const SizedBox(height: 10),
 
-              // 4. QUICK PERCENT CHIPS (Show only in percentage mode)
+              // 4. QUICK PERCENT CHIPS (Only for percentage mode)
               if (_discountType == DiscountType.percentage)
                 Wrap(
                   spacing: 8,
@@ -190,12 +254,12 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                         (pct) => ChoiceChip(
                           label: Text('${pct.toInt()}%'),
                           selected:
-                              (double.tryParse(_discountInputController.text) ??
+                              (double.tryParse(_dynamicInputController.text) ??
                                   -1) ==
                               pct,
                           onSelected: (selected) {
                             setState(
-                              () => _discountInputController.text = pct
+                              () => _dynamicInputController.text = pct
                                   .toInt()
                                   .toString(),
                             );
@@ -207,6 +271,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
               const SizedBox(height: 10),
 
+              // 5. SUMMARY BOX
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -216,7 +281,6 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                 ),
                 child: Column(
                   children: [
-                    // 1. ACTUAL PRICE (STRIKE THROUGH)
                     _buildPriceRow(
                       "Gross Amount:",
                       "₹${(double.tryParse(_priceController.text) ?? 0).toStringAsFixed(2)}",
@@ -224,9 +288,8 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                     ),
                     const SizedBox(height: 8),
 
-                    // 2. DISCOUNT AMOUNT
                     _buildPriceRow(
-                      "Discount (${_discountType == DiscountType.percentage ? '${_discountInputController.text}%' : 'Fixed'}):",
+                      "Discount (${_discountType == DiscountType.percentage ? '${_dynamicInputController.text.isEmpty ? '0' : _dynamicInputController.text}%' : 'Derived'}):",
                       "- ₹${_discountValue.toStringAsFixed(2)}",
                       color: Colors.redAccent,
                       isBold: false,
@@ -234,7 +297,6 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
                     const Divider(height: 24),
 
-                    // 3. FINAL NET PRICE
                     _buildPriceRow(
                       "Net Amount:",
                       "₹${_finalPrice.toStringAsFixed(2)}",
@@ -248,6 +310,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
 
               const SizedBox(height: 20),
 
+              // 6. SAVE BUTTON
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(60),
@@ -259,19 +322,21 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                 ),
                 onPressed: _isValid
                     ? () {
-                        // ... addItem logic ...
-                        // Note: final discount needs to be converted back to percentage if your model only stores %
-                        double finalDiscountPercent =
-                            _discountType == DiscountType.percentage
-                            ? (double.tryParse(_discountInputController.text) ??
-                                  0.0)
-                            : ((double.tryParse(
-                                        _discountInputController.text,
-                                      ) ??
-                                      0.0) /
-                                  (double.tryParse(_priceController.text) ??
-                                      1.0) *
-                                  100);
+                        final double sticker =
+                            double.tryParse(_priceController.text) ?? 1.0;
+                        final double safeSticker = sticker == 0 ? 1.0 : sticker;
+
+                        // Calculate final percentage regardless of which mode was used
+                        // (So your backend/cart can universally store the correct %)
+                        double finalDiscountPercent;
+                        if (_discountType == DiscountType.percentage) {
+                          finalDiscountPercent =
+                              double.tryParse(_dynamicInputController.text) ??
+                              0.0;
+                        } else {
+                          finalDiscountPercent =
+                              (_discountValue / safeSticker) * 100;
+                        }
 
                         final category =
                             widget.existingItem?.category ?? widget.category;
@@ -335,28 +400,5 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
         ),
       ],
     );
-  }
-
-  bool get _isValid {
-    final double sticker = double.tryParse(_priceController.text) ?? 0.0;
-    final double discountVal =
-        double.tryParse(_discountInputController.text) ?? 0.0;
-
-    // 1. Price must be greater than 0
-    if (sticker <= 0) return false;
-
-    // 2. Category must not be null
-    if (widget.category == null && widget.existingItem == null) return false;
-
-    // 3. Discount logic
-    if (_discountType == DiscountType.percentage) {
-      // Percentage shouldn't exceed 100% (unless your business logic allows it)
-      if (discountVal < 0 || discountVal > 100) return false;
-    } else {
-      // Amount discount shouldn't exceed the sticker price
-      if (discountVal < 0 || discountVal > sticker) return false;
-    }
-
-    return true;
   }
 }

@@ -4,6 +4,7 @@ import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/providers/cart_provider.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_screen.dart';
@@ -52,6 +53,16 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // 2. Organization Provider depends on Auth Provider
+        ChangeNotifierProxyProvider<AuthProvider, OrganizationProvider>(
+          create: (_) => OrganizationProvider(),
+          update: (context, authProvider, previousOrgProvider) {
+            // This is the magic link: Every time auth changes (like after a successful login),
+            // this update triggers, passing the AppUser to fetch the specific Org.
+            previousOrgProvider?.updateForUser(authProvider.user);
+            return previousOrgProvider!;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: const ApoorvaApp(),
@@ -72,6 +83,7 @@ class ApoorvaApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/users': (context) => UserScreen(),
         '/organizations': (context) => OrganizationScreen(),
+        '/dashboard': (context) => OrganizationDashboard(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
@@ -99,10 +111,8 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/customers') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => CustomersScreen(orgId: org.id),
-          );
+          // final org = settings.arguments as Organization;
+          return MaterialPageRoute(builder: (context) => CustomersScreen());
         }
 
         if (settings.name == '/customer-sales-history') {
@@ -145,10 +155,7 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/inventory') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => InventoryScreen(orgId: org.id),
-          );
+          return MaterialPageRoute(builder: (context) => InventoryScreen());
         }
 
         // --- Handle /super-admin route ---
@@ -182,7 +189,11 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/profile') {
-          final user = settings.arguments as AppUser;
+          final user = settings.arguments as AppUser?;
+          if (user == null) {
+            // Redirect to login or show error
+            return MaterialPageRoute(builder: (context) => const LoginScreen());
+          }
           return MaterialPageRoute(
             builder: (context) => ProfileScreen(user: user),
           );

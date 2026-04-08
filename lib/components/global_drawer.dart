@@ -25,6 +25,16 @@ class GlobalDrawer extends StatelessWidget {
                   title: 'Dashboard',
                   onTap: () => _navigateTo(context, '/dashboard'),
                 ),
+                _buildDrawerItem(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Customer',
+                  onTap: () => _navigateTo(context, '/customers'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Inventory',
+                  onTap: () => _navigateTo(context, '/inventory'),
+                ),
 
                 // --- ADMIN ONLY SECTION ---
                 if (isSuperAdmin) ...[
@@ -122,6 +132,16 @@ class GlobalDrawer extends StatelessWidget {
   void _navigateTo(BuildContext context, String routeName) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     Navigator.pop(context); // Close drawer first
-    Navigator.pushNamed(context, routeName, arguments: user);
+
+    // Only pass user as argument when the route requires it
+    if (routeName == '/profile') {
+      if (user == null) {
+        // Handle unauthenticated state - shouldn't happen if drawer is only shown to logged-in users
+        return;
+      }
+      Navigator.pushNamed(context, routeName, arguments: user);
+    } else {
+      Navigator.pushNamed(context, routeName);
+    }
   }
 }

@@ -1,34 +1,35 @@
 import 'package:apoorva_app/components/global_drawer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
-import 'package:apoorva_app/model/user/app_user.dart';
+import 'package:apoorva_app/providers/auth_provider.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class OrganizationDashboard extends StatelessWidget {
-  final Organization organization;
-  final AppUser currentUser;
-
-  const OrganizationDashboard({
-    super.key,
-    required this.organization,
-    required this.currentUser,
-  });
+  const OrganizationDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = Provider.of<AuthProvider>(context, listen: false).user;
+    final organization = Provider.of<OrganizationProvider>(
+      context,
+    ).currentOrganization;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(organization.name),
+        title: Text(organization?.name ?? 'NA'),
         actions: [
           // Quick toggle for managers who handle multiple locations
-          if (currentUser.assignedOrgs.length > 1)
-            IconButton(
-              icon: const Icon(Icons.swap_horiz),
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, '/org-selector'),
-              tooltip: 'Switch Shop',
-            ),
+          if (currentUser != null)
+            if (currentUser.assignedOrgs.length > 1)
+              IconButton(
+                icon: const Icon(Icons.swap_horiz),
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/org-selector'),
+                tooltip: 'Switch Shop',
+              ),
         ],
       ),
       drawer: GlobalDrawer(),
@@ -37,11 +38,11 @@ class OrganizationDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildShopHeader(),
+            if (organization != null) _buildShopHeader(organization),
             const SizedBox(height: 24),
 
             // --- REAL-TIME REVENUE & ALERTS ---
-            _buildLiveStatusGrid(),
+            if (organization != null) _buildLiveStatusGrid(organization),
 
             const SizedBox(height: 32),
             const Text(
@@ -113,7 +114,7 @@ class OrganizationDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildShopHeader() {
+  Widget _buildShopHeader(Organization organization) {
     return Row(
       children: [
         const CircleAvatar(
@@ -142,7 +143,7 @@ class OrganizationDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildLiveStatusGrid() {
+  Widget _buildLiveStatusGrid(Organization organization) {
     // 1. Calculate the start of the current day (00:00:00)
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -327,6 +328,9 @@ class OrganizationDashboard extends StatelessWidget {
     Color color,
     String route,
   ) {
+    final organization = Provider.of<OrganizationProvider>(
+      context,
+    ).currentOrganization;
     return InkWell(
       onTap: () => Navigator.pushNamed(context, route, arguments: organization),
       borderRadius: BorderRadius.circular(16),
