@@ -1,4 +1,5 @@
 import 'package:apoorva_app/providers/auth_provider.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/enum/app_user_role.dart';
@@ -10,6 +11,7 @@ class GlobalDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = Provider.of<AuthProvider>(context, listen: false).user;
+    final orgProvider = Provider.of<OrganizationProvider>(context);
     final bool isSuperAdmin = currentUser?.role == AppUserRole.superAdmin;
 
     return Drawer(
