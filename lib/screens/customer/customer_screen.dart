@@ -163,54 +163,5 @@ class _CustomersScreenState extends State<CustomersScreen> {
   void _showCustomerDetails(Customer customer) {
     Navigator.pushNamed(context, '/customer-details', arguments: customer);
     return;
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              customer.name,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              customer.phone,
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-            const Divider(height: 32),
-            const Text(
-              'Customer Insights',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            // Example Metrics
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Total Visits:'),
-                Text(
-                  '${customer.totalSales}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.pushNamed(context, '/scripts', arguments: customer),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-              child: const Text('Send Marketing Script'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
