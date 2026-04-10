@@ -76,7 +76,7 @@ void main() {
         final json = item.toJson();
 
         // Using camelCase here based on your recent fixes
-        expect(json['stickerPrice'], 2000.0);
+        expect(json['mrp'], 2000.0);
         expect(json['discountPercent'], 5.0);
         expect(json['category']['name'], 'Gold Chain');
       });
@@ -90,7 +90,7 @@ void main() {
             'isHotkey': false,
             'billMachineNumber': 2,
           },
-          'stickerPrice': 3000.0,
+          'mrp': 3000.0,
           'discountPercent': 10.0,
           'quantity': 2,
         };

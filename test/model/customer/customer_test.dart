@@ -34,9 +34,9 @@ void main() {
 
         expect(json['name'], 'Suresh');
         expect(json['phone'], '7777777777');
-        expect(json['visitCount'], 2);
+        expect(json['totalSales'], 2);
         // Verify custom timestamp converter key
-        expect(json['created_at'], isA<Timestamp>());
+        expect(json['createdAt'], isA<Timestamp>());
         // ID should NOT be in JSON based on @JsonKey(includeToJson: false)
         expect(json.containsKey('id'), isFalse);
       });
@@ -47,7 +47,7 @@ void main() {
           final json = {
             'name': 'Ramesh',
             'phone': '8888888888',
-            'created_at': Timestamp.fromDate(testDate),
+            'createdAt': Timestamp.fromDate(testDate),
             // visitCount is missing to test defaultValue
           };
 

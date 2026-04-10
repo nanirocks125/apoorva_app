@@ -78,7 +78,7 @@ void main() {
         expect(json['total'], 1800.0);
         expect(json['items'], isA<List>());
         // Check if items inside also serialized correctly
-        expect(json['items'][0]['stickerPrice'], 2000.0);
+        expect(json['items'][0]['mrp'], 2000.0);
       });
 
       test('fromJson should handle a full data map', () {
@@ -100,7 +100,7 @@ void main() {
                 'currentStock': 10,
                 'isHotkey': false,
               },
-              'stickerPrice': 1000.0,
+              'mrp': 1000.0,
               'discountPercent': 10.0,
               'quantity': 1,
             },
