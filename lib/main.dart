@@ -14,6 +14,7 @@ import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_screen.dart';
+import 'package:apoorva_app/screens/daily_sales_history_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/home/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
@@ -94,6 +95,7 @@ class ApoorvaApp extends StatelessWidget {
         '/customer_analytics': (context) => CustomerAnalyticsScreen(),
         '/data-integrity': (context) => DataIntegrityScreen(),
         '/inventory-analytics': (context) => InventoryAnalyticsScreen(),
+        '/sales-history': (context) => DailySalesHistoryScreen(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
@@ -156,13 +158,6 @@ class ApoorvaApp extends StatelessWidget {
             builder: (context) => PosScreen(organization: organization),
           );
         }
-
-        // if (settings.name == '/sales-history') {
-        //   final org = settings.arguments as Organization;
-        //   return MaterialPageRoute(
-        //     builder: (context) => SalesHistoryScreen(orgId: org.id),
-        //   );
-        // }
 
         if (settings.name == '/inventory') {
           return MaterialPageRoute(builder: (context) => InventoryScreen());
