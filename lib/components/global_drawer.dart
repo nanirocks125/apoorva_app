@@ -27,13 +27,18 @@ class GlobalDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.dashboard_outlined,
-                  title: 'Customer',
+                  title: 'Customers',
                   onTap: () => _navigateTo(context, '/customers'),
                 ),
                 _buildDrawerItem(
                   icon: Icons.dashboard_outlined,
                   title: 'Inventory',
                   onTap: () => _navigateTo(context, '/inventory'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Sales Summary',
+                  onTap: () => _navigateTo(context, '/sales_summary'),
                 ),
 
                 // --- ADMIN ONLY SECTION ---
