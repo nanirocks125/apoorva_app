@@ -93,7 +93,7 @@ class SaleSuccessScreen extends StatelessWidget {
               const Divider(height: 32),
               _buildPaymentDetails(),
               const SizedBox(height: 40),
-              if (!canPop) _buildActionButtons(context),
+              _buildActionButtons(context),
               const SizedBox(height: 20),
             ],
           ),
