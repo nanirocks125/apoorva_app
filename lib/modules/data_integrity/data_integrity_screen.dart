@@ -7,15 +7,32 @@ import 'package:provider/provider.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 
 class DataIntegrityScreen extends StatefulWidget {
-  const DataIntegrityScreen({super.key});
+  final CustomerService? customerService; // ✅ Added for testing
+  final SaleService? saleService; // ✅ Added for testing
+
+  const DataIntegrityScreen({
+    super.key,
+    this.customerService,
+    this.saleService,
+  });
 
   @override
   State<DataIntegrityScreen> createState() => _DataIntegrityScreenState();
 }
 
 class _DataIntegrityScreenState extends State<DataIntegrityScreen> {
-  final CustomerService _customerService = CustomerService();
-  final SaleService _saleService = SaleService();
+  // ✅ Initialize with injected services or defaults
+  late CustomerService _customerService;
+  late SaleService _saleService;
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ THIS IS THE CRITICAL PART
+    // It assigns the mocked service if provided, otherwise the real one.
+    _customerService = widget.customerService ?? CustomerService();
+    _saleService = widget.saleService ?? SaleService();
+  }
 
   @override
   Widget build(BuildContext context) {

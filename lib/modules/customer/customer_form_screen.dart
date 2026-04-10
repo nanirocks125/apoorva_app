@@ -25,6 +25,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
+
+  // ✅ NEW: Controllers for manual correction
+  late TextEditingController _salesController;
+  late TextEditingController _amountController;
+
   bool _isLoading = false;
 
   // State variables for the dates
@@ -39,6 +44,14 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     );
     _phoneController = TextEditingController(
       text: widget.existingCustomer?.phone ?? '',
+    );
+
+    // ✅ Initialize with existing values for manual adjustment
+    _salesController = TextEditingController(
+      text: (widget.existingCustomer?.totalSales ?? 0).toString(),
+    );
+    _amountController = TextEditingController(
+      text: (widget.existingCustomer?.totalAmountSpent ?? 0.0).toString(),
     );
 
     // Initialize dates from the existing customer, or set defaults for a new one
@@ -75,8 +88,8 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         lastPurchaseDate: _lastPurchaseDate,
         createdAt: _createdAt,
         // Preserve financial stats
-        totalSales: widget.existingCustomer?.totalSales ?? 0,
-        totalAmountSpent: widget.existingCustomer?.totalAmountSpent ?? 0.0,
+        totalSales: int.tryParse(_salesController.text) ?? 0,
+        totalAmountSpent: double.tryParse(_amountController.text) ?? 0.0,
       );
 
       await widget._customerService.saveCustomer(widget.orgId, customerToSave);
@@ -157,6 +170,47 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // --- SECTION: FINANCIAL STATS CORRECTION ---
+            const Text(
+              "Financial Statistics (Manual Correction)",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo,
+              ),
+            ),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _salesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Total Sales Count',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.shopping_bag),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Total Spent (₹)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.currency_rupee),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
             // --- DATE PICKER 2: Last Purchase Date ---
             InkWell(
