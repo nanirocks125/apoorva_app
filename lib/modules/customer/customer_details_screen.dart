@@ -2,6 +2,7 @@
 import 'package:apoorva_app/modules/customer/customer_form_screen.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/sales_history_screen.dart';
+import 'package:apoorva_app/services/sale_service.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/services/customer_service.dart';
@@ -11,8 +12,16 @@ import 'package:intl/intl.dart'; // ✅ Don't forget to import this for date for
 
 class CustomerDetailsScreen extends StatelessWidget {
   final Customer customer;
+  final CustomerService _customerService;
+  final SaleService _saleService;
 
-  const CustomerDetailsScreen({super.key, required this.customer});
+  CustomerDetailsScreen({
+    super.key,
+    required this.customer,
+    CustomerService? customerService,
+    SaleService? saleService,
+  }) : _customerService = customerService ?? CustomerService(),
+       _saleService = saleService ?? SaleService();
 
   void _handleMenuAction(BuildContext context, String action) async {
     // ✅ FIX 1: Add listen: false here
@@ -21,7 +30,7 @@ class CustomerDetailsScreen extends StatelessWidget {
       listen: false,
     ).currentOrganization;
 
-    final service = CustomerService();
+    final service = _customerService;
     var orgId = organization?.id ?? '';
     if (orgId.isEmpty) return;
 
@@ -228,7 +237,12 @@ class CustomerDetailsScreen extends StatelessWidget {
           ),
 
           // Bottom History List (Expanded to fill remaining screen)
-          Expanded(child: CustomerSalesHistory(customerPhone: customer.phone)),
+          Expanded(
+            child: CustomerSalesHistory(
+              customerPhone: customer.phone,
+              service: _saleService,
+            ),
+          ),
         ],
       ),
     );

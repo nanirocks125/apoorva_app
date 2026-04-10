@@ -9,8 +9,13 @@ import 'package:provider/provider.dart';
 
 class CustomerSalesHistory extends StatelessWidget {
   final String customerPhone;
+  SaleService _salesService;
 
-  const CustomerSalesHistory({super.key, required this.customerPhone});
+  CustomerSalesHistory({
+    super.key,
+    required this.customerPhone,
+    SaleService? service,
+  }) : _salesService = service ?? SaleService();
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +23,7 @@ class CustomerSalesHistory extends StatelessWidget {
       context,
     ).currentOrganization;
     return StreamBuilder<List<Sale>>(
-      stream: SaleService().getCustomerSales(
+      stream: _salesService.getCustomerSales(
         organization?.id ?? '',
         customerPhone,
       ),

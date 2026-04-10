@@ -8,12 +8,14 @@ class CustomerFormScreen extends StatefulWidget {
   final String orgId;
   final Customer?
   existingCustomer; // Null means CREATE NEW, Provided means EDIT
+  final CustomerService _customerService; // ✅ Add this
 
-  const CustomerFormScreen({
+  CustomerFormScreen({
     super.key,
     required this.orgId,
     this.existingCustomer,
-  });
+    CustomerService? customerService, // ✅ Add this
+  }) : _customerService = customerService ?? CustomerService();
 
   @override
   State<CustomerFormScreen> createState() => _CustomerFormScreenState();
@@ -77,7 +79,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         totalAmountSpent: widget.existingCustomer?.totalAmountSpent ?? 0.0,
       );
 
-      await CustomerService().saveCustomer(widget.orgId, customerToSave);
+      await widget._customerService.saveCustomer(widget.orgId, customerToSave);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
