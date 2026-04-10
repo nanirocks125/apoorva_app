@@ -21,19 +21,24 @@ class GlobalDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
+                  icon: Icons.grid_view_rounded,
                   title: 'Dashboard',
                   onTap: () => _navigateTo(context, '/dashboard'),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
-                  title: 'Customer',
+                  icon: Icons.people_alt_outlined,
+                  title: 'Customers',
                   onTap: () => _navigateTo(context, '/customers'),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
+                  icon: Icons.inventory_2_outlined,
                   title: 'Inventory',
                   onTap: () => _navigateTo(context, '/inventory'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Sales Summary',
+                  onTap: () => _navigateTo(context, '/sales_summary'),
                 ),
 
                 // --- ADMIN ONLY SECTION ---

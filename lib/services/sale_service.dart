@@ -1,4 +1,5 @@
 import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SaleService {
@@ -137,5 +138,71 @@ class SaleService {
           (snapshot) =>
               snapshot.docs.map((doc) => Sale.fromFirestore(doc)).toList(),
         );
+  }
+
+  Stream<List<Sale>> getTotalSales(String orgId) {
+    return _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Sale.fromFirestore(doc)).toList(),
+        );
+  }
+
+  Stream<List<DailySummary>> getDailySummaries(
+    String orgId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    Query<Map<String, dynamic>> query = _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales');
+
+    if (startDate != null && endDate != null) {
+      // Note: To include the full "To Date", set it to the end of the day
+      query = query
+          .where('timestamp', isGreaterThanOrEqualTo: startDate)
+          .where(
+            'timestamp',
+            isLessThanOrEqualTo: endDate.add(const Duration(days: 1)),
+          );
+    }
+    return query
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Sale.fromFirestore(doc)).toList(),
+        )
+        .map((snapshot) => _getDailySummaries(snapshot));
+  }
+
+  // Logic to convert List<Sale> to List<DailySummary>
+  List<DailySummary> _getDailySummaries(List<Sale> sales) {
+    Map<String, List<Sale>> grouped = {};
+
+    for (var sale in sales) {
+      // Normalize date to remove time (YYYY-MM-DD)
+      String dateKey =
+          "${sale.timestamp.year}-${sale.timestamp.month}-${sale.timestamp.day}";
+      if (grouped[dateKey] == null) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(sale);
+    }
+
+    return grouped.entries.map((entry) {
+      double total = entry.value.fold(0, (sum, item) => sum + item.netPayable);
+      return DailySummary(
+        date: entry.value.first.timestamp,
+        totalAmount: total,
+        saleCount: entry.value.length,
+      );
+    }).toList()..sort((a, b) => b.date.compareTo(a.date)); // Newest first
   }
 }
