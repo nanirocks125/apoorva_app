@@ -1,5 +1,6 @@
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/modules/customer/customer_form_screen.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/services/customer_service.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,20 @@ class _CustomersScreenState extends State<CustomersScreen> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          var orgId = organization?.id ?? '';
+          if (orgId.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CustomerFormScreen(orgId: orgId),
+              ),
+            );
+          }
+        },
+        child: const Icon(Icons.person_add),
       ),
       body: (organization == null)
           ? Text('No organization selected')
@@ -146,6 +161,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showCustomerDetails(Customer customer) {
+    Navigator.pushNamed(context, '/customer-details', arguments: customer);
+    return;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -177,7 +194,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               children: [
                 const Text('Total Visits:'),
                 Text(
-                  '${customer.visitCount}',
+                  '${customer.totalSales}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

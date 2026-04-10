@@ -6,6 +6,10 @@ class TimestampConverter implements JsonConverter<DateTime, dynamic> {
 
   @override
   DateTime fromJson(dynamic json) {
+    if (json == null) {
+      return DateTime.now(); // <-- Your Default Value!
+    }
+
     if (json is Timestamp) return json.toDate();
     // Fallback if data was accidentally saved as a string
     if (json is String) return DateTime.parse(json);

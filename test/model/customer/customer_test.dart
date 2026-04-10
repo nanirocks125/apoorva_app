@@ -11,30 +11,13 @@ void main() {
         name: 'Manikanta',
         phone: '8121971462',
         createdAt: testDate,
-        visitCount: 5,
+        lastPurchaseDate: testDate,
+        totalSales: 5,
       );
 
       expect(customer.name, 'Manikanta');
       expect(customer.phone, '8121971462');
-      expect(customer.visitCount, 5);
-      expect(
-        customer.id,
-        isNull,
-      ); // ID should be null unless set via copyWithId
-    });
-
-    test('copyWithId should return a new instance with the assigned ID', () {
-      final customer = Customer(
-        name: 'Lavanya',
-        phone: '9999999999',
-        createdAt: testDate,
-      );
-
-      final updatedCustomer = customer.copyWithId('doc_abc_123');
-
-      expect(updatedCustomer.id, 'doc_abc_123');
-      expect(updatedCustomer.name, 'Lavanya');
-      expect(identical(customer, updatedCustomer), isFalse);
+      expect(customer.totalSales, 5);
     });
 
     group('JSON Serialization', () {
@@ -43,7 +26,8 @@ void main() {
           name: 'Suresh',
           phone: '7777777777',
           createdAt: testDate,
-          visitCount: 2,
+          lastPurchaseDate: testDate,
+          totalSales: 2,
         );
 
         final json = customer.toJson();
@@ -70,7 +54,7 @@ void main() {
           final customer = Customer.fromJson(json);
 
           expect(customer.name, 'Ramesh');
-          expect(customer.visitCount, 0); // Default value from annotation
+          expect(customer.totalSales, 0); // Default value from annotation
           expect(customer.createdAt, testDate);
         },
       );

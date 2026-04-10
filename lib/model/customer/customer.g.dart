@@ -9,13 +9,21 @@ part of 'customer.dart';
 Customer _$CustomerFromJson(Map<String, dynamic> json) => Customer(
   name: json['name'] as String,
   phone: json['phone'] as String,
-  createdAt: Customer._dateTimeFromTimestamp(json['created_at']),
-  visitCount: (json['visitCount'] as num?)?.toInt() ?? 0,
+  lastPurchaseDate: const NullableTimestampConverter().fromJson(
+    json['lastPurchaseDate'],
+  ),
+  totalSales: (json['totalSales'] as num?)?.toInt() ?? 0,
+  totalAmountSpent: (json['totalAmountSpent'] as num?)?.toDouble() ?? 0,
+  createdAt: const TimestampConverter().fromJson(json['createdAt']),
 );
 
 Map<String, dynamic> _$CustomerToJson(Customer instance) => <String, dynamic>{
   'name': instance.name,
   'phone': instance.phone,
-  'created_at': Customer._dateTimeToTimestamp(instance.createdAt),
-  'visitCount': instance.visitCount,
+  'createdAt': const TimestampConverter().toJson(instance.createdAt),
+  'lastPurchaseDate': const NullableTimestampConverter().toJson(
+    instance.lastPurchaseDate,
+  ),
+  'totalSales': instance.totalSales,
+  'totalAmountSpent': instance.totalAmountSpent,
 };

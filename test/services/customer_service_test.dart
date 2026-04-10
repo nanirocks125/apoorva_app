@@ -44,6 +44,7 @@ void main() {
         name: 'Lavanya',
         phone: '8888888888',
         createdAt: DateTime.now(),
+        lastPurchaseDate: DateTime.now(),
       );
 
       await customerService.saveCustomer(orgId, newCustomer);
@@ -75,11 +76,11 @@ void main() {
 
         // 2. Create updated model using the generated ID
         final updatedCustomer = Customer(
-          id: docRef.id,
           name: 'New Name',
           phone: '1111111111',
           createdAt: DateTime.now(),
-          visitCount: 5,
+          lastPurchaseDate: DateTime.now(),
+          totalSales: 5,
         );
 
         // 3. Execute

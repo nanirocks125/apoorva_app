@@ -92,7 +92,7 @@ class CartSummaryFooter extends StatelessWidget {
           customer: Customer(
             name: provider.nameController.text,
             phone: provider.phoneController.text,
-            createdAt: DateTime.now(),
+            lastPurchaseDate: DateTime.now(),
           ),
           activeDraftId: provider.activeDraftId,
         ),

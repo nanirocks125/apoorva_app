@@ -40,6 +40,11 @@ class GlobalDrawer extends StatelessWidget {
                   title: 'Sales Summary',
                   onTap: () => _navigateTo(context, '/sales_summary'),
                 ),
+                _buildDrawerItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Customer Analytics',
+                  onTap: () => _navigateTo(context, '/customer_analytics'),
+                ),
 
                 // --- ADMIN ONLY SECTION ---
                 if (isSuperAdmin) ...[

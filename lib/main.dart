@@ -2,6 +2,8 @@ import 'package:apoorva_app/auth_wrapper.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
+import 'package:apoorva_app/modules/customer/customer_analytics/customer_analytics_screen.dart';
+import 'package:apoorva_app/modules/customer/customer_details_screen.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_screen.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
@@ -87,6 +89,7 @@ class ApoorvaApp extends StatelessWidget {
         '/organizations': (context) => OrganizationScreen(),
         '/dashboard': (context) => OrganizationDashboard(),
         '/sales_summary': (context) => SalesSummaryScreen(),
+        '/customer_analytics': (context) => CustomerAnalyticsScreen(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
@@ -150,12 +153,12 @@ class ApoorvaApp extends StatelessWidget {
           );
         }
 
-        if (settings.name == '/sales-history') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => SalesHistoryScreen(orgId: org.id),
-          );
-        }
+        // if (settings.name == '/sales-history') {
+        //   final org = settings.arguments as Organization;
+        //   return MaterialPageRoute(
+        //     builder: (context) => SalesHistoryScreen(orgId: org.id),
+        //   );
+        // }
 
         if (settings.name == '/inventory') {
           return MaterialPageRoute(builder: (context) => InventoryScreen());
@@ -199,6 +202,13 @@ class ApoorvaApp extends StatelessWidget {
           }
           return MaterialPageRoute(
             builder: (context) => ProfileScreen(user: user),
+          );
+        }
+
+        if (settings.name == '/customer-details') {
+          final customer = settings.arguments as Customer;
+          return MaterialPageRoute(
+            builder: (context) => CustomerDetailsScreen(customer: customer),
           );
         }
 

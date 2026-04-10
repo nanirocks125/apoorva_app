@@ -1,4 +1,3 @@
-import 'package:apoorva_app/screens/checkout/bill_summary_card.dart';
 import 'package:apoorva_app/screens/checkout/checkout_bottom_action.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +34,7 @@ void main() {
       name: 'John Doe',
       phone: '1234567890',
       createdAt: DateTime(2026, 1, 1),
+      lastPurchaseDate: DateTime(2026, 1, 1),
     );
 
     // 1. Dynamically create controllers for ALL modes (including Store Credit)

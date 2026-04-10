@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,19 +38,38 @@ class SaleService {
             sale.customerPhone,
           ); // Using phone as ID is great for quick lookups
 
-      // Update or create the customer record
-      batch.set(
-        customerRef,
-        {
-          'name': sale.customerName,
-          'phone': sale.customerPhone,
-          'lastPurchaseDate': Timestamp.now(),
-          'totalSales': FieldValue.increment(
-            1,
-          ), // Cool trick: auto-increment their visit count
-        },
-        SetOptions(merge: true),
-      ); // Merge ensures we don't overwrite existing data like address
+      // 1. CHECK IF CUSTOMER EXISTS FIRST
+      final customerSnap = await customerRef.get();
+
+      // 2. Base data that gets updated EVERY time
+      Map<String, dynamic> customerData = {
+        'name': sale.customerName,
+        'phone': sale.customerPhone,
+        'lastPurchaseDate': FieldValue.serverTimestamp(),
+      };
+
+      if (!customerSnap.exists) {
+        // 🟢 SCENARIO A: BRAND NEW CUSTOMER
+        // We set the createdAt timestamp because this is their first visit!
+        customerData['createdAt'] = FieldValue.serverTimestamp();
+
+        // Hardcode the first values instead of using increment
+        customerData['totalSales'] = 1;
+        customerData['totalAmountSpent'] = sale.netPayable;
+
+        // Create the document (No merge needed)
+        batch.set(customerRef, customerData);
+      } else {
+        // 🔵 SCENARIO B: EXISTING CUSTOMER
+        // We do NOT include 'createdAt' here, so their original date is safe.
+        customerData['totalSales'] = FieldValue.increment(1);
+        customerData['totalAmountSpent'] = FieldValue.increment(
+          sale.netPayable,
+        );
+
+        // Update the document safely
+        batch.set(customerRef, customerData, SetOptions(merge: true));
+      }
     }
 
     if (activeDraftId != null && activeDraftId.isNotEmpty) {

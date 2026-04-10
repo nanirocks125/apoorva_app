@@ -59,6 +59,7 @@ void main() {
         name: 'John Doe',
         phone: '999',
         createdAt: DateTime(2026, 1, 1),
+        lastPurchaseDate: DateTime(2026, 1, 1),
       ),
       orgId: orgId,
     );
