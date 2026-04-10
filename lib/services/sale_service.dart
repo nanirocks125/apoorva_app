@@ -1,4 +1,3 @@
-import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

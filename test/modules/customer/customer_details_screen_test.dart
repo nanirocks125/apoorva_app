@@ -75,26 +75,23 @@ void main() {
       () => mockSaleService.getCustomerSales(any(), any()),
     ).thenAnswer((_) => Stream.value([]));
   });
+  // Inside customer_details_screen_test.dart
 
   Widget createWidget() {
     return ChangeNotifierProvider<OrganizationProvider>.value(
       value: mockOrgProvider,
       child: MaterialApp(
-        // 1. Define a landing page so the Navigator has somewhere to 'pop' to
         home: const Scaffold(body: Text('Landing Page')),
-
-        // 2. Define the route for the details screen
         onGenerateRoute: (settings) {
           return MaterialPageRoute(
             builder: (context) => CustomerDetailsScreen(
               customer: testCustomer,
               customerService: mockCustomerService,
               saleService: mockSaleService,
+              showAdminActions: true, // ✅ FORCE visibility for the test
             ),
           );
         },
-
-        // 3. Start the test directly on the details screen
         initialRoute: '/details',
       ),
     );

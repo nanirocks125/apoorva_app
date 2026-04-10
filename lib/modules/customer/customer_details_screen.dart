@@ -15,12 +15,14 @@ class CustomerDetailsScreen extends StatelessWidget {
   final Customer customer;
   final CustomerService _customerService;
   final SaleService _saleService;
+  final bool showAdminActions; // 1. Added this flag
 
   CustomerDetailsScreen({
     super.key,
     required this.customer,
     CustomerService? customerService,
     SaleService? saleService,
+    this.showAdminActions = kIsWeb, // 2. Default to your existing logic
   }) : _customerService = customerService ?? CustomerService(),
        _saleService = saleService ?? SaleService();
 
@@ -95,7 +97,7 @@ class CustomerDetailsScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.black87,
         actions: [
-          if (kIsWeb)
+          if (showAdminActions)
             PopupMenuButton<String>(
               onSelected: (val) => _handleMenuAction(context, val),
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -170,7 +172,6 @@ class CustomerDetailsScreen extends StatelessWidget {
                   label: Text(customer.phone),
                 ),
 
-                // ✅ ADD THIS NEW BLOCK RIGHT HERE
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
