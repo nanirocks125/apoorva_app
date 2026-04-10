@@ -3,6 +3,7 @@ import 'package:apoorva_app/modules/customer/customer_form_screen.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/services/sale_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/services/customer_service.dart';
@@ -94,32 +95,33 @@ class CustomerDetailsScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.black87,
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (val) => _handleMenuAction(context, val),
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'edit',
-                child: ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text('Edit Profile'),
+          if (kIsWeb)
+            PopupMenuButton<String>(
+              onSelected: (val) => _handleMenuAction(context, val),
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: Icon(Icons.edit),
+                    title: Text('Edit Profile'),
+                  ),
                 ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'deactivate',
-                child: ListTile(
-                  leading: Icon(Icons.block),
-                  title: Text('Deactivate'),
+                const PopupMenuItem<String>(
+                  value: 'deactivate',
+                  child: ListTile(
+                    leading: Icon(Icons.block),
+                    title: Text('Deactivate'),
+                  ),
                 ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'delete',
-                child: ListTile(
-                  leading: Icon(Icons.delete, color: Colors.red),
-                  title: Text('Delete', style: TextStyle(color: Colors.red)),
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(Icons.delete, color: Colors.red),
+                    title: Text('Delete', style: TextStyle(color: Colors.red)),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
       body: Column(

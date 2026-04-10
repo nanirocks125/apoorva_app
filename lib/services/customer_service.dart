@@ -143,4 +143,18 @@ class CustomerService {
           .toList(),
     };
   }
+
+  Future<List<Customer>> getTopSpenders(String orgId) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('organizations')
+        .doc(orgId)
+        .collection('customers')
+        .orderBy('totalAmountSpent', descending: true)
+        .limit(10) // Limit to top 10 spenders
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => Customer.fromJson(doc.data()))
+        .toList();
+  }
 }

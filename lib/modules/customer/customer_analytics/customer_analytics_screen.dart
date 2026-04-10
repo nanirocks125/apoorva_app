@@ -17,6 +17,7 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
 
   bool _isLoading = true;
   List<Customer> _vipCustomers = [];
+  List<Customer> _topSpenders = []; // NEW: State for top spenders
   List<Customer> _lapsedCustomers = [];
   Map<String, List<Customer>> _upcomingEvents = {};
 
@@ -39,12 +40,14 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
         _service.getTopVIPCustomers(orgId),
         _service.getLapsedCustomers(orgId),
         _service.getThisMonthsEvents(orgId),
+        _service.getTopSpenders(orgId), // NEW: Fetch top spenders
       ]);
 
       setState(() {
         _vipCustomers = results[0] as List<Customer>;
         _lapsedCustomers = results[1] as List<Customer>;
         _upcomingEvents = results[2] as Map<String, List<Customer>>;
+        _topSpenders = results[3] as List<Customer>; // NEW: Assign results
         _isLoading = false;
       });
     } catch (e) {
@@ -76,6 +79,10 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
                 children: [
                   _buildSectionHeader("🎁 Action Needed: This Month's Events"),
                   _buildEventsCards(),
+
+                  const SizedBox(height: 24),
+                  _buildSectionHeader("💰 Top Spenders (Highest Revenue)"),
+                  _buildSpendersList(_topSpenders), // NEW: Top Spenders UI
 
                   const SizedBox(height: 24),
                   _buildSectionHeader("👑 Top VIP Customers (Reward Them)"),
@@ -205,6 +212,55 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
                       // TODO: Launch WhatsApp URL with a "We miss you" template
                     },
                   ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSpendersList(List<Customer> customers) {
+    if (customers.isEmpty) {
+      return const Text(
+        "No spending data available yet.",
+        style: TextStyle(color: Colors.grey),
+      );
+    }
+
+    return Column(
+      children: customers.map((c) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+          color: Colors.white,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.green.shade50,
+              child: Icon(Icons.attach_money, color: Colors.green.shade700),
+            ),
+            title: Text(
+              c.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(c.phone),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                // Assumes you add `totalAmountSpent` to your Customer model
+                "₹${c.totalAmountSpent?.toStringAsFixed(0) ?? '0'}",
+                style: TextStyle(
+                  color: Colors.green.shade800,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
         );
       }).toList(),

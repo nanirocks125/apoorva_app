@@ -7,6 +7,7 @@ import 'package:apoorva_app/modules/customer/customer_details_screen.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_screen.dart';
 import 'package:apoorva_app/modules/data_integrity/data_integrity_screen.dart';
+import 'package:apoorva_app/modules/inventory_analytics_screen/inventory_analytics_screen.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/providers/cart_provider.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
@@ -92,6 +93,7 @@ class ApoorvaApp extends StatelessWidget {
         '/sales_summary': (context) => SalesSummaryScreen(),
         '/customer_analytics': (context) => CustomerAnalyticsScreen(),
         '/data-integrity': (context) => DataIntegrityScreen(),
+        '/inventory-analytics': (context) => InventoryAnalyticsScreen(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
