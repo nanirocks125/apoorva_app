@@ -25,6 +25,7 @@ void main() {
         ),
         mrp: 0,
         discountPercent: 0,
+        quantity: 1,
       ),
     );
   });
@@ -73,6 +74,7 @@ void main() {
         category: testCategory,
         mrp: 5000,
         discountPercent: 10,
+        quantity: 1,
       );
       await tester.pumpWidget(
         createWidgetUnderTest(existingItem: existing, index: 0),
@@ -216,6 +218,7 @@ void main() {
         category: testCategory,
         mrp: 5000,
         discountPercent: 0,
+        quantity: 1,
       );
       when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
 
@@ -242,6 +245,7 @@ void main() {
         category: testCategory,
         mrp: 1000,
         discountPercent: 15,
+        quantity: 1,
       );
 
       await tester.pumpWidget(

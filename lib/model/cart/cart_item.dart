@@ -16,7 +16,7 @@ class CartItem {
     required this.category,
     required this.mrp,
     this.discountPercent = 0.0,
-    this.quantity = 1,
+    required this.quantity,
     this.discountType = DiscountType.percentage,
   });
 

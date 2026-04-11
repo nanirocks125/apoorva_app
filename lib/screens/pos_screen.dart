@@ -1,5 +1,4 @@
 import 'package:apoorva_app/components/global_drawer.dart';
-import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/screens/pos/cart_list_section.dart';
 import 'package:apoorva_app/screens/pos/cart_summary_footer.dart';

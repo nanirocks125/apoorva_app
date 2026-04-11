@@ -39,6 +39,7 @@ void main() {
         ),
         mrp: 600.0,
         discountPercent: 0.0,
+        quantity: 1,
       ),
       CartItem(
         category: Category(
@@ -50,6 +51,7 @@ void main() {
         ),
         mrp: 500.0,
         discountPercent: 20.0, // Result: 400
+        quantity: 1,
       ),
     ];
 

@@ -57,6 +57,7 @@ void main() {
           category: mockCategory,
           mrp: 1500.0,
           discountPercent: 100.0,
+          quantity: 1,
         );
 
         expect(item.finalPrice, 0.0);

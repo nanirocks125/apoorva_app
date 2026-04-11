@@ -40,6 +40,7 @@ void main() {
         ),
         mrp: 0,
         discountPercent: 0,
+        quantity: 1,
       ),
     );
   });
@@ -244,6 +245,7 @@ void main() {
         category: category,
         mrp: 2000,
         discountPercent: 10,
+        quantity: 1,
       );
 
       await tester.pumpWidget(

@@ -26,6 +26,7 @@ void main() {
     category: testCategory,
     mrp: 1000.0,
     discountPercent: 10.0,
+    quantity: 1,
   );
 
   setUp(() {
@@ -61,6 +62,7 @@ void main() {
         category: testCategory,
         mrp: 2000.0,
         discountPercent: 5.0,
+        quantity: 1,
       );
       posProvider.updateItem(updatedItem, 0);
       expect(posProvider.cart.items.first.mrp, 2000.0);
