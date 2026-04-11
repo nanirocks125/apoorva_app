@@ -12,8 +12,8 @@ class PosCart {
 
   // Final total after all discounts
   double get totalPayable {
-    double subtotal = items.fold(0, (sum, item) => sum + item.finalPrice);
-    return (subtotal - flatDiscount).clamp(0.0, double.infinity);
+    // double subtotal = items.fold(0, (sum, item) => sum + item.finalPrice);
+    return (totalFinalPrice - flatDiscount).clamp(0.0, double.infinity);
   }
 
   double get totalMRP {

@@ -101,7 +101,7 @@ class CheckoutController extends ChangeNotifier {
             (i) => SaleItem(
               categoryId: i.category.id,
               categoryName: i.category.name,
-              qty: 1,
+              qty: i.quantity,
               stickerPrice: i.mrp,
               finalPrice: i.finalPrice,
             ),
@@ -121,7 +121,7 @@ class CheckoutController extends ChangeNotifier {
         customerPhone: customer.phone,
         staffId: FirebaseAuth.instance.currentUser?.uid ?? 'System',
         items: saleItems,
-        subtotal: cart.totalPayable,
+        subtotal: cart.totalMRP,
         overallDiscountPercent: _overallDiscountPercent,
         overallDiscountAmount: overallDiscountAmount,
         roundOff: double.tryParse(roundOffController.text) ?? 0.0,

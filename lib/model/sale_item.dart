@@ -31,6 +31,14 @@ class SaleItem {
     return ((stickerPrice - finalPrice) / stickerPrice) * 100;
   }
 
+  double get unitDiscountAmount {
+    return stickerPrice - finalPrice;
+  }
+
+  double get totalAmount {
+    return qty * finalPrice;
+  }
+
   // --- JSON Logic ---
   factory SaleItem.fromJson(Map<String, dynamic> json) =>
       _$SaleItemFromJson(json);
