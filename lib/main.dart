@@ -30,6 +30,7 @@ import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/home/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -47,6 +48,17 @@ void main() async {
         : dev.DefaultFirebaseOptions.currentPlatform;
 
     await Firebase.initializeApp(options: options);
+
+    // Catch errors from the Flutter framework
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+
+    // Catch errors from the underlying platform (asynchronous)
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   } catch (e) {
     // If it fails because it already exists, we check if it's actually there
     if (e.toString().contains('duplicate-app')) {
