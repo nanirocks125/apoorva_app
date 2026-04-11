@@ -26,7 +26,6 @@ import 'package:apoorva_app/screens/organization/organization_selection_screen.d
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
 import 'package:apoorva_app/screens/reports_screen.dart';
-import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/home/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';

@@ -27,4 +27,8 @@ class PosCart {
   double get totalDiscountOnMRP {
     return totalMRP - totalFinalPrice;
   }
+
+  double get totalItemsCount {
+    return items.fold(0, (sum, item) => sum + item.quantity);
+  }
 }

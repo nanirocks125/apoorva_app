@@ -33,7 +33,7 @@ class CartSummaryFooter extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${cart.items.length} ITEMS',
+                '${cart.totalItemsCount} ITEMS',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,
