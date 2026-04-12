@@ -85,6 +85,10 @@ void main() {
     testWidgets('renders user info and admin sections for Super Admin', (
       tester,
     ) async {
+      // Set a larger surface size to ensure all items are visible
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+
       await tester.pumpWidget(createWidgetUnderTest(user: adminUser));
       await tester.tap(find.byType(IconButton)); // Open drawer
       await tester.pumpAndSettle();

@@ -1,5 +1,6 @@
 import 'package:apoorva_app/enum/app_user_role.dart';
 import 'package:apoorva_app/model/organization/organization_snapshot.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
@@ -17,9 +18,12 @@ import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
 // Mocks
 class MockOrgService extends Mock implements OrganizationService {}
+
+class MockOrgProvider extends Mock implements OrganizationProvider {}
 
 class MockAuthService extends Mock implements AuthService {}
 
@@ -34,6 +38,8 @@ void setupFirebaseMocks() {
 }
 
 void main() {
+  late MockOrgProvider mockOrgProvider;
+  late MockAuthService mockAuthService;
   late MockOrgService mockOrgService;
   late AppUser superAdmin;
   late AppUser unassignedUser;
@@ -50,7 +56,12 @@ void main() {
   });
 
   setUp(() {
+    mockOrgProvider = MockOrgProvider();
+    mockAuthService = MockAuthService();
     mockOrgService = MockOrgService();
+    when(() => mockOrgProvider.currentOrganization).thenReturn(
+      Organization(id: '1', name: 'Test Shop', createdAt: DateTime.now()),
+    );
 
     PackageInfo.setMockInitialValues(
       appName: "Apoorva Polaris",
@@ -106,12 +117,21 @@ void main() {
   });
 
   Widget createWidgetUnderTest(AppUser user) {
-    final mockStatsService = MockPlatformStatsService();
-    return MaterialApp(
-      home: HomeScreen(
-        loggedInUser: user,
-        orgService: mockOrgService,
-        statsService: mockStatsService,
+    // Use .value if you already have a mock created in setUp
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<OrganizationProvider>.value(
+          value: mockOrgProvider,
+        ),
+        Provider<AuthService>.value(value: mockAuthService),
+        // Add other providers if needed
+      ],
+      child: MaterialApp(
+        home: HomeScreen(
+          loggedInUser: user,
+          orgService: mockOrgService,
+          statsService: MockPlatformStatsService(),
+        ),
       ),
     );
   }

@@ -75,6 +75,7 @@ void main() {
           finalPrice: 900,
           qty: 1,
           categoryId: '1',
+          discountType: .finalPrice,
         ),
       ]);
       when(() => mockPlatform.canLaunch(any())).thenAnswer((_) async => true);
@@ -121,6 +122,7 @@ void main() {
           finalPrice: 500,
           qty: 1,
           categoryId: '2',
+          discountType: .finalPrice,
         ),
       ]);
       when(() => mockSale.totalSavings).thenReturn(0.0);
@@ -168,6 +170,7 @@ void main() {
           finalPrice: 1800,
           qty: 1,
           categoryId: '3',
+          discountType: .finalPrice,
         ),
       ]);
       when(() => mockPlatform.canLaunch(any())).thenAnswer((_) async => true);

@@ -19,25 +19,12 @@ class SaleSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Calculate the values based on Checkout logic
-    final double totalMrp = sale.items.fold(
-      0.0,
-      (sum, item) => sum + item.stickerPrice,
-    );
-    final double itemDiscounts = sale.items.fold(
-      0.0,
-      (sum, item) => sum + (item.stickerPrice - item.finalPrice),
-    );
-
     // Subtotal = Total MRP - Item Discounts
-    final double subtotal = totalMrp - itemDiscounts;
 
     // Bill Amount = Subtotal - Additional Discount
-    final double billAmount = subtotal - sale.overallDiscountAmount;
+    // final double billAmount = subtotal - sale.overallDiscountAmount;
 
     // Total Savings logic for the blue box
-    final double totalSavings =
-        itemDiscounts + sale.overallDiscountAmount + sale.roundOff;
 
     return PopScope(
       canPop: canPop, // This disables the swipe back and back button
@@ -84,16 +71,16 @@ class SaleSuccessScreen extends StatelessWidget {
               const Divider(height: 32),
               // Updated Financial Summary passing new values
               _buildFinancialSummary(
-                totalMrp: totalMrp,
-                itemDiscounts: itemDiscounts,
-                subtotal: subtotal,
-                billAmount: billAmount,
-                totalSavings: totalSavings,
+                totalMrp: sale.totalMRP,
+                itemDiscounts: sale.totalItemsDiscount,
+                subtotal: sale.subTotal,
+                billAmount: sale.billAmount,
+                totalSavings: sale.totalSavings,
               ),
               const Divider(height: 32),
               _buildPaymentDetails(),
               const SizedBox(height: 40),
-              if (!canPop) _buildActionButtons(context),
+              _buildActionButtons(context),
               const SizedBox(height: 20),
             ],
           ),
@@ -127,7 +114,7 @@ class SaleSuccessScreen extends StatelessWidget {
       children: [
         _buildSectionHeader('ITEMS'),
         ...sale.items.map((item) {
-          double itemSaving = item.stickerPrice - item.finalPrice;
+          // double itemSaving = item.stickerPrice - item.finalPrice;
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Column(
@@ -140,15 +127,23 @@ class SaleSuccessScreen extends StatelessWidget {
                       '${item.categoryName} (₹${item.stickerPrice.toStringAsFixed(0)})',
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
-                    Text(
-                      '₹${item.finalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Column(
+                      children: [
+                        Text(
+                          '₹${item.totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '${item.qty} x ₹${item.finalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                if (itemSaving > 0)
+                if (item.unitDiscountAmount > 0)
                   Text(
-                    'Saved: ₹${itemSaving.toStringAsFixed(2)} (${item.discountPercent.toInt()}% Off)',
+                    'Saved: ₹${item.unitDiscountAmount.toStringAsFixed(2)} (${item.discountPercent.toInt()}% Off)',
                     style: TextStyle(
                       color: Colors.green.shade700,
                       fontSize: 12,
@@ -307,6 +302,15 @@ class SaleSuccessScreen extends StatelessWidget {
         //     sale.id,
         //   ),
         // ),
+
+        // NEW: Edit Sale Button
+        _actionButton(
+          icon: Icons.edit_note_outlined,
+          label: 'Edit Sale / Modify Items',
+          color: Colors.orange.shade700,
+          onPressed: () => _handleEditSale(context),
+        ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -385,6 +389,14 @@ class SaleSuccessScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _handleEditSale(BuildContext context) {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/pos', // Or wherever your PosScreen lives
+      (route) => false,
+      arguments: sale,
     );
   }
 }

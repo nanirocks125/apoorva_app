@@ -1,15 +1,21 @@
 import 'package:apoorva_app/auth_wrapper.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
-import 'package:apoorva_app/modules/daily-summary-report/daily_summary_report.dart';
+import 'package:apoorva_app/modules/customer/customer_analytics/customer_analytics_screen.dart';
+import 'package:apoorva_app/modules/customer/customer_details_screen.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_screen.dart';
+import 'package:apoorva_app/modules/data_integrity/data_integrity_screen.dart';
+import 'package:apoorva_app/modules/data_integrity/sales_integrity_screen.dart';
+import 'package:apoorva_app/modules/inventory_analytics_screen/inventory_analytics_screen.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/providers/cart_provider.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_history_screen.dart';
 import 'package:apoorva_app/screens/customer/customer_screen.dart';
+import 'package:apoorva_app/screens/daily_sales_history_screen.dart';
 import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/home/home_screen.dart';
 import 'package:apoorva_app/screens/inventory/inventory_screen.dart';
@@ -21,10 +27,10 @@ import 'package:apoorva_app/screens/organization/organization_selection_screen.d
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
 import 'package:apoorva_app/screens/pos_screen.dart';
 import 'package:apoorva_app/screens/reports_screen.dart';
-import 'package:apoorva_app/screens/sales_history_screen.dart';
 import 'package:apoorva_app/screens/scripts/scripts_screen.dart';
 import 'package:apoorva_app/screens/home/user/users_screen.dart';
 import 'package:apoorva_app/screens/whatsapp_status_queue_screen.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -42,6 +48,17 @@ void main() async {
         : dev.DefaultFirebaseOptions.currentPlatform;
 
     await Firebase.initializeApp(options: options);
+
+    // Catch errors from the Flutter framework
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+
+    // Catch errors from the underlying platform (asynchronous)
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   } catch (e) {
     // If it fails because it already exists, we check if it's actually there
     if (e.toString().contains('duplicate-app')) {
@@ -87,6 +104,10 @@ class ApoorvaApp extends StatelessWidget {
         '/organizations': (context) => OrganizationScreen(),
         '/dashboard': (context) => OrganizationDashboard(),
         '/sales_summary': (context) => SalesSummaryScreen(),
+        '/customer_analytics': (context) => CustomerAnalyticsScreen(),
+        '/data-integrity': (context) => DataIntegrityScreen(),
+        '/sales-integrity': (context) => SalesIntegrityScreen(),
+        '/inventory-analytics': (context) => InventoryAnalyticsScreen(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
@@ -142,18 +163,10 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/pos') {
-          final organization =
-              settings.arguments
-                  as Organization; // Extract the user passed from Login
+          final initialSale =
+              settings.arguments as Sale; // Extract the user passed from Login
           return MaterialPageRoute(
-            builder: (context) => PosScreen(organization: organization),
-          );
-        }
-
-        if (settings.name == '/sales-history') {
-          final org = settings.arguments as Organization;
-          return MaterialPageRoute(
-            builder: (context) => SalesHistoryScreen(orgId: org.id),
+            builder: (context) => PosScreen(initialSale: initialSale),
           );
         }
 
@@ -199,6 +212,21 @@ class ApoorvaApp extends StatelessWidget {
           }
           return MaterialPageRoute(
             builder: (context) => ProfileScreen(user: user),
+          );
+        }
+
+        if (settings.name == '/customer-details') {
+          final customer = settings.arguments as Customer;
+          return MaterialPageRoute(
+            builder: (context) => CustomerDetailsScreen(customer: customer),
+          );
+        }
+
+        if (settings.name == '/sales-history') {
+          final selectedDate = settings.arguments as DateTime;
+          return MaterialPageRoute(
+            builder: (context) =>
+                DailySalesHistoryScreen(selectedDate: selectedDate),
           );
         }
 

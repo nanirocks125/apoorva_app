@@ -44,6 +44,7 @@ void main() {
         name: 'Lavanya',
         phone: '8888888888',
         createdAt: DateTime.now(),
+        lastPurchaseDate: DateTime.now(),
       );
 
       await customerService.saveCustomer(orgId, newCustomer);
@@ -61,34 +62,42 @@ void main() {
     test(
       'saveCustomer should UPDATE an existing record when ID is provided',
       () async {
-        // 1. Setup: Create an existing customer
-        final docRef = await fakeDb
+        final String testPhone = '1111111111';
+        // 1. Setup: Create an existing customer using the PHONE NUMBER as the ID
+        final docRef = fakeDb
             .collection('organizations')
             .doc(orgId)
             .collection('customers')
-            .add({
-              'name': 'Old Name',
-              'phone': '0000000000',
-              'created_at': DateTime.now(),
-              'visitCount': 0,
-            });
+            .doc(testPhone); // ✅ FIX 1: Use .doc(phone) instead of .add()
 
-        // 2. Create updated model using the generated ID
+        await docRef.set({
+          'name': 'Old Name',
+          'phone': testPhone,
+          // Since it's a raw map, pass actual Timestamp or String depending on your FakeFirestore setup
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+          'totalSales': 0,
+        });
+
+        // 2. Create updated model
         final updatedCustomer = Customer(
-          id: docRef.id,
           name: 'New Name',
-          phone: '1111111111',
+          phone: testPhone,
           createdAt: DateTime.now(),
-          visitCount: 5,
+          lastPurchaseDate: DateTime.now(),
+          totalSales: 5,
         );
 
         // 3. Execute
         await customerService.saveCustomer(orgId, updatedCustomer);
 
         // 4. Verify
-        final updatedDoc = await docRef.get();
+        final updatedDoc = await docRef
+            .get(); // Fetch the specific phone document
         expect(updatedDoc.get('name'), 'New Name');
-        expect(updatedDoc.get('visitCount'), 5);
+        expect(
+          updatedDoc.get('totalSales'),
+          5,
+        ); // ✅ FIX 2: Expect 5, since that's what we passed in
       },
     );
   });

@@ -19,6 +19,7 @@ void main() {
           name: '',
           phone: '',
           createdAt: DateTime(2026, 2, 2),
+          lastPurchaseDate: DateTime(2026, 2, 2),
         );
 
         await tester.pumpWidget(createWidgetUnderTest(emptyCustomer));
@@ -36,6 +37,7 @@ void main() {
           name: 'Manikanta',
           phone: '',
           createdAt: DateTime(2026, 2, 2),
+          lastPurchaseDate: DateTime(2026, 2, 2),
         );
 
         await tester.pumpWidget(createWidgetUnderTest(nameOnly));
@@ -53,6 +55,7 @@ void main() {
           name: '',
           phone: '9876543210',
           createdAt: DateTime(2026, 2, 2),
+          lastPurchaseDate: DateTime(2026, 2, 2),
         );
 
         await tester.pumpWidget(createWidgetUnderTest(phoneOnly));
@@ -70,6 +73,7 @@ void main() {
           name: 'Apoorva',
           phone: '1234567890',
           createdAt: DateTime(2026, 2, 2),
+          lastPurchaseDate: DateTime(2026, 2, 2),
         );
 
         await tester.pumpWidget(createWidgetUnderTest(fullCustomer));
@@ -84,6 +88,7 @@ void main() {
         name: 'Style Test',
         phone: '000',
         createdAt: DateTime(2026, 2, 2),
+        lastPurchaseDate: DateTime(2026, 2, 2),
       );
       await tester.pumpWidget(createWidgetUnderTest(customer));
 

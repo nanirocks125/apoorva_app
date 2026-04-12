@@ -4,6 +4,7 @@ import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -105,8 +106,9 @@ class OrganizationDashboard extends StatelessWidget {
       ),
       // Floating Action Button for the most common task: A New Sale
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            Navigator.pushNamed(context, '/pos', arguments: organization),
+        onPressed: () {
+          Navigator.pushNamed(context, '/pos', arguments: organization);
+        },
         label: const Text('New Sale', style: TextStyle(color: Colors.white)),
         icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
         backgroundColor: const Color(0xFFFF5733),

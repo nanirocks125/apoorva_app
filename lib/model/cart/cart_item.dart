@@ -16,7 +16,7 @@ class CartItem {
     required this.category,
     required this.mrp,
     this.discountPercent = 0.0,
-    this.quantity = 1,
+    required this.quantity,
     this.discountType = DiscountType.percentage,
   });
 
@@ -27,7 +27,10 @@ class CartItem {
   Map<String, dynamic> toJson() => _$CartItemToJson(this);
 
   // --- Logic ---
-  double get finalPrice => (mrp * quantity) * (1 - (discountPercent / 100));
+  double get finalPrice =>
+      ((mrp) * (1 - (discountPercent / 100))).roundToDouble();
+
+  double get totalItemsPrice => (quantity * finalPrice).roundToDouble();
 
   // Bridge method to convert to SaleItem (for Zero Discrepancy)
   // we can use this when confirming the sale.

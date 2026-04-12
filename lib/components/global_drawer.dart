@@ -40,6 +40,16 @@ class GlobalDrawer extends StatelessWidget {
                   title: 'Sales Summary',
                   onTap: () => _navigateTo(context, '/sales_summary'),
                 ),
+                _buildDrawerItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Customer Analytics',
+                  onTap: () => _navigateTo(context, '/customer_analytics'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Inventory Analytics',
+                  onTap: () => _navigateTo(context, '/inventory-analytics'),
+                ),
 
                 // --- ADMIN ONLY SECTION ---
                 if (isSuperAdmin) ...[
@@ -68,6 +78,18 @@ class GlobalDrawer extends StatelessWidget {
                   icon: Icons.settings_outlined,
                   title: 'App Settings',
                   onTap: () => _navigateTo(context, '/settings'),
+                ),
+
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Data Integrity',
+                  onTap: () => _navigateTo(context, '/data-integrity'),
+                ),
+
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Sales Integrity',
+                  onTap: () => _navigateTo(context, '/sales-integrity'),
                 ),
               ],
             ),

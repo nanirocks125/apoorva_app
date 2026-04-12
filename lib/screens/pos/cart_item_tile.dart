@@ -57,19 +57,31 @@ class CartItemTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '₹${item.mrp} • ${item.discountPercent.toInt()}% Off',
+          '₹${item.mrp}/unit • ${item.discountPercent.toInt()}% Off',
           style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 11),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '₹${item.finalPrice.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 15, // 17 నుండి 15 కి
-                color: Color(0xFF2D3436),
-              ),
+            Column(
+              crossAxisAlignment: .end,
+              children: [
+                Text(
+                  '₹${item.totalItemsPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15, // 17 నుండి 15 కి
+                    color: Color(0xFF2D3436),
+                  ),
+                ),
+                Text(
+                  '${item.quantity} x ₹${item.finalPrice}/unit',
+                  style: TextStyle(
+                    color: Colors.blueGrey.shade300,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 4),
             IconButton(
