@@ -70,10 +70,6 @@ class PosScreen extends StatelessWidget {
                     : provider.holdCurrentBill,
               ),
               const DraftsBadgeAction(), // Separate widget for stream
-              IconButton(
-                icon: const Icon(Icons.history_outlined, color: Colors.teal),
-                onPressed: () => _viewPurchaseHistory(context),
-              ),
             ],
           ),
           drawer: GlobalDrawer(),
@@ -91,10 +87,6 @@ class PosScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _viewPurchaseHistory(BuildContext context) {
-    Navigator.pushNamed(context, '/sales-history');
   }
 
   Future<void> _pickDateTime(BuildContext context, PosProvider provider) async {

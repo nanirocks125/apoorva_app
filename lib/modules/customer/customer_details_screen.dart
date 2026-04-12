@@ -149,7 +149,9 @@ class CustomerDetailsScreen extends StatelessWidget {
                   radius: 30,
                   backgroundColor: Colors.indigo.shade50,
                   child: Text(
-                    customer.name[0].toUpperCase(),
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : '?',
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.indigo.shade400,

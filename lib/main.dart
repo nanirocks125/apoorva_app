@@ -108,7 +108,6 @@ class ApoorvaApp extends StatelessWidget {
         '/data-integrity': (context) => DataIntegrityScreen(),
         '/sales-integrity': (context) => SalesIntegrityScreen(),
         '/inventory-analytics': (context) => InventoryAnalyticsScreen(),
-        '/sales-history': (context) => DailySalesHistoryScreen(),
       },
 
       // 3. Dynamic Route Handling (For screens requiring objects like Organization)
@@ -220,6 +219,14 @@ class ApoorvaApp extends StatelessWidget {
           final customer = settings.arguments as Customer;
           return MaterialPageRoute(
             builder: (context) => CustomerDetailsScreen(customer: customer),
+          );
+        }
+
+        if (settings.name == '/sales-history') {
+          final selectedDate = settings.arguments as DateTime;
+          return MaterialPageRoute(
+            builder: (context) =>
+                DailySalesHistoryScreen(selectedDate: selectedDate),
           );
         }
 

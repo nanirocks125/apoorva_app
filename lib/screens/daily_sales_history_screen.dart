@@ -9,7 +9,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class DailySalesHistoryScreen extends StatefulWidget {
-  const DailySalesHistoryScreen({super.key});
+  DateTime selectedDate;
+
+  DailySalesHistoryScreen({
+    super.key,
+    DateTime? selectedDate, // 1. Make it nullable here
+  }) : selectedDate = selectedDate ?? DateTime.now(); // 2. Assign if null
 
   @override
   State<DailySalesHistoryScreen> createState() =>
@@ -18,7 +23,6 @@ class DailySalesHistoryScreen extends StatefulWidget {
 
 class _DailySalesHistoryScreenState extends State<DailySalesHistoryScreen> {
   String _searchQuery = '';
-  DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +65,7 @@ class _DailySalesHistoryScreenState extends State<DailySalesHistoryScreen> {
               // 1. Typed Stream using SaleService
               stream: SaleService().getSalesByDate(
                 organization.id,
-                _selectedDate,
+                widget.selectedDate,
               ),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -194,11 +198,11 @@ class _DailySalesHistoryScreenState extends State<DailySalesHistoryScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: widget.selectedDate,
       firstDate: DateTime(2025),
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) setState(() => widget.selectedDate = picked);
   }
 
   void _viewBill(Sale sale, Organization organization) {

@@ -107,8 +107,6 @@ class OrganizationDashboard extends StatelessWidget {
       // Floating Action Button for the most common task: A New Sale
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          print('triggering crash');
-          // FirebaseCrashlytics.instance.crash();
           Navigator.pushNamed(context, '/pos', arguments: organization);
         },
         label: const Text('New Sale', style: TextStyle(color: Colors.white)),

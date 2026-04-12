@@ -88,7 +88,7 @@ class GlobalDrawer extends StatelessWidget {
 
                 _buildDrawerItem(
                   icon: Icons.settings_outlined,
-                  title: 'Data Integrity',
+                  title: 'Sales Integrity',
                   onTap: () => _navigateTo(context, '/sales-integrity'),
                 ),
               ],

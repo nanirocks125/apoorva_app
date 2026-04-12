@@ -59,6 +59,13 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     _lastPurchaseDate = widget.existingCustomer?.lastPurchaseDate;
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
   // Helper method to open the Date Picker
   Future<void> _pickDate({
     required DateTime? initialDate,

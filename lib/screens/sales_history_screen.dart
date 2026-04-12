@@ -45,66 +45,75 @@ class CustomerSalesHistory extends StatelessWidget {
           itemCount: sales.length,
           itemBuilder: (context, index) {
             final sale = sales[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ExpansionTile(
-                leading: const Icon(Icons.receipt_long, color: Colors.teal),
-                title: Text(
-                  '₹${sale.netPayable.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+            return GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/customer-details',
+                  arguments: sale.timestamp,
+                );
+              },
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                subtitle: Text(
-                  DateFormat('dd MMM yyyy').format(sale.timestamp),
-                ),
-                children: [
-                  const Divider(),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildDetailRow('Bill ID:', sale.id.substring(0, 8)),
-                        _buildDetailRow(
-                          'Discount:',
-                          '₹${sale.overallDiscountAmount}',
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Items:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        ...sale.items.map(
-                          (item) => Text(
-                            '• ${item.categoryName} (₹${item.finalPrice})',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SaleSuccessScreen(
-                                  sale: sale,
-                                  orgId: organization?.id ?? '',
-                                  canPop: true,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.receipt),
-                            label: const Text('View Full Bill'),
-                          ),
-                        ),
-                      ],
+                child: ExpansionTile(
+                  leading: const Icon(Icons.receipt_long, color: Colors.teal),
+                  title: Text(
+                    '₹${sale.netPayable.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                ],
+                  subtitle: Text(
+                    DateFormat('dd MMM yyyy').format(sale.timestamp),
+                  ),
+                  children: [
+                    const Divider(),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildDetailRow('Bill ID:', sale.id.substring(0, 8)),
+                          _buildDetailRow(
+                            'Discount:',
+                            '₹${sale.overallDiscountAmount}',
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Items:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          ...sale.items.map(
+                            (item) => Text(
+                              '• ${item.categoryName} (₹${item.finalPrice})',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SaleSuccessScreen(
+                                    sale: sale,
+                                    orgId: organization?.id ?? '',
+                                    canPop: true,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.receipt),
+                              label: const Text('View Full Bill'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
