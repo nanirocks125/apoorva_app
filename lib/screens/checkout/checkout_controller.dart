@@ -104,6 +104,7 @@ class CheckoutController extends ChangeNotifier {
               qty: i.quantity,
               stickerPrice: i.mrp,
               finalPrice: i.finalPrice,
+              discountType: i.discountType,
             ),
           )
           .toList();

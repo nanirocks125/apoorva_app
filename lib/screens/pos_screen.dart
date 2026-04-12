@@ -1,5 +1,6 @@
 import 'package:apoorva_app/components/global_drawer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/screens/pos/cart_list_section.dart';
 import 'package:apoorva_app/screens/pos/cart_summary_footer.dart';
 import 'package:apoorva_app/screens/pos/customer_data_header.dart';
@@ -10,13 +11,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class PosScreen extends StatelessWidget {
-  const PosScreen({super.key, required this.organization});
+  const PosScreen({super.key, required this.organization, this.initialSale});
   final Organization organization;
+  final Sale? initialSale; // Add this
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PosProvider(orgId: organization.id),
+      create: (_) =>
+          PosProvider(orgId: organization.id, initialSale: initialSale),
       child: Consumer<PosProvider>(
         builder: (context, provider, _) => Scaffold(
           appBar: AppBar(

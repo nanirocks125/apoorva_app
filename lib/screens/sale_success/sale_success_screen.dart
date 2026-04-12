@@ -302,6 +302,15 @@ class SaleSuccessScreen extends StatelessWidget {
         //     sale.id,
         //   ),
         // ),
+
+        // NEW: Edit Sale Button
+        _actionButton(
+          icon: Icons.edit_note_outlined,
+          label: 'Edit Sale / Modify Items',
+          color: Colors.orange.shade700,
+          onPressed: () => _handleEditSale(context),
+        ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -380,6 +389,14 @@ class SaleSuccessScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _handleEditSale(BuildContext context) {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/pos', // Or wherever your PosScreen lives
+      (route) => false,
+      arguments: sale,
     );
   }
 }

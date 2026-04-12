@@ -1,3 +1,4 @@
+import 'package:apoorva_app/enum/discount_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'sale_item.g.dart';
@@ -18,12 +19,16 @@ class SaleItem {
   @JsonKey(defaultValue: 0)
   final double finalPrice;
 
+  @JsonKey(defaultValue: DiscountType.finalPrice)
+  final DiscountType discountType;
+
   SaleItem({
     required this.categoryId,
     required this.qty,
     required this.stickerPrice,
     required this.finalPrice,
     required this.categoryName,
+    required this.discountType,
   });
 
   double get discountPercent {
