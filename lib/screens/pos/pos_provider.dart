@@ -14,6 +14,16 @@ class PosProvider extends ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+  DateTime _billDateTime = DateTime.now();
+  DateTime get billDateTime => _billDateTime;
+
+  void updateBillDateTime(DateTime dt) {
+    print("updating bill time to: $dt"); // Debug log
+    _billDateTime = dt;
+    cart.billDateTime = dt;
+    notifyListeners();
+  }
+
   PosProvider({required this.orgId, Sale? initialSale}) {
     if (initialSale != null) {
       _loadFromSale(initialSale);
@@ -54,7 +64,7 @@ class PosProvider extends ChangeNotifier {
           customerPhone: phoneController.text,
           items: List.from(cart.items),
           total: cart.totalPayable,
-          createdAt: DateTime.now(),
+          createdAt: billDateTime,
         ),
       );
       clearCart();
@@ -90,6 +100,8 @@ class PosProvider extends ChangeNotifier {
   }
 
   void _loadFromSale(Sale sale) {
+    updateBillDateTime(sale.timestamp);
+
     // 1. Map Sale Items back to CartItems
     final restoredItems = sale.items.map((item) {
       return CartItem(
@@ -110,8 +122,13 @@ class PosProvider extends ChangeNotifier {
       );
     }).toList();
 
-    cart = PosCart(items: restoredItems);
-
+    cart = PosCart(
+      items: restoredItems,
+      billDateTime: sale.timestamp,
+      customerName: sale.customerName,
+      customerPhone: sale.customerPhone,
+      flatDiscount: sale.overallDiscountAmount,
+    );
     // 3. Handle Customer (Assuming your Sale model has customerName/phone)
     // If your Sale model doesn't have a full Customer object,
     // you might need to reconstruct it or fetch it.

@@ -15,6 +15,7 @@ class CheckoutScreen extends StatefulWidget {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
+  final String? existingSaleId;
   final CheckoutController? controller; // Add this
 
   const CheckoutScreen({
@@ -23,6 +24,7 @@ class CheckoutScreen extends StatefulWidget {
     required this.customer,
     required this.orgId,
     this.activeDraftId,
+    this.existingSaleId,
     this.controller, // Add this
   });
 
@@ -43,6 +45,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           customer: widget.customer,
           orgId: widget.orgId,
           activeDraftId: widget.activeDraftId,
+          existingSaleId: widget.existingSaleId,
         );
   }
 

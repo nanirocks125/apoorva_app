@@ -13,12 +13,14 @@ class CheckoutController extends ChangeNotifier {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
+  final String? existingSaleId; // 1. Add this field
 
   CheckoutController({
     required this.cart,
     required this.customer,
     required this.orgId,
     this.activeDraftId,
+    this.existingSaleId,
   }) {
     // Initialize payment controllers and set default
     for (var mode in PaymentMode.values) {
@@ -109,15 +111,17 @@ class CheckoutController extends ChangeNotifier {
           )
           .toList();
 
-      final String newSaleId = FirebaseFirestore.instance
-          .collection('organizations')
-          .doc(orgId)
-          .collection('sales')
-          .doc()
-          .id;
+      final String saleId =
+          existingSaleId ??
+          FirebaseFirestore.instance
+              .collection('organizations')
+              .doc(orgId)
+              .collection('sales')
+              .doc()
+              .id;
 
       final sale = Sale(
-        id: newSaleId,
+        id: saleId,
         customerName: customer.name.isEmpty ? 'Walk-in' : customer.name,
         customerPhone: customer.phone,
         staffId: FirebaseAuth.instance.currentUser?.uid ?? 'System',
@@ -128,7 +132,7 @@ class CheckoutController extends ChangeNotifier {
         roundOff: double.tryParse(roundOffController.text) ?? 0.0,
         netPayable: finalTotal,
         payments: payments,
-        timestamp: DateTime.now(),
+        timestamp: cart.billDateTime,
         source: 'POS',
         status: 'Completed',
       );

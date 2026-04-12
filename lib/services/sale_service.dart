@@ -12,67 +12,66 @@ class SaleService {
     Sale sale,
     String? activeDraftId,
   ) async {
-    // ❌ WRONG: final batch = FirebaseFirestore.instance.batch();
-    // ✅ RIGHT: Use the injected database
     final batch = _db.batch();
 
-    // ❌ WRONG: final saleRef = FirebaseFirestore.instance.collection(...)
-    // ✅ RIGHT: Use the injected database
+    // 1. Reference the sale using the ID provided in the object
+    // (In Edit mode, this is the existing ID; in New mode, it's the generated one)
     final saleRef = _db
         .collection('organizations')
         .doc(orgId)
         .collection('sales')
-        .doc();
+        .doc(sale.id); // <--- Use sale.id, NOT .doc()
 
+    // 2. Fetch the OLD sale data to calculate the difference (Delta)
+    final oldSaleSnap = await saleRef.get();
+    bool isEdit = oldSaleSnap.exists;
+
+    double amountDelta = sale.netPayable;
+    int salesCountDelta = 1;
+
+    if (isEdit) {
+      // If editing, we only add/subtract the difference
+      final oldData = oldSaleSnap.data() as Map<String, dynamic>;
+      double oldNetPayable = (oldData['netPayable'] ?? 0.0).toDouble();
+
+      amountDelta = sale.netPayable - oldNetPayable;
+      salesCountDelta = 0; // Don't increment the sale count for an edit
+    }
+
+    // 3. Set/Update the Sale document
     batch.set(saleRef, sale.toJson());
 
-    // 2. Prepare the Customer Reference (The Missing Part!)
-    // We use the phone number as the document ID to prevent duplicates
+    // 4. Update Customer Statistics with the Delta
     if (sale.customerPhone.isNotEmpty) {
       final customerRef = _db
           .collection('organizations')
           .doc(orgId)
           .collection('customers')
-          .doc(
-            sale.customerPhone,
-          ); // Using phone as ID is great for quick lookups
+          .doc(sale.customerPhone);
 
-      // 1. CHECK IF CUSTOMER EXISTS FIRST
       final customerSnap = await customerRef.get();
 
-      // 2. Base data that gets updated EVERY time
-      Map<String, dynamic> customerData = {
-        'name': sale.customerName,
-        'phone': sale.customerPhone,
-        'lastPurchaseDate': FieldValue.serverTimestamp(),
-      };
-
       if (!customerSnap.exists) {
-        // 🟢 SCENARIO A: BRAND NEW CUSTOMER
-        // We set the createdAt timestamp because this is their first visit!
-        customerData['createdAt'] = FieldValue.serverTimestamp();
-
-        // Hardcode the first values instead of using increment
-        customerData['totalSales'] = 1;
-        customerData['totalAmountSpent'] = sale.netPayable;
-
-        // Create the document (No merge needed)
-        batch.set(customerRef, customerData);
+        batch.set(customerRef, {
+          'name': sale.customerName,
+          'phone': sale.customerPhone,
+          'totalSales': 1,
+          'totalAmountSpent': sale.netPayable,
+          'lastPurchaseDate': sale.timestamp, // Use sale timestamp
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       } else {
-        // 🔵 SCENARIO B: EXISTING CUSTOMER
-        // We do NOT include 'createdAt' here, so their original date is safe.
-        customerData['totalSales'] = FieldValue.increment(1);
-        customerData['totalAmountSpent'] = FieldValue.increment(
-          sale.netPayable,
-        );
-
-        // Update the document safely
-        batch.set(customerRef, customerData, SetOptions(merge: true));
+        batch.update(customerRef, {
+          'name': sale.customerName, // Update name in case it changed
+          'totalSales': FieldValue.increment(salesCountDelta),
+          'totalAmountSpent': FieldValue.increment(amountDelta),
+          'lastPurchaseDate': sale.timestamp,
+        });
       }
     }
 
+    // 5. Cleanup Draft if necessary
     if (activeDraftId != null && activeDraftId.isNotEmpty) {
-      // ✅ Ensure the draft reference also uses _db
       final draftRef = _db
           .collection('organizations')
           .doc(orgId)
@@ -82,7 +81,7 @@ class SaleService {
     }
 
     await batch.commit();
-    return saleRef.id;
+    return sale.id;
   }
 
   Future<void> markSaleAsSent({

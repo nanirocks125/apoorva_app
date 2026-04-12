@@ -3,12 +3,13 @@ import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/model/cart/cart_item.dart';
 
 class PosCart {
-  List<CartItem> items;
+  List<CartItem> items = [];
   double flatDiscount = 0.0; // Cart-level flat rupee discount [cite: 39]
   PaymentMode paymentMode = PaymentMode.cash; // Cash, UPI, or Card
   String? customerPhone;
   String? customerName;
   String? socialSource; // Instagram, WhatsApp, etc. [cite: 40]
+  DateTime billDateTime = DateTime.now();
 
   PosCart({
     List<CartItem>? items,
@@ -17,7 +18,9 @@ class PosCart {
     this.customerPhone,
     this.customerName,
     this.socialSource,
-  }) : items = items ?? [];
+    DateTime? billDateTime, // Added to constructor
+  }) : items = items ?? [],
+       billDateTime = billDateTime ?? DateTime.now();
 
   // Final total after all discounts
   double get totalPayable {

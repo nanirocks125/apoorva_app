@@ -16,6 +16,7 @@ void main() {
       qty: 1,
       stickerPrice: 1000.0,
       finalPrice: 900.0,
+      discountType: .finalPrice,
     ),
   ];
 

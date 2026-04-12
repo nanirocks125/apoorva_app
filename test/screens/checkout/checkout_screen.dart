@@ -15,6 +15,7 @@ class CheckoutScreen extends StatefulWidget {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
+  final String? existingSaleId;
 
   const CheckoutScreen({
     super.key,
@@ -22,6 +23,7 @@ class CheckoutScreen extends StatefulWidget {
     required this.customer,
     required this.orgId,
     this.activeDraftId,
+    this.existingSaleId,
   });
 
   @override
@@ -39,6 +41,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       customer: widget.customer,
       orgId: widget.orgId,
       activeDraftId: widget.activeDraftId,
+      existingSaleId: widget.existingSaleId,
     );
   }
 

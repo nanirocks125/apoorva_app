@@ -11,6 +11,7 @@ void main() {
           qty: 2,
           stickerPrice: 2000.0,
           finalPrice: 1800.0,
+          discountType: .finalPrice,
         );
 
         expect(item.categoryId, 'gold_01');
@@ -25,6 +26,7 @@ void main() {
           qty: 1,
           stickerPrice: 1000.0,
           finalPrice: 900.0,
+          discountType: .finalPrice,
         );
 
         // (1000 - 900) / 1000 * 100 = 10%
@@ -38,6 +40,7 @@ void main() {
           qty: 1,
           stickerPrice: 0.0,
           finalPrice: 0.0,
+          discountType: .finalPrice,
         );
 
         expect(item.discountPercent, 0.0);
@@ -52,6 +55,7 @@ void main() {
           qty: 1,
           stickerPrice: 5000.0,
           finalPrice: 4500.0,
+          discountType: .finalPrice,
         );
 
         final json = item.toJson();

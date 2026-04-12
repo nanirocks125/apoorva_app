@@ -35,7 +35,7 @@ void main() {
       home: Scaffold(
         body: ChangeNotifierProvider<PosProvider>.value(
           value: mockProvider,
-          child: const CartSummaryFooter(),
+          child: CartSummaryFooter(),
         ),
       ),
     );

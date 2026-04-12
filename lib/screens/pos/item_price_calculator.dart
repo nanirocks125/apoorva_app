@@ -52,9 +52,9 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
     }
     _dynamicInputController = TextEditingController(text: initialValue);
 
-    _priceController.text = '300';
-    _dynamicInputController.text = '250';
-    _quantity = 2;
+    // _priceController.text = '300';
+    // _dynamicInputController.text = '250';
+    // _quantity = 2;
   }
 
   double get _mrp {

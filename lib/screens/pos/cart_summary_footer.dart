@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../model/customer/customer.dart';
 
 class CartSummaryFooter extends StatelessWidget {
-  const CartSummaryFooter({super.key});
+  String? existingSaleId;
+  CartSummaryFooter({super.key, this.existingSaleId});
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +93,10 @@ class CartSummaryFooter extends StatelessWidget {
           customer: Customer(
             name: provider.nameController.text,
             phone: provider.phoneController.text,
-            lastPurchaseDate: DateTime.now(),
+            lastPurchaseDate: provider.billDateTime,
           ),
           activeDraftId: provider.activeDraftId,
+          existingSaleId: existingSaleId,
         ),
       ),
     ).then((sold) {
