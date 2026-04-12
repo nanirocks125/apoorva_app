@@ -33,11 +33,6 @@ class CheckoutController extends ChangeNotifier {
     if (existingSale != null) {
       // Set Additional Discount
       setDiscount(existingSale!.overallDiscountPercent);
-      // _overallDiscountPercent = existingSale!.overallDiscountPercent;
-
-      print(
-        'overall discount percentage ${existingSale!.overallDiscountPercent}',
-      );
       // Set Round Off Value
       roundOffController.text = existingSale!.roundOff.toStringAsFixed(0);
 
