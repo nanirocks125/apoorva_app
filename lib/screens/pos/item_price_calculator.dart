@@ -1,4 +1,5 @@
-import 'package:apoorva_app/enum/discount_type.dart' show DiscountType;
+import 'package:apoorva_app/enum/discount_type.dart'
+    show DiscountType, DiscountTypeExtension;
 import 'package:apoorva_app/model/cart/cart_item.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
@@ -83,6 +84,9 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   Widget build(BuildContext context) {
     final themeColor = const Color(0xFFFF5733);
     final softBg = themeColor.withOpacity(0.05);
+    // ✅ FIX: Determine category name safely from both sources
+    final String catName =
+        widget.category?.name ?? widget.existingItem?.category.name ?? 'Item';
 
     return Container(
       decoration: const BoxDecoration(
@@ -111,9 +115,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
             const SizedBox(height: 24),
 
             Text(
-              widget.existingItem != null
-                  ? 'Edit ${widget.category?.name}'
-                  : 'Add ${widget.category?.name}',
+              widget.existingItem != null ? 'Edit $catName' : 'Add $catName',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -129,7 +131,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                   flex: 3,
                   child: _buildInputField(
                     controller: _priceController,
-                    label: "Unit Price",
+                    label: "MRP",
                     prefix: "₹",
                     isBig: true,
                   ),
@@ -210,10 +212,36 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
                   ),
                 ],
                 selected: {_discountType},
-                onSelectionChanged: (set) => setState(() {
-                  _discountType = set.first;
-                  _dynamicInputController.clear();
-                }),
+                onSelectionChanged: (set) {
+                  setState(() {
+                    // 1. Capture the state of the bill before switching types
+                    final currentFinalPrice = _unitFinalPrice;
+                    final currentDiscountAmt = _mrp - currentFinalPrice;
+
+                    // 2. Update the type
+                    _discountType = set.first;
+
+                    // 3. Convert the value to match the new mode
+                    if (_mrp > 0) {
+                      if (_discountType == DiscountType.percentage) {
+                        final pct = (currentDiscountAmt * 100 / _mrp);
+                        // Display as integer if whole, otherwise 1 decimal point
+                        _dynamicInputController.text = pct % 1 == 0
+                            ? pct.toInt().toString()
+                            : pct.toStringAsFixed(1);
+                      } else if (_discountType == DiscountType.amount) {
+                        _dynamicInputController.text = currentDiscountAmt
+                            .toStringAsFixed(0);
+                      } else {
+                        // finalPrice mode
+                        _dynamicInputController.text = currentFinalPrice
+                            .toStringAsFixed(0);
+                      }
+                    } else {
+                      _dynamicInputController.clear();
+                    }
+                  });
+                },
                 style: SegmentedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   selectedBackgroundColor: themeColor,
@@ -229,9 +257,7 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
             if (_discountType != DiscountType.percentage)
               _buildInputField(
                 controller: _dynamicInputController,
-                label: _discountType == DiscountType.percentage
-                    ? "Discount Percentage"
-                    : "Enter Amount",
+                label: _discountType.fieldLabel,
                 prefix: _discountType == DiscountType.percentage ? "" : "₹",
               ),
 
@@ -397,7 +423,29 @@ class _ItemPriceCalculatorState extends State<ItemPriceCalculator> {
   }
 
   bool _isValid() {
-    return _mrp > 0 && (widget.category != null || widget.existingItem != null);
+    final stickerPrice = _mrp;
+    final inputValue = double.tryParse(_dynamicInputController.text) ?? 0.0;
+
+    // 1. Basic check: MRP must be > 0 and we must have a category
+    if (stickerPrice <= 0) return false;
+    if (widget.category == null && widget.existingItem == null) return false;
+
+    // 2. Mode-specific validation
+    if (_discountType == DiscountType.percentage) {
+      if (inputValue > 100) return false; // Cannot discount more than 100%
+    }
+
+    if (_discountType == DiscountType.amount) {
+      if (inputValue > stickerPrice)
+        return false; // Cannot discount more than the unit price
+    }
+
+    if (_discountType == DiscountType.finalPrice) {
+      // If user enters a final price higher than MRP, disable the button
+      if (inputValue > stickerPrice) return false;
+    }
+
+    return true;
   }
 
   void _saveItem() {
