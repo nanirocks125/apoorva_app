@@ -111,7 +111,8 @@ class _DataIntegrityScreenState extends State<DataIntegrityScreen> {
 
             final bool isMismatch =
                 (calculatedSaleCount != customer.totalSales) ||
-                (calculatedTotalSpent != customer.totalAmountSpent);
+                ((calculatedTotalSpent - customer.totalAmountSpent).abs() >
+                    0.01);
 
             if (!isMismatch) return const SizedBox.shrink();
 

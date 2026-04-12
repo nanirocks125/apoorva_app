@@ -174,7 +174,7 @@ void main() {
       expect(find.text('Customer saved successfully!'), findsOneWidget);
     });
 
-    testWidgets('successful save navigates back and shows snackbar', (
+    testWidgets('successful save shows loading spinner during save', (
       tester,
     ) async {
       // ✅ FIX 2: Add delay for the loading spinner frame
