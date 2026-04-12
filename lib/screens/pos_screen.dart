@@ -1,6 +1,7 @@
 import 'package:apoorva_app/components/global_drawer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/sale.dart';
+import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/screens/pos/cart_list_section.dart';
 import 'package:apoorva_app/screens/pos/cart_summary_footer.dart';
 import 'package:apoorva_app/screens/pos/customer_data_header.dart';
@@ -11,13 +12,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class PosScreen extends StatelessWidget {
-  const PosScreen({super.key, required this.organization, this.initialSale});
-  final Organization organization;
+  const PosScreen({super.key, this.initialSale});
+  // final Organization organization;
   final Sale? initialSale; // Add this
 
   @override
   Widget build(BuildContext context) {
+    // 1. Watch the OrganizationProvider for changes
+    // watch() makes this build method rerun whenever the organization updates
+    final orgProvider = context.watch<OrganizationProvider>();
+    final organization = orgProvider.currentOrganization;
+
+    // 2. Show Loader if organization is still null
+    if (organization == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return ChangeNotifierProvider(
+      key: ValueKey(organization.id),
       create: (_) =>
           PosProvider(orgId: organization.id, initialSale: initialSale),
       child: Consumer<PosProvider>(
@@ -59,6 +70,6 @@ class PosScreen extends StatelessWidget {
   }
 
   void _viewPurchaseHistory(BuildContext context) {
-    Navigator.pushNamed(context, '/sales-history', arguments: organization);
+    Navigator.pushNamed(context, '/sales-history');
   }
 }

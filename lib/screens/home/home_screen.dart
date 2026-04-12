@@ -104,7 +104,7 @@ class HomeScreen extends StatelessWidget {
             );
           }
 
-          return PosScreen(organization: org);
+          return PosScreen();
         }
 
         // Fallback if the shop was deleted but the user still has the ID

@@ -1,6 +1,7 @@
 import 'package:apoorva_app/auth_wrapper.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/modules/customer/customer_analytics/customer_analytics_screen.dart';
 import 'package:apoorva_app/modules/customer/customer_details_screen.dart';
@@ -161,11 +162,10 @@ class ApoorvaApp extends StatelessWidget {
         }
 
         if (settings.name == '/pos') {
-          final organization =
-              settings.arguments
-                  as Organization; // Extract the user passed from Login
+          final initialSale =
+              settings.arguments as Sale; // Extract the user passed from Login
           return MaterialPageRoute(
-            builder: (context) => PosScreen(organization: organization),
+            builder: (context) => PosScreen(initialSale: initialSale),
           );
         }
 

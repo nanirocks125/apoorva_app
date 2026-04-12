@@ -10,7 +10,7 @@ CartItem _$CartItemFromJson(Map<String, dynamic> json) => CartItem(
   category: Category.fromJson(json['category'] as Map<String, dynamic>),
   mrp: (json['mrp'] as num).toDouble(),
   discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0.0,
-  quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+  quantity: (json['quantity'] as num).toInt(),
   discountType:
       $enumDecodeNullable(_$DiscountTypeEnumMap, json['discountType']) ??
       DiscountType.percentage,
