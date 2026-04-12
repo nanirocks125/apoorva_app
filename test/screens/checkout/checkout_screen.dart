@@ -1,6 +1,7 @@
 import 'package:apoorva_app/enum/payment_mode.dart';
 import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:apoorva_app/model/customer/customer.dart';
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/screens/checkout/bill_summary_card.dart';
 import 'package:apoorva_app/screens/checkout/checkout_bottom_action.dart';
 import 'package:apoorva_app/screens/checkout/checkout_controller.dart';
@@ -15,7 +16,7 @@ class CheckoutScreen extends StatefulWidget {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
-  final String? existingSaleId;
+  final Sale? existingSale;
 
   const CheckoutScreen({
     super.key,
@@ -23,7 +24,7 @@ class CheckoutScreen extends StatefulWidget {
     required this.customer,
     required this.orgId,
     this.activeDraftId,
-    this.existingSaleId,
+    this.existingSale,
   });
 
   @override
@@ -41,7 +42,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       customer: widget.customer,
       orgId: widget.orgId,
       activeDraftId: widget.activeDraftId,
-      existingSaleId: widget.existingSaleId,
+      existingSale: widget.existingSale,
     );
   }
 
