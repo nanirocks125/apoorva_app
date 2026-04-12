@@ -7,6 +7,7 @@ import 'package:apoorva_app/modules/customer/customer_analytics/customer_analyti
 import 'package:apoorva_app/modules/customer/customer_details_screen.dart';
 import 'package:apoorva_app/modules/daily-summary-report/daily_summary_screen.dart';
 import 'package:apoorva_app/modules/data_integrity/data_integrity_screen.dart';
+import 'package:apoorva_app/modules/data_integrity/sales_integrity_screen.dart';
 import 'package:apoorva_app/modules/inventory_analytics_screen/inventory_analytics_screen.dart';
 import 'package:apoorva_app/providers/auth_provider.dart';
 import 'package:apoorva_app/providers/cart_provider.dart';
@@ -105,6 +106,7 @@ class ApoorvaApp extends StatelessWidget {
         '/sales_summary': (context) => SalesSummaryScreen(),
         '/customer_analytics': (context) => CustomerAnalyticsScreen(),
         '/data-integrity': (context) => DataIntegrityScreen(),
+        '/sales-integrity': (context) => SalesIntegrityScreen(),
         '/inventory-analytics': (context) => InventoryAnalyticsScreen(),
         '/sales-history': (context) => DailySalesHistoryScreen(),
       },

@@ -13,14 +13,14 @@ class CheckoutController extends ChangeNotifier {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
-  final String? existingSaleId; // 1. Add this field
+  final Sale? existingSale; // 1. Add this field
 
   CheckoutController({
     required this.cart,
     required this.customer,
     required this.orgId,
     this.activeDraftId,
-    this.existingSaleId,
+    this.existingSale,
   }) {
     // Initialize payment controllers and set default
     for (var mode in PaymentMode.values) {
@@ -28,6 +28,26 @@ class CheckoutController extends ChangeNotifier {
     }
     paymentControllers[PaymentMode.cash]!.text = cart.totalPayable
         .toStringAsFixed(2);
+
+    // 3. EDIT CASE: Override values if existingSale is present
+    if (existingSale != null) {
+      // Set Additional Discount
+      setDiscount(existingSale!.overallDiscountPercent);
+      // _overallDiscountPercent = existingSale!.overallDiscountPercent;
+
+      print(
+        'overall discount percentage ${existingSale!.overallDiscountPercent}',
+      );
+      // Set Round Off Value
+      roundOffController.text = existingSale!.roundOff.toStringAsFixed(0);
+
+      // Restore Payment Modes and Amounts
+      selectedModes.clear(); // Clear default 'cash: true'
+      existingSale!.payments.forEach((mode, amount) {
+        selectedModes[mode] = true;
+        paymentControllers[mode]!.text = amount.toStringAsFixed(2);
+      });
+    }
 
     roundOffController.addListener(() {
       _autoSyncPayment(); // Synchronize the payment fields
@@ -48,11 +68,11 @@ class CheckoutController extends ChangeNotifier {
   double get overallDiscountPercent => _overallDiscountPercent;
   bool get isProcessing => _isProcessing;
   double get overallDiscountAmount =>
-      cart.totalPayable * (_overallDiscountPercent / 100);
+      cart.totalFinalPrice * (_overallDiscountPercent / 100);
 
   double get finalTotal {
     double roundOff = double.tryParse(roundOffController.text) ?? 0.0;
-    return cart.totalPayable - overallDiscountAmount - roundOff;
+    return cart.totalFinalPrice - overallDiscountAmount - roundOff;
   }
 
   double get totalPaid {
@@ -112,7 +132,7 @@ class CheckoutController extends ChangeNotifier {
           .toList();
 
       final String saleId =
-          existingSaleId ??
+          existingSale?.id ??
           FirebaseFirestore.instance
               .collection('organizations')
               .doc(orgId)

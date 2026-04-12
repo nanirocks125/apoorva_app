@@ -85,7 +85,7 @@ class PosScreen extends StatelessWidget {
                   slivers: [HotkeyRowSection(), CartListSection()],
                 ),
               ),
-              CartSummaryFooter(existingSaleId: initialSale?.id),
+              CartSummaryFooter(existingSale: initialSale),
             ],
           ),
         ),

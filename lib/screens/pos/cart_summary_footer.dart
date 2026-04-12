@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/sale.dart';
 import 'package:apoorva_app/screens/checkout/checkout_screen.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../model/customer/customer.dart';
 
 class CartSummaryFooter extends StatelessWidget {
-  String? existingSaleId;
-  CartSummaryFooter({super.key, this.existingSaleId});
+  Sale? existingSale;
+  CartSummaryFooter({super.key, this.existingSale});
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +97,7 @@ class CartSummaryFooter extends StatelessWidget {
             lastPurchaseDate: provider.billDateTime,
           ),
           activeDraftId: provider.activeDraftId,
-          existingSaleId: existingSaleId,
+          existingSale: existingSale,
         ),
       ),
     ).then((sold) {
