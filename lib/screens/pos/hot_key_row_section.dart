@@ -39,6 +39,8 @@ class HotkeyRowSection extends StatelessWidget {
 
         final categories = snapshot.data!;
         final hotkeys = categories.where((c) => c.isHotkey).toList();
+        final double screenWidth = MediaQuery.of(context).size.width;
+        final int crossAxisCount = screenWidth > 900 ? 10 : 4;
 
         return SliverToBoxAdapter(
           child: Column(
@@ -69,14 +71,13 @@ class HotkeyRowSection extends StatelessWidget {
                         child: GridView.builder(
                           // Vertical scrolling enabled within the fixed height
                           scrollDirection: Axis.vertical,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount:
-                                    4, // 4 columns for smaller cards
-                                mainAxisSpacing: 8,
-                                crossAxisSpacing: 8,
-                                childAspectRatio: 1.0, // Square cards
-                              ),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                crossAxisCount, // 4 columns for smaller cards
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 1.0, // Square cards
+                          ),
                           itemCount: hotkeys.length,
                           itemBuilder: (context, index) {
                             return CategoryCard(
