@@ -19,8 +19,9 @@ class ReceiptCommunicationService {
           bool hasDiscount = item.stickerPrice > item.finalPrice;
 
           return "${entry.key + 1}. *${item.categoryName.toUpperCase()}*\n"
-              "   MRP: ${hasDiscount ? "~Rs ${item.stickerPrice.toStringAsFixed(2)}~ " : "Rs ${item.stickerPrice.toStringAsFixed(2)}"} →  *Rs ${item.finalPrice.toStringAsFixed(2)}* \n"
-              "   ${hasDiscount ? "DISCOUNT *Rs ${(item.stickerPrice - item.finalPrice).toStringAsFixed(2)}*" : ""}";
+              "   MRP: ${hasDiscount ? "~Rs ${item.stickerPrice.toStringAsFixed(0)}~ " : ""}Rs ${item.finalPrice.toStringAsFixed(2)}\n"
+              "   Qty: ${item.qty} x Rs ${item.finalPrice.toStringAsFixed(2)}\n"
+              "   Item Total: *Rs ${item.totalAmount.toStringAsFixed(2)}*";
         })
         .join("\n\n");
 
@@ -31,7 +32,7 @@ class ReceiptCommunicationService {
         "📦 *ITEMS:* \n$itemsList\n\n"
         "💰 *NET PAYABLE: Rs ${sale.netPayable.toStringAsFixed(2)}*\n"
         "✨ *YOU SAVED Rs ${sale.totalSavings.toStringAsFixed(2)}!* ✨\n\n"
-        "🆔 Bill ID: ${sale.id.substring(0, 8)}"
+        "🆔 Bill ID: ${sale.id.substring(0, 8)}\n"
         "📸 Follow: instagram.com/apoorva.online\n"
         "Visit Again! 🙏";
 
