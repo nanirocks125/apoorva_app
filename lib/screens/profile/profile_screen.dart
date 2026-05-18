@@ -1,4 +1,5 @@
 import 'package:apoorva_app/model/user/app_user.dart';
+import 'package:apoorva_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:apoorva_app/enum/app_user_role.dart';
 
@@ -137,10 +138,18 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildLogoutButton(BuildContext context) {
     return TextButton.icon(
-      onPressed: () {}, // Implement sign out logic
+      onPressed: () => _handleLogout(context),
       icon: const Icon(Icons.logout, color: Colors.red),
       label: const Text("Sign Out", style: TextStyle(color: Colors.red)),
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final AuthService authService = AuthService();
+    await authService.signOut();
+    if (context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 
   Color _getRoleColor(AppUserRole role) {

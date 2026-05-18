@@ -107,8 +107,9 @@ void main() {
       final decodedMsg = Uri.decodeComponent(capturedUrl.split('text=')[1]);
 
       // Assertions for Strike-through and Discount line
-      expect(decodedMsg, contains("~Rs 1000.00~  →  *Rs 900.00*"));
-      expect(decodedMsg, contains("DISCOUNT *Rs 100.00*"));
+      expect(decodedMsg, contains("MRP: ~Rs 1000~ Rs 900.00"));
+      expect(decodedMsg, contains("Qty: 1 x Rs 900.00"));
+      expect(decodedMsg, contains("Item Total: *Rs 900.00*"));
       expect(decodedMsg, contains("✨ *YOU SAVED Rs 100.00!* ✨"));
     });
 
@@ -155,7 +156,9 @@ void main() {
       final decodedMsg = Uri.decodeComponent(capturedUrl.split('text=')[1]);
 
       // Assertions: No ~ symbols, No DISCOUNT text for that item
-      expect(decodedMsg, contains("MRP: Rs 500.00 →  *Rs 500.00*"));
+      expect(decodedMsg, contains('MRP: Rs 500.00'));
+      expect(decodedMsg, contains('Qty: 1 x Rs 500.00'));
+      expect(decodedMsg, contains('Item Total: *Rs 500.00*'));
       expect(decodedMsg, isNot(contains("~Rs 500~")));
       expect(decodedMsg, isNot(contains("DISCOUNT *Rs 0.00*")));
     });
