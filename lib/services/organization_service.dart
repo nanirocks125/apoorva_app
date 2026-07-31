@@ -1,3 +1,4 @@
+import 'package:apoorva_app/localDB/category_local_db.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
@@ -135,5 +136,35 @@ class OrganizationService {
     } else {
       await ref.doc(catId).update(category.toJson()); // Update existing
     }
+  }
+
+  // రిమోట్ నుంచి లేటెస్ట్ కేటగిరీలను తెచ్చి లోకల్ SQLite లో అప్‌డేట్ చేసే సెపరేట్ లాజిక్
+  Future<List<Category>> fetchAndRefreshLocalCategories(String orgId) async {
+    try {
+      // 1. ఫైర్‌బేస్ (Remote) నుంచి లేటెస్ట్ డేటాని ఫెచ్ చేయడం
+      final snapshot = await _db
+          .collection('organizations')
+          .doc(orgId)
+          .collection('inventory')
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final remoteCategories = snapshot.docs.map((doc) {
+          final cat = Category.fromFirestore(doc);
+          return cat.copyWithId(doc.id);
+        }).toList();
+
+        // 2. లోకల్ SQLite డేటాబేస్‌ని కొత్త డేటాతో అప్‌డేట్ (Refresh) చేయడం
+        await CategoryLocalDatabase.instance.cacheCategories(remoteCategories);
+
+        print("Local DB successfully refreshed from remote!");
+        return remoteCategories;
+      }
+    } catch (e) {
+      print("Failed to fetch from remote, using existing local cache: $e");
+    }
+
+    // 3. ఒకవేళ నెట్ లేకపోతే లేదా ఎర్రర్ వస్తే ఉన్న లోకల్ డేటాయే రిటర్న్ చేయడం
+    return await CategoryLocalDatabase.instance.getCachedCategories();
   }
 }

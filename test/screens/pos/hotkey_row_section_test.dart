@@ -18,28 +18,28 @@ class MockOrganizationService extends Mock implements OrganizationService {}
 void main() {
   late MockPosProvider mockProvider;
   late MockOrganizationService mockService;
-  late StreamController<List<Category>> streamController;
+  late Completer<List<Category>> completer;
 
   setUp(() {
     mockProvider = MockPosProvider();
     mockService = MockOrganizationService();
-    streamController = StreamController<List<Category>>();
+    completer = Completer<List<Category>>();
 
     when(() => mockProvider.orgId).thenReturn('apoorva_mangalagiri');
   });
 
-  tearDown(() async {
-    await streamController.close();
-  });
-
-  Widget createWidgetUnderTest() {
+  Widget createWidgetUnderTest({Future<List<Category>> Function()? fetcher}) {
     return MaterialApp(
       home: Scaffold(
         body: ChangeNotifierProvider<PosProvider>.value(
           value: mockProvider,
           child: CustomScrollView(
             slivers: [
-              HotkeyRowSection(service: mockService), // Inject Mock Service
+              HotkeyRowSection(
+                service: mockService,
+                categoriesFetcher:
+                    fetcher, // 🟢 పాస్ చేసిన ఫెచర్ ని ఇక్కడ బైండ్ చేస్తున్నాం
+              ),
             ],
           ),
         ),
@@ -48,27 +48,23 @@ void main() {
   }
 
   group('HotkeyRowSection Tests', () {
-    testWidgets('Should show nothing when stream has no data', (tester) async {
-      when(
-        () => mockService.getLiveCategories(any()),
-      ).thenAnswer((_) => streamController.stream);
+    testWidgets('Should show loading or nothing when future has no data yet', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          fetcher: () =>
+              completer.future, // ఇంకా కంప్లీట్ కాని ఫ్యూచర్ పంపుతున్నాం
+        ),
+      );
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      // No data added to stream yet
-
-      expect(find.byType(CategoryCard), findsNothing);
-      expect(find.byType(FindButton), findsNothing);
+      // Loading indicator లేదా కంటెంట్ రాకముందు స్టేట్ చెక్
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('Should only show categories where isHotkey is true', (
       tester,
     ) async {
-      when(
-        () => mockService.getLiveCategories(any()),
-      ).thenAnswer((_) => streamController.stream);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
       final categories = [
         Category(
           id: '1',
@@ -86,8 +82,11 @@ void main() {
         ),
       ];
 
-      streamController.add(categories);
-      await tester.pump();
+      await tester.pumpWidget(
+        createWidgetUnderTest(fetcher: () async => categories),
+      );
+
+      await tester.pumpAndSettle(); // Future పూర్తి అయ్యే వరకు వేచి చూస్తుంది
 
       // Hotkey ఉన్న వస్తువు మాత్రమే కనిపించాలి
       expect(find.text('Hotkey Item'), findsOneWidget);
@@ -98,12 +97,6 @@ void main() {
     });
 
     testWidgets('Should render correct number of hotkey cards', (tester) async {
-      when(
-        () => mockService.getLiveCategories(any()),
-      ).thenAnswer((_) => streamController.stream);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
       final categories = [
         Category(
           id: '1',
@@ -121,8 +114,11 @@ void main() {
         ),
       ];
 
-      streamController.add(categories);
-      await tester.pump();
+      await tester.pumpWidget(
+        createWidgetUnderTest(fetcher: () async => categories),
+      );
+
+      await tester.pumpAndSettle();
 
       expect(find.byType(CategoryCard), findsNWidgets(2));
     });
