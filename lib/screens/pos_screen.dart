@@ -75,13 +75,15 @@ class PosScreen extends StatelessWidget {
           drawer: GlobalDrawer(),
           body: Column(
             children: [
-              CustomerDataHeader(), // Separate Stateless Widget
-              Expanded(
+              const CustomerDataHeader(), // Separate Stateless Widget
+              const Expanded(
                 child: CustomScrollView(
                   slivers: [HotkeyRowSection(), CartListSection()],
                 ),
               ),
-              CartSummaryFooter(existingSale: initialSale),
+              CartSummaryFooter(
+                existingSale: initialSale,
+              ), // Pass the initialSale to the footer
             ],
           ),
         ),

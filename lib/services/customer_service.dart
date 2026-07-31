@@ -157,4 +157,20 @@ class CustomerService {
         .map((doc) => Customer.fromJson(doc.data()))
         .toList();
   }
+
+  Future<List<Customer>> searchCustomers(String orgId, String query) async {
+    if (query.length < 3) return [];
+
+    // Prefix search logic: 'Mani' తో స్టార్ట్ అయ్యే పేర్లన్నీ వస్తాయి
+    var snapshot = await _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('customers')
+        .where('name', isGreaterThanOrEqualTo: query)
+        .where('name', isLessThanOrEqualTo: '$query\uf8ff')
+        .limit(10)
+        .get();
+
+    return snapshot.docs.map((doc) => Customer.fromJson(doc.data())).toList();
+  }
 }
