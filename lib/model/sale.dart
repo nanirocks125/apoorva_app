@@ -76,23 +76,20 @@ class Sale {
     whatsappStatus: whatsappStatus,
   );
 
-  double get totalItemSavings => items.fold(
+  double get totalMRP => items.fold(
     0.0,
-    (sum, item) => sum + (item.stickerPrice - item.finalPrice) * item.qty,
+    (sumMRP, item) => sumMRP + (item.stickerPrice * item.qty),
   );
 
-  /// The grand total of all savings (Item discounts + Overall + Round-off)
-  /// This is the "Huge Impact" number for your customers.
-  double get totalSavings =>
-      totalItemSavings + overallDiscountAmount + roundOff;
-}
-
-// model/sale.dart లో ఈ getters యాడ్ చేయండి
-extension SaleCalculations on Sale {
-  double get itemTotalDiscounts => items.fold(
+  double get totalItemsDiscount => items.fold(
     0.0,
-    (sum, item) => sum + (item.stickerPrice - item.finalPrice),
+    (sumDiscount, item) => sumDiscount + (item.unitDiscountAmount * item.qty),
   );
+
+  double get subTotal => totalMRP - totalItemsDiscount;
+
+  double get billAmount => subTotal - overallDiscountAmount;
+
   double get totalSavings =>
-      itemTotalDiscounts + overallDiscountAmount + roundOff;
+      totalItemsDiscount + overallDiscountAmount + roundOff;
 }

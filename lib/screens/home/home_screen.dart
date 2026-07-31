@@ -1,7 +1,6 @@
 import 'package:apoorva_app/model/organization/organization.dart';
 import 'package:apoorva_app/model/user/app_user.dart';
 import 'package:apoorva_app/screens/auth/login_screen.dart';
-import 'package:apoorva_app/screens/dashboard/organization_dashboard_screen.dart';
 import 'package:apoorva_app/screens/home/version_block_screen.dart';
 import 'package:apoorva_app/screens/organization/organization_selection_screen.dart';
 import 'package:apoorva_app/screens/dashboard/super_admin_dashboard.dart';
@@ -104,7 +103,7 @@ class HomeScreen extends StatelessWidget {
             );
           }
 
-          return PosScreen(organization: org);
+          return PosScreen();
         }
 
         // Fallback if the shop was deleted but the user still has the ID

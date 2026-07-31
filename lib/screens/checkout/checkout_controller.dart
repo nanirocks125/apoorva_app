@@ -13,12 +13,14 @@ class CheckoutController extends ChangeNotifier {
   final Customer customer;
   final String orgId;
   final String? activeDraftId;
+  final Sale? existingSale; // 1. Add this field
 
   CheckoutController({
     required this.cart,
     required this.customer,
     required this.orgId,
     this.activeDraftId,
+    this.existingSale,
   }) {
     // Initialize payment controllers and set default
     for (var mode in PaymentMode.values) {
@@ -26,6 +28,21 @@ class CheckoutController extends ChangeNotifier {
     }
     paymentControllers[PaymentMode.cash]!.text = cart.totalPayable
         .toStringAsFixed(2);
+
+    // 3. EDIT CASE: Override values if existingSale is present
+    if (existingSale != null) {
+      // Set Additional Discount
+      setDiscount(existingSale!.overallDiscountPercent);
+      // Set Round Off Value
+      roundOffController.text = existingSale!.roundOff.toStringAsFixed(0);
+
+      // Restore Payment Modes and Amounts
+      selectedModes.clear(); // Clear default 'cash: true'
+      existingSale!.payments.forEach((mode, amount) {
+        selectedModes[mode] = true;
+        paymentControllers[mode]!.text = amount.toStringAsFixed(2);
+      });
+    }
 
     roundOffController.addListener(() {
       _autoSyncPayment(); // Synchronize the payment fields
@@ -46,11 +63,11 @@ class CheckoutController extends ChangeNotifier {
   double get overallDiscountPercent => _overallDiscountPercent;
   bool get isProcessing => _isProcessing;
   double get overallDiscountAmount =>
-      cart.totalPayable * (_overallDiscountPercent / 100);
+      cart.totalFinalPrice * (_overallDiscountPercent / 100);
 
   double get finalTotal {
     double roundOff = double.tryParse(roundOffController.text) ?? 0.0;
-    return cart.totalPayable - overallDiscountAmount - roundOff;
+    return cart.totalFinalPrice - overallDiscountAmount - roundOff;
   }
 
   double get totalPaid {
@@ -101,33 +118,36 @@ class CheckoutController extends ChangeNotifier {
             (i) => SaleItem(
               categoryId: i.category.id,
               categoryName: i.category.name,
-              qty: 1,
+              qty: i.quantity,
               stickerPrice: i.mrp,
               finalPrice: i.finalPrice,
+              discountType: i.discountType,
             ),
           )
           .toList();
 
-      final String newSaleId = FirebaseFirestore.instance
-          .collection('organizations')
-          .doc(orgId)
-          .collection('sales')
-          .doc()
-          .id;
+      final String saleId =
+          existingSale?.id ??
+          FirebaseFirestore.instance
+              .collection('organizations')
+              .doc(orgId)
+              .collection('sales')
+              .doc()
+              .id;
 
       final sale = Sale(
-        id: newSaleId,
+        id: saleId,
         customerName: customer.name.isEmpty ? 'Walk-in' : customer.name,
         customerPhone: customer.phone,
         staffId: FirebaseAuth.instance.currentUser?.uid ?? 'System',
         items: saleItems,
-        subtotal: cart.totalPayable,
+        subtotal: cart.totalMRP,
         overallDiscountPercent: _overallDiscountPercent,
         overallDiscountAmount: overallDiscountAmount,
         roundOff: double.tryParse(roundOffController.text) ?? 0.0,
         netPayable: finalTotal,
         payments: payments,
-        timestamp: DateTime.now(),
+        timestamp: cart.billDateTime,
         source: 'POS',
         status: 'Completed',
       );

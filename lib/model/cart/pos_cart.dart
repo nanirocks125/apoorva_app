@@ -9,11 +9,23 @@ class PosCart {
   String? customerPhone;
   String? customerName;
   String? socialSource; // Instagram, WhatsApp, etc. [cite: 40]
+  DateTime billDateTime = DateTime.now();
+
+  PosCart({
+    List<CartItem>? items,
+    this.flatDiscount = 0.0,
+    this.paymentMode = PaymentMode.cash,
+    this.customerPhone,
+    this.customerName,
+    this.socialSource,
+    DateTime? billDateTime, // Added to constructor
+  }) : items = items ?? [],
+       billDateTime = billDateTime ?? DateTime.now();
 
   // Final total after all discounts
   double get totalPayable {
-    double subtotal = items.fold(0, (sum, item) => sum + item.finalPrice);
-    return (subtotal - flatDiscount).clamp(0.0, double.infinity);
+    // double subtotal = items.fold(0, (sum, item) => sum + item.finalPrice);
+    return (totalFinalPrice - flatDiscount).clamp(0.0, double.infinity);
   }
 
   double get totalMRP {
@@ -26,5 +38,9 @@ class PosCart {
 
   double get totalDiscountOnMRP {
     return totalMRP - totalFinalPrice;
+  }
+
+  int get totalItemsCount {
+    return items.fold(0, (sum, item) => sum + item.quantity);
   }
 }

@@ -22,6 +22,12 @@ void main() {
     mockProvider = MockPosProvider();
     mockCart = MockPosCart();
 
+    // ✅ Wrap these in closures () =>
+    when(() => mockCart.totalFinalPrice).thenReturn(0.0);
+    when(() => mockCart.totalMRP).thenReturn(0.0);
+    when(() => mockCart.items).thenReturn([]);
+    when(() => mockCart.totalItemsCount).thenReturn(0);
+
     // ప్రతి టెస్ట్ కి ముందు డిఫాల్ట్ గా ఒక కార్ట్ ని రిటర్న్ చేయమని చెప్పడం
     when(() => mockProvider.cart).thenReturn(mockCart);
   });
@@ -60,6 +66,7 @@ void main() {
           ),
           mrp: 1000,
           discountPercent: 0,
+          quantity: 1,
         ),
         CartItem(
           category: Category(
@@ -71,6 +78,7 @@ void main() {
           ),
           mrp: 500,
           discountPercent: 10,
+          quantity: 1,
         ),
       ];
 
@@ -98,6 +106,7 @@ void main() {
           ),
           mrp: 1000,
           discountPercent: 0,
+          quantity: 1,
         ),
       ];
 

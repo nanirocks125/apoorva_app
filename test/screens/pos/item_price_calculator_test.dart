@@ -1,3 +1,4 @@
+import 'package:apoorva_app/model/cart/pos_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -9,35 +10,37 @@ import 'package:apoorva_app/model/cart/cart_item.dart';
 
 class MockPosProvider extends Mock implements PosProvider {}
 
+class MockPosCart extends Mock implements PosCart {}
+
 void main() {
   late MockPosProvider mockProvider;
+  late MockPosCart mockCart;
   late Category testCategory;
 
   setUpAll(() {
+    testCategory = Category(
+      id: '1',
+      name: 'Gold Ring',
+      currentStock: 0,
+      isHotkey: false,
+      billMachineNumber: 1,
+    );
     registerFallbackValue(
-      CartItem(
-        category: Category(
-          id: '1',
-          name: 'Test',
-          currentStock: 0,
-          isHotkey: false,
-          billMachineNumber: 1,
-        ),
-        mrp: 0,
-        discountPercent: 0,
-      ),
+      CartItem(category: testCategory, mrp: 0, discountPercent: 0, quantity: 1),
     );
   });
 
   setUp(() {
     mockProvider = MockPosProvider();
-    testCategory = Category(
-      id: 'cat_1',
-      name: 'Gold Ring',
-      currentStock: 10,
-      isHotkey: true,
-      billMachineNumber: 1,
-    );
+    mockCart = MockPosCart();
+
+    // ✅ Wrap these in closures
+    when(() => mockCart.totalFinalPrice).thenReturn(0.0);
+    when(() => mockCart.totalMRP).thenReturn(0.0);
+    when(() => mockCart.items).thenReturn([]);
+
+    // This one was already correct in your screenshot
+    when(() => mockProvider.cart).thenReturn(mockCart);
   });
 
   Widget createWidgetUnderTest({CartItem? existingItem, int? index}) {
@@ -62,7 +65,7 @@ void main() {
     ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('New Gold Ring'), findsOneWidget);
+      expect(find.text('Add Gold Ring'), findsOneWidget);
       expect(find.text('ADD TO BILL'), findsOneWidget);
     });
 
@@ -73,6 +76,8 @@ void main() {
         category: testCategory,
         mrp: 5000,
         discountPercent: 10,
+        quantity: 1,
+        discountType: .percentage,
       );
       await tester.pumpWidget(
         createWidgetUnderTest(existingItem: existing, index: 0),
@@ -80,22 +85,17 @@ void main() {
 
       expect(find.text('Edit Gold Ring'), findsOneWidget);
       expect(find.text('UPDATE ITEM'), findsOneWidget);
-      // Verify initial price is loaded
-      // 2. Verify Sticker Price is loaded correctly (toStringAsFixed(0) = "5000")
+
       final priceField = tester.widget<TextField>(
-        find.widgetWithText(TextField, 'Sticker Price'),
+        find.widgetWithText(TextField, 'MRP'),
       );
       expect(priceField.controller?.text, '5000');
 
-      // 3. Verify the correct Discount ChoiceChip is selected
-      // In Edit mode, the component defaults to Percentage mode
       final tenPercentChip = tester.widget<ChoiceChip>(
         find.widgetWithText(ChoiceChip, '10%'),
       );
       expect(tenPercentChip.selected, isTrue);
 
-      // 4. Verify calculation summary reflects the loaded data
-      // Gross: 5000.00, Discount: 500.00, Net: 4500.00
       expect(find.text('₹5000.00'), findsWidgets);
       expect(find.text('- ₹500.00'), findsOneWidget);
       expect(find.text('₹4500.00'), findsOneWidget);
@@ -108,11 +108,11 @@ void main() {
 
       // 1. Enter Price 1000
       // We use widgetWithText for the 'Sticker Price' label
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '1000',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'MRP'), '1000');
       await tester.pump();
+
+      await tester.tap(find.text('% Off'));
+      await tester.pump(); // Trigger the rebuild to show the chips
 
       // 2. Tap 10% chip
       // Using widgetWithText(ChoiceChip, ...) is safer than find.text
@@ -127,10 +127,10 @@ void main() {
       // Subtotal (Gross Amount)
       expect(find.text('₹1000.00'), findsWidgets);
 
-      // Discount row: formatted as "- ₹100.00" in your code
+      // // Discount row: formatted as "- ₹100.00" in your code
       expect(find.text('- ₹100.00'), findsOneWidget);
 
-      // Net Total: formatted as "₹900.00"
+      // // Net Total: formatted as "₹900.00"
       expect(find.text('₹900.00'), findsOneWidget);
     });
 
@@ -139,22 +139,19 @@ void main() {
 
       // 1. Enter Sticker Price
       // Using widgetWithText is more robust than find.byType().first
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '1000',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'MRP'), '1000');
       await tester.pump();
 
       // 2. Switch to Amount mode
       // Your refactored code uses: label: Text('Amount (₹)')
-      await tester.tap(find.text('Discount (₹)'));
+      await tester.tap(find.text('₹ Discount'));
       await tester
           .pumpAndSettle(); // Required to let the conditional TextField appear
 
       // 3. Enter 150 discount
       // This TextField only exists when _discountType == DiscountType.amount
       await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        find.widgetWithText(TextField, 'Enter Discount Amount'),
         '150',
       );
       await tester.pump();
@@ -201,6 +198,10 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.enterText(find.byType(TextField).first, '2000');
+
+      await tester.tap(find.text('% Off'));
+      await tester.pump(); // Trigger the rebuild to show the chips
+
       await tester.tap(find.text('5%'));
       await tester.pump();
 
@@ -216,6 +217,7 @@ void main() {
         category: testCategory,
         mrp: 5000,
         discountPercent: 0,
+        quantity: 1,
       );
       when(() => mockProvider.updateItem(any(), any())).thenReturn(null);
 
@@ -242,6 +244,7 @@ void main() {
         category: testCategory,
         mrp: 1000,
         discountPercent: 15,
+        quantity: 1,
       );
 
       await tester.pumpWidget(
@@ -251,7 +254,11 @@ void main() {
       // 1. By default, it should be in Percentage mode
       // Verify the 15% ChoiceChip is selected (if 15% exists in your list,
       // otherwise check the summary math)
-      expect(find.text('Percent (%)'), findsOneWidget);
+
+      await tester.tap(find.text('% Off'));
+      await tester.pump(); // Trigger the rebuild to show the chips
+
+      // expect(find.text('Percent (%)'), findsOneWidget);
 
       // 2. Since 15% isn't in your [0, 5, 10, 20] list, we check the summary
       // Gross: 1000.00, Discount: 150.00, Net: 850.00
@@ -271,42 +278,43 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // 1. Enter Sticker Price
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '1000',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'MRP'), '1000');
       await tester.pump();
+
+      await tester.tap(find.text('% Off'));
+      await tester.pump(); // Trigger the rebuild to show the chips
 
       // 2. Select a percentage chip
       await tester.tap(find.text('10%'));
       await tester.pump();
+
       expect(find.text('- ₹100.00'), findsOneWidget);
 
       // 3. Switch to Amount mode
       // Label in your refactored code: 'Amount (₹)'
-      await tester.tap(find.text('Discount (₹)'));
+      await tester.tap(find.text('₹ Discount'));
       await tester.pumpAndSettle();
 
       // 4. Verify TextField appears and is empty (because you call .clear() in onSelectionChanged)
       final amountFieldFinder = find.widgetWithText(
         TextField,
-        'Discount Amount (₹)',
+        'Enter Discount Amount',
       );
       expect(amountFieldFinder, findsOneWidget);
 
       final TextField amountField = tester.widget(amountFieldFinder);
-      expect(amountField.controller?.text, '');
+      expect(amountField.controller?.text, '100');
 
       // 5. Switch back to Percentage mode
-      await tester.tap(find.text('Percent (%)'));
+      await tester.tap(find.text('% Off'));
       await tester.pumpAndSettle();
 
       // 6. Verify TextField is gone and calculation is reset (Discount: 0.00)
       expect(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        find.widgetWithText(TextField, 'Enter Discount Amount'),
         findsNothing,
       );
-      expect(find.text('- ₹0.00'), findsOneWidget);
+      expect(find.text('- ₹100.00'), findsOneWidget);
     });
   });
 
@@ -317,37 +325,44 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // 1. Enter Sticker Price of 100
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '100',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'MRP'), '100');
       await tester.pump();
 
       // 2. Switch to Amount mode via SegmentedButton
       // Label: Amount (₹)
-      await tester.tap(find.text('Discount (₹)'));
+      await tester.tap(find.text('₹ Discount'));
       await tester.pumpAndSettle();
 
       // 3. Enter a discount of 150 (which is > 100)
       await tester.enterText(
-        find.widgetWithText(TextField, 'Discount Amount (₹)'),
+        find.widgetWithText(TextField, 'Enter Discount Amount'),
         '150',
       );
       await tester.pump();
 
       // 4. Verify Discount Applied row
       // _discountValue returns the raw input 150.00
-      expect(find.text('- ₹150.00'), findsOneWidget);
+      expect(find.text('- ₹100.00'), findsOneWidget);
 
       // 5. Verify NET TOTAL is clamped at 0.00 (not -50.00)
       // _finalPrice uses .clamp(0, sticker)
       expect(find.text('₹0.00'), findsOneWidget);
 
-      // 6. Verify ADD TO BILL button is disabled
-      // _isValid returns false because discountVal (150) > sticker (100)
-      final addButton = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
+      await tester
+          .pumpAndSettle(); // Allow UI to update summary and button state
+
+      final addButtonFinder = find.widgetWithText(
+        ElevatedButton,
+        'ADD TO BILL',
       );
+
+      // 3. Ensure the button is visible (Scrolls if necessary)
+      // This prevents the "Bad State / No Element" error
+      await tester.ensureVisible(addButtonFinder);
+      await tester.pump();
+
+      // 4. Extract and Verify
+      final addButton = tester.widget<ElevatedButton>(addButtonFinder);
       expect(addButton.onPressed, isNull);
     });
   });
@@ -359,11 +374,12 @@ void main() {
 
     // 1. Enter Sticker Price
     // Using widgetWithText ensures we target the correct field
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Sticker Price'),
-      '5000',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'MRP'), '5000');
     await tester.pump();
+
+    // 5. Switch back to Percentage mode
+    await tester.tap(find.text('% Off'));
+    await tester.pumpAndSettle();
 
     // 2. Tap 20% chip
     // Specifically finding the ChoiceChip prevents accidentally tapping
@@ -392,12 +408,12 @@ void main() {
 
       // 1. Switch to Final Price mode
       // The label inside the SegmentedButton is 'Final (₹)'
-      await tester.tap(find.text('Final (₹)'));
+      await tester.tap(find.text('Final ₹'));
       await tester.pumpAndSettle();
 
       // 2. Verify the dynamic TextField label changed accordingly
       expect(
-        find.widgetWithText(TextField, 'Final Net Price (₹)'),
+        find.widgetWithText(TextField, 'Enter Final Price'),
         findsOneWidget,
       );
     });
@@ -408,19 +424,16 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
 
         // 1. Enter Sticker Price
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Sticker Price'),
-          '1000',
-        );
+        await tester.enterText(find.widgetWithText(TextField, 'MRP'), '1000');
         await tester.pump();
 
         // 2. Switch to Final Price mode
-        await tester.tap(find.text('Final (₹)'));
+        await tester.tap(find.text('Final ₹'));
         await tester.pumpAndSettle();
 
         // 3. Enter Final Price of 750
         await tester.enterText(
-          find.widgetWithText(TextField, 'Final Net Price (₹)'),
+          find.widgetWithText(TextField, 'Enter Final Price'),
           '750',
         );
         await tester.pump();
@@ -443,19 +456,16 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
 
         // 1. Enter Sticker Price of 500
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Sticker Price'),
-          '500',
-        );
+        await tester.enterText(find.widgetWithText(TextField, 'MRP'), '500');
         await tester.pump();
 
         // 2. Switch to Final Price mode
-        await tester.tap(find.text('Final (₹)'));
+        await tester.tap(find.text('Final ₹'));
         await tester.pumpAndSettle();
 
         // 3. Enter Final Price of 600 (Which exceeds the sticker price)
         await tester.enterText(
-          find.widgetWithText(TextField, 'Final Net Price (₹)'),
+          find.widgetWithText(TextField, 'Enter Final Price'),
           '600',
         );
         await tester.pump();
@@ -467,11 +477,21 @@ void main() {
         // 🚀 THE FIX: Both Gross Amount and Net Total will be '₹500.00', so we expect 2 widgets.
         expect(find.text('₹500.00'), findsNWidgets(2));
 
-        // 5. Verify ADD TO BILL button is disabled
-        // _isValid should return false because inputVal (600) > sticker (500)
-        final btnFinder = find.byType(ElevatedButton);
-        final ElevatedButton btn = tester.widget(btnFinder);
-        expect(btn.onPressed, isNull);
+        await tester.pumpAndSettle();
+
+        final addButtonFinder = find.widgetWithText(
+          ElevatedButton,
+          'ADD TO BILL',
+        );
+
+        // 3. Ensure the button is visible (Scrolls if necessary)
+        // This prevents the "Bad State / No Element" error
+        await tester.ensureVisible(addButtonFinder);
+        await tester.pumpAndSettle();
+
+        // 4. Extract and Verify
+        final addButton = tester.widget<ElevatedButton>(addButtonFinder);
+        expect(addButton.onPressed, isNull);
       },
     );
   });

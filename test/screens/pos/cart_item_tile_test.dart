@@ -18,6 +18,7 @@ void main() {
     category: testCategory,
     mrp: 5000.0,
     discountPercent: 10.0,
+    quantity: 1,
   );
 
   group('CartItemTile Widget Tests', () {

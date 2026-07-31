@@ -80,7 +80,7 @@ class CartListSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "${provider.cart.items.length} ITEMS",
+                    "${provider.cart.totalItemsCount} ITEMS",
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

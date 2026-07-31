@@ -12,6 +12,9 @@ SaleItem _$SaleItemFromJson(Map<String, dynamic> json) => SaleItem(
   stickerPrice: (json['stickerPrice'] as num?)?.toDouble() ?? 0,
   finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0,
   categoryName: json['categoryName'] as String? ?? '',
+  discountType:
+      $enumDecodeNullable(_$DiscountTypeEnumMap, json['discountType']) ??
+      DiscountType.finalPrice,
 );
 
 Map<String, dynamic> _$SaleItemToJson(SaleItem instance) => <String, dynamic>{
@@ -20,4 +23,11 @@ Map<String, dynamic> _$SaleItemToJson(SaleItem instance) => <String, dynamic>{
   'qty': instance.qty,
   'stickerPrice': instance.stickerPrice,
   'finalPrice': instance.finalPrice,
+  'discountType': _$DiscountTypeEnumMap[instance.discountType]!,
+};
+
+const _$DiscountTypeEnumMap = {
+  DiscountType.percentage: 'percentage',
+  DiscountType.amount: 'amount',
+  DiscountType.finalPrice: 'finalPrice',
 };

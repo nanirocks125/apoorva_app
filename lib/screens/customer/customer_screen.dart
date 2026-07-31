@@ -1,5 +1,6 @@
 import 'package:apoorva_app/model/customer/customer.dart';
 import 'package:apoorva_app/model/organization/organization.dart';
+import 'package:apoorva_app/modules/customer/customer_form_screen.dart';
 import 'package:apoorva_app/providers/organization_provider.dart';
 import 'package:apoorva_app/services/customer_service.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,20 @@ class _CustomersScreenState extends State<CustomersScreen> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          var orgId = organization?.id ?? '';
+          if (orgId.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CustomerFormScreen(orgId: orgId),
+              ),
+            );
+          }
+        },
+        child: const Icon(Icons.person_add),
       ),
       body: (organization == null)
           ? Text('No organization selected')
@@ -146,54 +161,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showCustomerDetails(Customer customer) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              customer.name,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              customer.phone,
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-            const Divider(height: 32),
-            const Text(
-              'Customer Insights',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            // Example Metrics
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Total Visits:'),
-                Text(
-                  '${customer.visitCount}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.pushNamed(context, '/scripts', arguments: customer),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-              child: const Text('Send Marketing Script'),
-            ),
-          ],
-        ),
-      ),
-    );
+    Navigator.pushNamed(context, '/customer-details', arguments: customer);
+    return;
   }
 }

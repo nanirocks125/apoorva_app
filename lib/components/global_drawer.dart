@@ -21,19 +21,34 @@ class GlobalDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
+                  icon: Icons.grid_view_rounded,
                   title: 'Dashboard',
                   onTap: () => _navigateTo(context, '/dashboard'),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
-                  title: 'Customer',
+                  icon: Icons.people_alt_outlined,
+                  title: 'Customers',
                   onTap: () => _navigateTo(context, '/customers'),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.dashboard_outlined,
+                  icon: Icons.inventory_2_outlined,
                   title: 'Inventory',
                   onTap: () => _navigateTo(context, '/inventory'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Sales Summary',
+                  onTap: () => _navigateTo(context, '/sales_summary'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Customer Analytics',
+                  onTap: () => _navigateTo(context, '/customer_analytics'),
+                ),
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Inventory Analytics',
+                  onTap: () => _navigateTo(context, '/inventory-analytics'),
                 ),
 
                 // --- ADMIN ONLY SECTION ---
@@ -63,6 +78,18 @@ class GlobalDrawer extends StatelessWidget {
                   icon: Icons.settings_outlined,
                   title: 'App Settings',
                   onTap: () => _navigateTo(context, '/settings'),
+                ),
+
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Data Integrity',
+                  onTap: () => _navigateTo(context, '/data-integrity'),
+                ),
+
+                _buildDrawerItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Sales Integrity',
+                  onTap: () => _navigateTo(context, '/sales-integrity'),
                 ),
               ],
             ),

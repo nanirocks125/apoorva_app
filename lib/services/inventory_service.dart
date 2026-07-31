@@ -1,4 +1,5 @@
 import 'package:apoorva_app/model/category/category.dart';
+import 'package:apoorva_app/model/category_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InventoryService {
@@ -71,5 +72,52 @@ class InventoryService {
       print("Error deleting: $e");
       rethrow;
     }
+  }
+}
+
+extension InventoryAnalytics on InventoryService {
+  // Fetches sales and aggregates them by category for a specific date range
+  Future<List<CategoryAnalytics>> getCategoryAnalytics(
+    String orgId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final salesSnapshot = await _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('sales')
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .get();
+
+    Map<String, CategoryAnalytics> aggregation = {};
+
+    for (var doc in salesSnapshot.docs) {
+      final items = doc.data()['items'] as List<dynamic>? ?? [];
+      for (var item in items) {
+        final String catId = item['cat_id'] ?? 'unknown';
+        final String name = item['categoryName'] ?? 'Unknown';
+        final int qty = (item['qty'] as num? ?? 0).toInt();
+        final double price = (item['finalPrice'] as num? ?? 0).toDouble();
+
+        if (aggregation.containsKey(catId)) {
+          var existing = aggregation[catId]!;
+          aggregation[catId] = CategoryAnalytics(
+            categoryId: catId,
+            categoryName: name,
+            totalQty: existing.totalQty + qty,
+            totalRevenue: existing.totalRevenue + price,
+          );
+        } else {
+          aggregation[catId] = CategoryAnalytics(
+            categoryId: catId,
+            categoryName: name,
+            totalQty: qty,
+            totalRevenue: price,
+          );
+        }
+      }
+    }
+    return aggregation.values.toList();
   }
 }

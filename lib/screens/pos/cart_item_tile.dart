@@ -28,61 +28,79 @@ class CartItemTile extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        onTap: onTap,
-        // 2. IS DENSE: ఇది ListTile హైట్‌ని గణనీయంగా తగ్గిస్తుంది
-        // isDense: true,
-        // 3. VISUAL DENSITY: ప్యాడింగ్‌ని ఇంకా కంప్రెస్ చేయడానికి
-        visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          onTap: onTap,
+          // 2. IS DENSE: ఇది ListTile హైట్‌ని గణనీయంగా తగ్గిస్తుంది
+          // isDense: true,
+          // 3. VISUAL DENSITY: ప్యాడింగ్‌ని ఇంకా కంప్రెస్ చేయడానికి
+          visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
 
-        leading: CircleAvatar(
-          radius: 18, // 22 నుండి 18 కి తగ్గించాం
-          backgroundColor: Colors.orange.withOpacity(0.1),
-          child: Text(
-            item.category.name[0],
-            style: const TextStyle(
-              color: Color(0xFFFF5733),
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        title: Text(
-          item.category.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14, // 15 నుండి 14 కి
-            color: Color(0xFF2D3436),
-          ),
-        ),
-        subtitle: Text(
-          '₹${item.mrp} • ${item.discountPercent.toInt()}% Off',
-          style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 11),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '₹${item.finalPrice.toStringAsFixed(2)}',
+          leading: CircleAvatar(
+            radius: 18, // 22 నుండి 18 కి తగ్గించాం
+            backgroundColor: Colors.orange.withOpacity(0.1),
+            child: Text(
+              item.category.name[0],
               style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 15, // 17 నుండి 15 కి
-                color: Color(0xFF2D3436),
+                color: Color(0xFFFF5733),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
-            const SizedBox(width: 4),
-            IconButton(
-              onPressed: onRemove,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
-              icon: const Icon(
-                Icons.remove_circle_outline_rounded,
-                color: Colors.redAccent,
-                size: 20, // 24 నుండి 20 కి
-              ),
+          ),
+          title: Text(
+            item.category.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14, // 15 నుండి 14 కి
+              color: Color(0xFF2D3436),
             ),
-          ],
+          ),
+          subtitle: Text(
+            '₹${item.mrp}/unit • ${item.discountPercent.toInt()}% Off',
+            style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 11),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Column(
+                crossAxisAlignment: .end,
+                children: [
+                  Text(
+                    '₹${item.totalItemsPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15, // 17 నుండి 15 కి
+                      color: Color(0xFF2D3436),
+                    ),
+                  ),
+                  Text(
+                    '${item.quantity} x ₹${item.finalPrice}/unit',
+                    style: TextStyle(
+                      color: Colors.blueGrey.shade300,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: onRemove,
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(4),
+                icon: const Icon(
+                  Icons.remove_circle_outline_rounded,
+                  color: Colors.redAccent,
+                  size: 20, // 24 నుండి 20 కి
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -40,6 +40,7 @@ void main() {
         ),
         mrp: 0,
         discountPercent: 0,
+        quantity: 1,
       ),
     );
   });
@@ -101,6 +102,9 @@ void main() {
           .first; // మొదటి టెక్స్ట్ ఫీల్డ్ (Sticker Price)
       await tester.enterText(priceField, '5000');
       await tester.pump();
+
+      await tester.tap(find.text('% Off'));
+      await tester.pump(); // Trigger the rebuild to show the chips
 
       // 5. డిస్కౌంట్ సెలెక్ట్ చేయడం (10%)
       await tester.tap(find.text('10%'));
@@ -213,13 +217,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // 1. Header shows "New Gold Ring" instead of "Add"
-      expect(find.text('New Gold Ring'), findsOneWidget);
+      expect(find.text('Add Gold Ring'), findsOneWidget);
 
       // 2. Enter price via Sticker Price label
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Sticker Price'),
-        '5000',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'MRP'), '5000');
       await tester.pump();
 
       await tester.tap(find.text('ADD TO BILL'));
@@ -244,6 +245,7 @@ void main() {
         category: category,
         mrp: 2000,
         discountPercent: 10,
+        quantity: 1,
       );
 
       await tester.pumpWidget(
@@ -270,7 +272,7 @@ void main() {
       // 2. Verify values are pre-filled (Your code uses toStringAsFixed(0))
       // So looking for "2000", not "2000.0"
       final priceField = tester.widget<TextField>(
-        find.widgetWithText(TextField, 'Sticker Price'),
+        find.widgetWithText(TextField, 'MRP'),
       );
       expect(priceField.controller?.text, '2000');
 
@@ -377,7 +379,7 @@ void main() {
         expect(find.byType(ItemPriceCalculator), findsOneWidget);
 
         // Check for the specific "New" label used in your ternary logic
-        expect(find.text('New Gold Ring'), findsOneWidget);
+        expect(find.text('Add Gold Ring'), findsOneWidget);
       },
     );
   });
