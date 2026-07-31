@@ -101,34 +101,37 @@ class CustomerDataHeaderState extends State<CustomerDataHeader> {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final customer = _searchResults[index];
-                  return ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFF1F3F6),
-                      child: Icon(
-                        Icons.person,
-                        size: 18,
-                        color: Colors.blueGrey,
+                  return Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFF1F3F6),
+                        child: Icon(
+                          Icons.person,
+                          size: 18,
+                          color: Colors.blueGrey,
+                        ),
                       ),
-                    ),
-                    title: Text(
-                      customer.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                      title: Text(
+                        customer.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
+                      subtitle: Text(
+                        customer.phone,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          provider.nameController.text = customer.name;
+                          provider.phoneController.text = customer.phone;
+                          _searchResults = []; // సెలెక్ట్ చేసాక క్లోజ్ చేయడం
+                        });
+                        FocusScope.of(context).unfocus(); // కీబోర్డ్ హైడ్ చేయడం
+                      },
                     ),
-                    subtitle: Text(
-                      customer.phone,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        provider.nameController.text = customer.name;
-                        provider.phoneController.text = customer.phone;
-                        _searchResults = []; // సెలెక్ట్ చేసాక క్లోజ్ చేయడం
-                      });
-                      FocusScope.of(context).unfocus(); // కీబోర్డ్ హైడ్ చేయడం
-                    },
                   );
                 },
               ),

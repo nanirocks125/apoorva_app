@@ -80,6 +80,7 @@ void main() {
           any<bool>(), // 6. usePrinterSettings
           any<OutputType>(), // 7. outputType
           any<bool>(), // 8. forceCustomPrintPaper
+          any(),
         ),
       ).thenAnswer((_) async => true);
 
@@ -104,6 +105,7 @@ void main() {
           any<bool>(),
           any<OutputType>(),
           any<bool>(),
+          any<bool>(),
         ),
       ).called(1);
     });
@@ -121,6 +123,7 @@ void main() {
           any<bool>(), // 6. usePrinterSettings
           any<OutputType>(), // 7. outputType
           any<bool>(), // 8. forceCustomPrintPaper
+          any<bool>(),
         ),
       ).thenAnswer((_) async => true);
 
