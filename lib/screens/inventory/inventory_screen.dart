@@ -28,19 +28,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   // లోకల్ DB నుండి డేటా తెచ్చుకోవడం
   Future<void> _loadLocalInventory() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final data = await widget._inventoryService.getCachedCategories();
 
-    if (widget._inventoryService.lastRefreshTime != null) {
-      _lastRefreshText = DateFormat(
-        'hh:mm a, dd MMM',
-      ).format(widget._inventoryService.lastRefreshTime!);
+    try {
+      final data = await widget._inventoryService.getCachedCategories();
+
+      if (widget._inventoryService.lastRefreshTime != null) {
+        _lastRefreshText = DateFormat(
+          'hh:mm a, dd MMM',
+        ).format(widget._inventoryService.lastRefreshTime!);
+      }
+
+      setState(() {
+        _items = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     }
-
-    setState(() {
-      _items = data;
-      _isLoading = false;
-    });
   }
 
   // Pull-to-Refresh & Sync from Remote via InventoryService

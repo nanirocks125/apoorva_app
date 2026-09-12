@@ -2,7 +2,6 @@ import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/model/category_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:apoorva_app/localDB/category_local_db.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart'; // 🟢 Crashlytics ఇంపోర్ట్
 
 class InventoryService {
   final FirebaseFirestore _db;
@@ -13,13 +12,9 @@ class InventoryService {
   InventoryService({FirebaseFirestore? db})
     : _db = db ?? FirebaseFirestore.instance;
 
-  // 🟢 1. రిమోట్ నుంచి లేటెస్ట్ కేటగిరీలను తెచ్చి లోకల్ SQLite లో అప్‌డేట్ చేయడం (Sync & Refresh)
+  // 1. రిమోట్ నుంచి లేటెస్ట్ కేటగిరీలను తెచ్చి లోకల్ SQLite లో అప్‌డేట్ చేయడం (Sync & Refresh)
   Future<List<Category>> fetchAndRefreshLocalCategories(String orgId) async {
     try {
-      FirebaseCrashlytics.instance.log(
-        'Fetching inventory from remote for org: $orgId',
-      );
-
       final snapshot = await _db
           .collection('organizations')
           .doc(orgId)
@@ -36,44 +31,23 @@ class InventoryService {
         await CategoryLocalDatabase.instance.cacheCategories(remoteCategories);
         lastRefreshTime = DateTime.now(); // టైమ్ అప్‌డేట్ చేయడం
 
-        FirebaseCrashlytics.instance.log(
-          'Local DB successfully refreshed from remote. Total items: ${remoteCategories.length}',
-        );
         print("Local DB successfully refreshed from remote!");
         return remoteCategories;
-      } else {
-        FirebaseCrashlytics.instance.log(
-          'Remote inventory is empty for org: $orgId',
-        );
       }
-    } catch (e, stackTrace) {
-      // 🟢 నాన్-ఫాటల్ ఎర్రర్‌ని క్రాష్‌లిటిక్స్‌కి రిపోర్ట్ చేయడం
-      FirebaseCrashlytics.instance.recordError(
-        e,
-        stackTrace,
-        reason: 'Failed to fetch from remote, using local cache',
-      );
+    } catch (e) {
       print("Failed to fetch from remote, using local cache: $e");
     }
 
     // నెట్ లేకపోతే లేదా ఎర్రర్ వస్తే లోకల్ డేటాయే రిటర్న్ చేయడం
-    FirebaseCrashlytics.instance.log('Falling back to local SQLite cache');
     return await CategoryLocalDatabase.instance.getCachedCategories();
   }
 
-  // 🟢 2. నేరుగా లోకల్ DB నుండి కేటగిరీలను పొందడం (Zero Cost Read)
+  // 2. నేరుగా లోకల్ DB నుండి కేటగిరీలను పొందడం (Zero Cost Read)
   Future<List<Category>> getCachedCategories() async {
-    FirebaseCrashlytics.instance.log(
-      'Reading categories directly from local SQLite DB',
-    );
     return await CategoryLocalDatabase.instance.getCachedCategories();
   }
 
   Future<void> saveCategory(String orgId, Category category) async {
-    FirebaseCrashlytics.instance.log(
-      'Saving category: ${category.name} (Machine No: ${category.billMachineNumber})',
-    );
-
     final collection = _db
         .collection('organizations')
         .doc(orgId)
@@ -86,15 +60,9 @@ class InventoryService {
 
     for (var doc in querySnapshot.docs) {
       if (category.id.isEmpty || doc.id != category.id) {
-        final exception = Exception(
+        throw Exception(
           'Bill Machine Number ${category.billMachineNumber} is already in use.',
         );
-        FirebaseCrashlytics.instance.recordError(
-          exception,
-          null,
-          reason: 'Duplicate bill machine number error',
-        );
-        throw exception;
       }
     }
     // --- DUPLICATE CHECK END ---
@@ -106,9 +74,6 @@ class InventoryService {
 
       // లోకల్ DB లో కూడా సేవ్ చేయడం
       await CategoryLocalDatabase.instance.cacheCategories([categoryWithId]);
-      FirebaseCrashlytics.instance.log(
-        'New category created and cached locally: ${categoryWithId.id}',
-      );
     } else {
       await collection
           .doc(category.id)
@@ -116,9 +81,6 @@ class InventoryService {
 
       // లోకల్ DB లో అప్‌డేట్ చేయడం
       await CategoryLocalDatabase.instance.cacheCategories([category]);
-      FirebaseCrashlytics.instance.log(
-        'Category updated and cached locally: ${category.id}',
-      );
     }
   }
 
@@ -138,10 +100,6 @@ class InventoryService {
 
   Future<void> deleteCategory(String orgId, String categoryId) async {
     try {
-      FirebaseCrashlytics.instance.log(
-        'Attempting to delete category ID: $categoryId',
-      );
-
       await _db
           .collection('organizations')
           .doc(orgId)
@@ -149,16 +107,8 @@ class InventoryService {
           .doc(categoryId)
           .delete();
 
-      FirebaseCrashlytics.instance.log(
-        'Delete truly successful for ID: $categoryId',
-      );
       print("Delete truly successful for ID: $categoryId");
-    } catch (e, stackTrace) {
-      FirebaseCrashlytics.instance.recordError(
-        e,
-        stackTrace,
-        reason: 'Error deleting category ID: $categoryId',
-      );
+    } catch (e) {
       print("Error deleting: $e");
       rethrow;
     }
@@ -172,10 +122,6 @@ extension InventoryAnalytics on InventoryService {
     DateTime start,
     DateTime end,
   ) async {
-    FirebaseCrashlytics.instance.log(
-      'Fetching category analytics for org: $orgId',
-    );
-
     final salesSnapshot = await _db
         .collection('organizations')
         .doc(orgId)
