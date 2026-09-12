@@ -1,3 +1,4 @@
+import 'package:apoorva_app/localDB/category_local_db.dart';
 import 'package:apoorva_app/model/category/category.dart';
 import 'package:apoorva_app/screens/pos/category_card.dart';
 import 'package:apoorva_app/screens/pos/find_button.dart';
@@ -9,32 +10,41 @@ import 'package:provider/provider.dart';
 
 class HotkeyRowSection extends StatelessWidget {
   final OrganizationService? service;
-  const HotkeyRowSection({super.key, this.service});
+  // 🟢 1. టెస్టింగ్ కోసం లోకల్ DB ఫ్యూచర్‌ని బయటి నుండి పంపేలా ఆప్షనల్ పారామీటర్
+  final Future<List<Category>> Function()? categoriesFetcher;
+
+  const HotkeyRowSection({super.key, this.service, this.categoriesFetcher});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<PosProvider>();
     final orgId = context.select<PosProvider, String>((p) => p.orgId);
-    final orgService = service ?? OrganizationService();
 
     if (orgId.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return StreamBuilder<List<Category>>(
-      stream: orgService.getLiveCategories(orgId),
+    // 🟢 2. ఒకవేళ టెస్ట్ అయితే ఇచ్చిన ఫంక్షన్ వాడతాం, లేదంటే రియల్ లోకల్ DB వాడతాం
+    final futureToFetch = categoriesFetcher != null
+        ? categoriesFetcher!()
+        : CategoryLocalDatabase.instance.getCachedCategories();
+
+    return FutureBuilder<List<Category>>(
+      future: futureToFetch,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Text('Unable to load quick items'),
+              child: Text('Unable to load quick items from local DB'),
             ),
           );
         }
 
         if (!snapshot.hasData) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
+          return const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         final categories = snapshot.data!;
@@ -66,18 +76,16 @@ class HotkeyRowSection extends StatelessWidget {
                     // 1. COMPACT GRID (Left Side)
                     Expanded(
                       child: SizedBox(
-                        // Height: 2 rows of cards + spacing
                         height: 140,
                         child: GridView.builder(
-                          // Vertical scrolling enabled within the fixed height
                           scrollDirection: Axis.vertical,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount:
-                                crossAxisCount, // 4 columns for smaller cards
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 1.0, // Square cards
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                                childAspectRatio: 1.0,
+                              ),
                           itemCount: hotkeys.length,
                           itemBuilder: (context, index) {
                             return CategoryCard(
@@ -97,7 +105,7 @@ class HotkeyRowSection extends StatelessWidget {
                     // 2. DOUBLE HEIGHT MORE BUTTON (Right Side)
                     SizedBox(
                       width: 70,
-                      height: 120, // Matches the grid height
+                      height: 120,
                       child: FindButton(
                         onTap: () => PosUIHelpers.showCategoryPicker(
                           context,

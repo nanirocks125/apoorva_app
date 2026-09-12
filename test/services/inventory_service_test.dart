@@ -2,11 +2,18 @@ import 'package:apoorva_app/services/inventory_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:apoorva_app/model/category/category.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // 🟢 1. ఇది ఇంపోర్ట్ చేయండి
 
 void main() {
   late FakeFirebaseFirestore fakeDb;
   late InventoryService inventoryService;
   const String orgId = 'apoorva_mangalagiri';
+
+  setUpAll(() {
+    // 🟢 2. యూనిట్ టెస్ట్‌ల కోసం SQLite FFI ఫ్యాక్టరీని ఇనిషియలైజ్ చేయడం
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
 
   setUp(() {
     fakeDb = FakeFirebaseFirestore();

@@ -37,6 +37,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:apoorva_app/firebase_options_dev.dart' as dev;
 import 'package:apoorva_app/firebase_options_prod.dart' as prod;
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,24 +69,38 @@ void main() async {
       rethrow;
     }
   }
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // 2. Organization Provider depends on Auth Provider
-        ChangeNotifierProxyProvider<AuthProvider, OrganizationProvider>(
-          create: (_) => OrganizationProvider(),
-          update: (context, authProvider, previousOrgProvider) {
-            // This is the magic link: Every time auth changes (like after a successful login),
-            // this update triggers, passing the AppUser to fetch the specific Org.
-            previousOrgProvider?.updateForUser(authProvider.user);
-            return previousOrgProvider!;
-          },
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn =
+          'https://51f818597a0856a18a037cf67e2ad507@o4511828228374528.ingest.us.sentry.io/4511828233486336';
+      options.sendDefaultPii = true;
+      options.enableLogs = true;
+      options.tracesSampleRate = 1.0;
+      options.profilesSampleRate = 1.0;
+      options.replay.sessionSampleRate = 0.1;
+      options.replay.onErrorSampleRate = 1.0;
+    },
+    appRunner: () async {
+      runApp(
+        SentryWidget(
+          child: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => AuthProvider()),
+              ChangeNotifierProxyProvider<AuthProvider, OrganizationProvider>(
+                create: (_) => OrganizationProvider(),
+                update: (context, authProvider, previousOrgProvider) {
+                  previousOrgProvider?.updateForUser(authProvider.user);
+                  return previousOrgProvider!;
+                },
+              ),
+              ChangeNotifierProvider(create: (_) => CartProvider()),
+            ],
+            child: const ApoorvaApp(),
+          ),
         ),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-      ],
-      child: const ApoorvaApp(),
-    ),
+      );
+    },
   );
 }
 
