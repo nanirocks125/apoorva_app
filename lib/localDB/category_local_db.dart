@@ -35,6 +35,7 @@ class CategoryLocalDatabase {
 
   // 1. లోకల్ SQLite నుంచి కేటగిరీలను సురక్షితంగా తెచ్చుకోవడం (Type Safe Mapping)
   Future<List<Category>> getCachedCategories() async {
+    print("Apoorva - Fetching cached categories");
     final db = await instance.database;
     final result = await db.query(
       'categories',

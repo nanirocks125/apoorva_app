@@ -1,9 +1,11 @@
 import 'package:apoorva_app/localDB/category_local_db.dart';
 import 'package:apoorva_app/model/category/category.dart';
+import 'package:apoorva_app/repository/inventory_repository.dart';
 import 'package:apoorva_app/screens/pos/category_card.dart';
 import 'package:apoorva_app/screens/pos/find_button.dart';
 import 'package:apoorva_app/screens/pos/pos_provider.dart';
 import 'package:apoorva_app/screens/pos/pos_ui_helpers.dart';
+import 'package:apoorva_app/services/inventory_service.dart';
 import 'package:apoorva_app/services/organization_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,9 +13,9 @@ import 'package:provider/provider.dart';
 class HotkeyRowSection extends StatelessWidget {
   final OrganizationService? service;
   // 🟢 1. టెస్టింగ్ కోసం లోకల్ DB ఫ్యూచర్‌ని బయటి నుండి పంపేలా ఆప్షనల్ పారామీటర్
-  final Future<List<Category>> Function()? categoriesFetcher;
+  final CategoryRepository? categoryRepo;
 
-  const HotkeyRowSection({super.key, this.service, this.categoriesFetcher});
+  const HotkeyRowSection({super.key, this.service, this.categoryRepo});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +26,12 @@ class HotkeyRowSection extends StatelessWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    // 🟢 2. ఒకవేళ టెస్ట్ అయితే ఇచ్చిన ఫంక్షన్ వాడతాం, లేదంటే రియల్ లోకల్ DB వాడతాం
-    final futureToFetch = categoriesFetcher != null
-        ? categoriesFetcher!()
-        : CategoryLocalDatabase.instance.getCachedCategories();
+    final repo = CategoryRepositoryImpl(
+      remoteService: InventoryService(),
+      localDb: CategoryLocalDatabase.instance,
+    );
+
+    final futureToFetch = repo.getCategories(orgId, forceRefresh: false);
 
     return FutureBuilder<List<Category>>(
       future: futureToFetch,

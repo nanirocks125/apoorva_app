@@ -14,12 +14,16 @@ class InventoryService {
 
   // 1. రిమోట్ నుంచి లేటెస్ట్ కేటగిరీలను తెచ్చి లోకల్ SQLite లో అప్‌డేట్ చేయడం (Sync & Refresh)
   Future<List<Category>> fetchAndRefreshLocalCategories(String orgId) async {
+    print("Apoorva - Fetching categories from remote for orgId: $orgId");
     try {
       final snapshot = await _db
           .collection('organizations')
           .doc(orgId)
           .collection('inventory')
           .get();
+      print(
+        "Apoorva - Fetched ${snapshot.docs.length} categories from remote.",
+      );
 
       if (snapshot.docs.isNotEmpty) {
         final remoteCategories = snapshot.docs.map((doc) {
@@ -31,11 +35,11 @@ class InventoryService {
         await CategoryLocalDatabase.instance.cacheCategories(remoteCategories);
         lastRefreshTime = DateTime.now(); // టైమ్ అప్‌డేట్ చేయడం
 
-        print("Local DB successfully refreshed from remote!");
+        print("Apoorva - Local DB successfully refreshed from remote!");
         return remoteCategories;
       }
     } catch (e) {
-      print("Failed to fetch from remote, using local cache: $e");
+      print("Apoorva - Failed to fetch from remote, using local cache: $e");
     }
 
     // నెట్ లేకపోతే లేదా ఎర్రర్ వస్తే లోకల్ డేటాయే రిటర్న్ చేయడం
@@ -47,7 +51,20 @@ class InventoryService {
     return await CategoryLocalDatabase.instance.getCachedCategories();
   }
 
-  Future<void> saveCategory(String orgId, Category category) async {
+  Future<List<Category>> fetchCategories(String orgId) async {
+    final snapshot = await _db
+        .collection('organizations')
+        .doc(orgId)
+        .collection('inventory')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final cat = Category.fromFirestore(doc);
+      return cat.copyWithId(doc.id);
+    }).toList();
+  }
+
+  Future<Category> saveCategory(String orgId, Category category) async {
     final collection = _db
         .collection('organizations')
         .doc(orgId)
@@ -71,16 +88,12 @@ class InventoryService {
       final newDocRef = collection.doc();
       final categoryWithId = category.copyWithId(newDocRef.id);
       await newDocRef.set(categoryWithId.toJson());
-
-      // లోకల్ DB లో కూడా సేవ్ చేయడం
-      await CategoryLocalDatabase.instance.cacheCategories([categoryWithId]);
+      return categoryWithId;
     } else {
       await collection
           .doc(category.id)
           .set(category.toJson(), SetOptions(merge: true));
-
-      // లోకల్ DB లో అప్‌డేట్ చేయడం
-      await CategoryLocalDatabase.instance.cacheCategories([category]);
+      return category;
     }
   }
 
